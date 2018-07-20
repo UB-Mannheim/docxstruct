@@ -1,10 +1,6 @@
 # custom imports
 from configuration.configuration_handler import ConfigurationHandler
-from utils.hocr_converter import HocrConverter
 from utils.database_handler import DatabaseHandler
-
-# external imports
-from pathlib import Path
 
 
 # load configuration
@@ -15,19 +11,23 @@ config = config_handler.get_config()
 
 
 # Basic steps:
-# 1. Read in the .hocr-files (then, for each file ...)
-# = str(Path(config.DBDIR_READER).absolute())
 dh = DatabaseHandler(dbdir="")
 dh.set_dirpos(tablename_pos=config.TABLENAME_POS,ocr_profile_pos=config.OCR_PROFILE_POS,\
               ocr_pos=config.OCR_POS,dbname_pos=config.DBPATH_POS)
 
 dh.fetch_files(config.INPUT_FILEGLOB, config.INPUT_FILETYPES)
-test = dh.get_files()
-dfs = dh.fetch_dataframe()
-print(test)
+# get files-list
+hocr_files = dh.get_files()
 
 
-# 2. line feature extraction
+# main iteration loop
+for key in hocr_files:
+    for file in hocr_files[key]:
+        # fetch basic data for current file
+        ocromore_data = dh.fetch_ocromore_data(file)
+        # extract features from basic data
+
+
 
 # 3. line segmentation
 

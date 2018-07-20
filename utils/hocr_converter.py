@@ -71,6 +71,47 @@ class HocrConverter(object):
         self.df2sql(df, filename, con, index=index, datainfo=self.datainfo)
         return df
 
+
+
+    def parse_ocromore_hocr(self, file):
+
+        filename = file.path
+        document = self.get_hocr_document(filename)
+        ocr = "Ocromore"
+
+        page = document.pages[0]
+        # assign ocropus page
+        self._ocromore_page = page
+        html = page._hocr_html
+        contents = html.contents
+        final_object = []
+        line_index = 0
+
+        for element in contents:
+            res = str(element).find("span")
+            if res >= 1:
+                current_line_object = {}
+
+                line = Line(document, element)
+
+                #idx = self.line2dict(line,df_dict,ocr,ocr_profile,idx,lidx)
+                current_line_object["hocr_coordinates"] = line.coordinates
+                current_line_object["text"] = line.ocr_text
+                print("ocrtext", line.ocr_text)
+                current_line_object["words"] = []
+                for word_index, word in enumerate(line.words):
+                    current_word_object = {}
+                    current_word_object["hocr_coordinates"] = word.coordinates
+                    current_word_object["text"] = word.ocr_text
+                    current_word_object["word_index"] = word_index
+                    current_line_object["words"].append(current_word_object)
+
+                current_line_object["line_index"] = line_index
+                final_object.append(current_line_object)
+                line_index += 1
+        # idx = self.eof2dict(df_dict, ocr, ocr_profile,[page.coordinates[2], page.coordinates[3], page.coordinates[2], page.coordinates[3]], idx, lidx)
+        return final_object
+
     def hocr2df(self, filename, ocr=None, ocr_profile=None, index=None, additional_profiles=[], mode_ocromore=False):
         """
         Metamethod to parse hocr/xml files to a dataframe

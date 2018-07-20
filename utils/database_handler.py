@@ -165,6 +165,16 @@ class DatabaseHandler(object):
 
         return dataframes
 
+    def fetch_ocromore_data(self, file):
+
+        ocromore_data_current = {}
+        ocromore_data_current_lines = HocrConverter().parse_ocromore_hocr(file)
+        ocromore_data_current['lines'] = ocromore_data_current_lines
+        ocromore_data_current['file_info'] = file
+
+        return ocromore_data_current
+
+
     def parse_to_db(self, delete_and_create_dir=True):
 
         if delete_and_create_dir is True:
