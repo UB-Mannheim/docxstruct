@@ -1,0 +1,3 @@
+[submodule "akf_corelib"]
+	path = akf_corelib
+	url = https://github.com/Hyper-Node/akf_corelib.git

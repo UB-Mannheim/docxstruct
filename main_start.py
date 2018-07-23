@@ -1,7 +1,10 @@
-# custom imports
-from configuration.configuration_handler import ConfigurationHandler
-from utils.database_handler import DatabaseHandler
+# TODO's
+# Utils folder which is redundant to python-ocr as an extra repository
 
+# custom imports
+from akf_corelib.configuration_handler import ConfigurationHandler
+from akf_corelib.database_handler import DatabaseHandler
+from lib.feature_extractor import FeatureExtractor
 
 # load configuration
 CODED_CONFIGURATION_PATH= './configuration/config_parse_hocr_js.conf'
@@ -11,6 +14,7 @@ config = config_handler.get_config()
 
 
 # Basic steps:
+feature_extractor = FeatureExtractor()
 dh = DatabaseHandler(dbdir="")
 dh.set_dirpos(tablename_pos=config.TABLENAME_POS,ocr_profile_pos=config.OCR_PROFILE_POS,\
               ocr_pos=config.OCR_POS,dbname_pos=config.DBPATH_POS)
@@ -26,8 +30,10 @@ for key in hocr_files:
         # fetch basic data for current file
         ocromore_data = dh.fetch_ocromore_data(file)
         # extract features from basic data
+        feature_extractor.extract_file_features(ocromore_data)
 
 
+        break
 
 # 3. line segmentation
 
