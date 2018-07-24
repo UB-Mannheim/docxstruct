@@ -52,7 +52,6 @@ class LineFeatures():
 class FeatureExtractor():
 
     def __init__(self):
-        print("asd")
         config_handler = ConfigurationHandler(first_init=False)
 
         self.config = config_handler.get_config()
@@ -70,8 +69,9 @@ class FeatureExtractor():
             current_line_features = self.extract_line_features(line)
             all_line_features.append(current_line_features)
 
+        ocromore_data['line_features'] = all_line_features
 
-        return all_line_features
+        return ocromore_data
 
 
     def extract_line_features(self, line):
