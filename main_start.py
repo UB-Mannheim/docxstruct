@@ -30,12 +30,12 @@ for key in hocr_files:
         # fetch basic data for current file
         ocromore_data = dh.fetch_ocromore_data(file)
         # extract features from basic data
-        feature_extractor.extract_file_features(ocromore_data)
-
+        features = feature_extractor.extract_file_features(ocromore_data)
+        ocromore_data['line_features'] = features
+        # line segmentation
 
         break
 
-# 3. line segmentation
 
 # 4. content classifictation
 
