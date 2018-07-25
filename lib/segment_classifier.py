@@ -5,6 +5,8 @@ import re
 import abc
 import sys
 import inspect
+import regex
+from akf_corelib.regex_util import RegexUtil as regu
 ##
 # notes to regex
 # re.match("c", "abcdef")    # No match
@@ -58,7 +60,7 @@ class SegmentHolder(object):
             super().__init__("Sitz")
 
         def match_start_condition(self, line, line_text, line_index, features):
-            match_sitz = re.search(r"^Sitz\s?:.+", line_text)
+            match_sitz = regu.fuzzy_search(r"^Sitz\s?:.+", line_text)
             if match_sitz is not None:
                 self.start_index = line_index
                 self.start_was_segmented = True
@@ -78,14 +80,15 @@ class SegmentHolder(object):
             super().__init__("Fernruf")
 
         def match_start_condition(self, line, line_text, line_index, features):
-            match_sitz = re.search(r"^Fernruf\s?:.+", line_text)
-            if match_sitz is not None:
+            match_start = regu.fuzzy_search(r"^Fernruf\s?:.+", line_text)
+
+            if match_start is not None:
                 self.start_index = line_index
                 self.start_was_segmented = True
                 return True
 
         def match_stop_condition(self, line, line_text, line_index, features):
-            match_stop = re.search(r"^Fernschreiber\s?:", line_text)
+            match_stop = regu.fuzzy_search(r"^Fernschreiber\s?:", line_text)
 
             if match_stop is not None:
                 self.stop_index = line_index -1
@@ -100,14 +103,15 @@ class SegmentHolder(object):
             super().__init__("Fernschreiber")
 
         def match_start_condition(self, line, line_text, line_index, features):
-            match_sitz = re.search(r"^Fernschreiber\s?:", line_text)
-            if match_sitz is not None:
+            match_start = regu.fuzzy_search(r"^Fernschreiber\s?:", line_text)
+
+            if match_start is not None:
                 self.start_index = line_index
                 self.start_was_segmented = True
                 return True
 
         def match_stop_condition(self, line, line_text, line_index, features):
-            match_stop = re.search(r"^Vorstand\s?:", line_text)
+            match_stop = regu.fuzzy_search(r"^Vorstand\s?:", line_text)
 
             if match_stop is not None:
                 self.stop_index = line_index -1
@@ -124,14 +128,16 @@ class SegmentHolder(object):
             super().__init__("Vorstand")
 
         def match_start_condition(self, line, line_text, line_index, features):
-            match_sitz = re.search(r"^Vorstand\s?:", line_text)
-            if match_sitz is not None:
+            match_start = regu.fuzzy_search(r"^Vorstand\s?:", line_text)
+
+
+            if match_start is not None:
                 self.start_index = line_index
                 self.start_was_segmented = True
                 return True
 
         def match_stop_condition(self, line, line_text, line_index, features):
-            match_stop = re.search(r"^Aufsichtsrat\s?:", line_text)
+            match_stop = regu.fuzzy_search(r"^Aufsichtsrat\s?:", line_text)
 
             if match_stop is not None:
                 self.stop_index = line_index -1
