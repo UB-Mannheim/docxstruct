@@ -37,38 +37,66 @@ class Segment(object):
         else:
             return False
 
-class SegmentHolder():
+    def is_start_segmented(self):
+        return self.start_was_segmented
+
+    def is_stop_segmented(self):
+        return self.stop_was_segmented
+
+class SegmentHolder(object):
+    """
+    This is a simple holder class for the adapted segments which
+    contain start and stop recognition conditions, wrapper should
+    be kept as simple as possible
+    """
+
     class SegmentSitz(Segment):
 
         def __init__(self):
             super().__init__("Sitz")
 
         def match_start_condition(self, line, line_text, line_index, features):
-            #current_text = "SOMET" + line_text
-            #match = re.match(r"Sitz\s?:.+", current_text)
-            #match2 = re.fullmatch(r"Sitz\s?:.+", current_text)
             match_sitz = re.search(r"^Sitz\s?:.+", line_text)
             if match_sitz is not None:
                 self.start_index = line_index
                 self.start_was_segmented = True
+                return True
 
+        def match_stop_condition(self, line, line_text, line_index, features):
+            if self.start_was_segmented is True:
+                self.stop_index = self.start_index
+                self.stop_was_segmented = True
+                return True
 
-
-
-class AllSegments():
+class AllSegments(object):
+    """
+    Accessor class for the segmentation of a file
+    """
 
     # idea indices mathed
-    index_field = [
-        False,
-        False,
-        True,
+    index_field = []
 
-    ]
-
-    def __init__(self):
+    def __init__(self, number_of_lines):
         # init all internal-classification classes
         self.my_classes = []
         self.instantiate_classification_classes()
+        self.initialize_index_field(number_of_lines)
+
+    def initialize_index_field(self, number_of_lines):
+        for ctr in range(0, number_of_lines):
+            self.index_field.append(False)
+
+    def update_index_field(self, segmentation_class):
+        segment_tag = segmentation_class.segment_tag
+        start_index = segmentation_class.start_index
+        stop_index = segmentation_class.stop_index
+
+        if start_index > stop_index:
+            stop_index = start_index
+
+        #stop_index = start_index+ 5 # just a test
+        self.index_field[start_index:stop_index] = [segment_tag] * (stop_index-start_index+1)
+        
 
     def instantiate_classification_classes(self):
         dict_test = SegmentHolder.__dict__.items()
@@ -83,14 +111,17 @@ class AllSegments():
     # overall function for iterating over all matches
     def match_my_segments(self, line, line_text, line_index, features):
         for segment_class in self.my_classes:
-            if segment_class.start_or_stop_segmented() is True:
-                continue
 
-            segment_class.match_start_condition(line, line_text, line_index, features)
-            segment_class.match_stop_condition(line, line_text, line_index, features)
+            start_updated = False
+            stop_updated = False
+            if not segment_class.is_start_segmented():
+                start_updated = segment_class.match_start_condition(line, line_text, line_index, features)
+            if not segment_class.is_stop_segmented():
+                stop_updated = segment_class.match_stop_condition(line, line_text, line_index, features)
 
-
-
+            if start_updated or stop_updated:
+                # there was a change -> update the indices fields
+                self.update_index_field(segment_class)
 
 
 
@@ -111,9 +142,9 @@ class SegmentClassifier():
 
 
     def classify_file_segments(self, ocromore_data):
-        all_file_segments = AllSegments()
         lines = ocromore_data['lines']
         feats = ocromore_data['line_features']
+        all_file_segments = AllSegments(len(lines))
 
 
 
