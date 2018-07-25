@@ -51,6 +51,8 @@ class SegmentHolder(object):
     """
 
     class SegmentSitz(Segment):
+        # example recognition line:
+        # Sitz: (20a) Peine, Gerhardstr. 10.
 
         def __init__(self):
             super().__init__("Sitz")
@@ -67,6 +69,77 @@ class SegmentHolder(object):
                 self.stop_index = self.start_index
                 self.stop_was_segmented = True
                 return True
+
+    class SegmentFernruf(Segment):
+        # example recognition:
+        # Fernruf: Peine 26 41, 26 09 und \n 2741, \n Grossilsede 5 41.
+
+        def __init__(self):
+            super().__init__("Fernruf")
+
+        def match_start_condition(self, line, line_text, line_index, features):
+            match_sitz = re.search(r"^Fernruf\s?:.+", line_text)
+            if match_sitz is not None:
+                self.start_index = line_index
+                self.start_was_segmented = True
+                return True
+
+        def match_stop_condition(self, line, line_text, line_index, features):
+            match_stop = re.search(r"^Fernschreiber\s?:", line_text)
+
+            if match_stop is not None:
+                self.stop_index = line_index -1
+                self.stop_was_segmented = True
+                return True
+
+    class SegmentFernschreiber(Segment):
+        # example recognition:
+        # Fernruf: Peine 26 41, 26 09 und \n 2741, \n Grossilsede 5 41.
+
+        def __init__(self):
+            super().__init__("Fernschreiber")
+
+        def match_start_condition(self, line, line_text, line_index, features):
+            match_sitz = re.search(r"^Fernschreiber\s?:", line_text)
+            if match_sitz is not None:
+                self.start_index = line_index
+                self.start_was_segmented = True
+                return True
+
+        def match_stop_condition(self, line, line_text, line_index, features):
+            match_stop = re.search(r"^Vorstand\s?:", line_text)
+
+            if match_stop is not None:
+                self.stop_index = line_index -1
+                self.stop_was_segmented = True
+                return True
+
+
+    class SegmentVorstand(Segment):
+        # example recognition:
+        # Vorstand: \n Diedrich Dännemark, Peine; \n Helmuth Heintzmann, Herne; \n ...
+
+
+        def __init__(self):
+            super().__init__("Vorstand")
+
+        def match_start_condition(self, line, line_text, line_index, features):
+            match_sitz = re.search(r"^Vorstand\s?:", line_text)
+            if match_sitz is not None:
+                self.start_index = line_index
+                self.start_was_segmented = True
+                return True
+
+        def match_stop_condition(self, line, line_text, line_index, features):
+            match_stop = re.search(r"^Aufsichtsrat\s?:", line_text)
+
+            if match_stop is not None:
+                self.stop_index = line_index -1
+                self.stop_was_segmented = True
+                return True
+
+
+
 
 class AllSegments(object):
     """
@@ -96,7 +169,7 @@ class AllSegments(object):
 
         #stop_index = start_index+ 5 # just a test
         self.index_field[start_index:stop_index] = [segment_tag] * (stop_index-start_index+1)
-        
+
 
     def instantiate_classification_classes(self):
         dict_test = SegmentHolder.__dict__.items()
@@ -154,9 +227,6 @@ class SegmentClassifier():
             current_index = current_line['line_index']
 
             all_file_segments.match_my_segments(current_line, current_text, current_index, current_features)
-
-
-            #print("asd")
 
         ocromore_data['segmentation'] = all_file_segments
         return ocromore_data
