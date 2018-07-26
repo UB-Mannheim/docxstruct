@@ -19,12 +19,16 @@ class Segment(object):
     def __init__(self, segment_tag):
         self.start_was_segmented = False
         self.stop_was_segmented = False
+        self.enabled = True
         self.start_line_index = -1
         self.stop_line_index = -1
         self.key_tag_cindex_start = -1 # character index of keytag: 'Vorstand: Name' ---> 0
         self.key_tag_cindex_stop = -1  # character index of keytag: 'Vorstand: Name' ---> 9
         self.restcontent_in_start_line = -1
         self.segment_tag = segment_tag
+
+    def disable(self):
+        self.enabled = False
 
     @abc.abstractmethod
     def match_start_condition(self, line, line_text, line_index, features):
@@ -152,6 +156,7 @@ class SegmentHolder(object):
 
         def __init__(self):
             super().__init__("Vorstand")
+            self.disable()
 
         def match_start_condition(self, line, line_text, line_index, features):
             match_start = regu.fuzzy_search(r"^Vorstand\s?:", line_text)
@@ -178,6 +183,7 @@ class SegmentHolder(object):
 
         def __init__(self):
             super().__init__("Aufsichtsrat")
+            self.disable()
 
         def match_start_condition(self, line, line_text, line_index, features):
             match_start = regu.fuzzy_search(r"^Aufsichtsrat\s?:", line_text)
@@ -197,6 +203,57 @@ class SegmentHolder(object):
                 self.stop_was_segmented = True
                 return True
 
+    class SegmentGruendung(Segment):
+        # example recognition:
+        # Gründung: 1858.
+
+
+        def __init__(self):
+            super().__init__("Gründung")
+            self.disable()
+
+        def match_start_condition(self, line, line_text, line_index, features):
+            match_start = regu.fuzzy_search(r"^Gründung\s?:", line_text)
+
+
+            if match_start is not None:
+                self.set_keytag_indices(match_start)
+                self.start_index = line_index
+                self.start_was_segmented = True
+                return True
+
+        def match_stop_condition(self, line, line_text, line_index, features):
+
+            if self.start_was_segmented and not self.stop_was_segmented:
+                self.stop_index = self.start_index
+                self.stop_was_segmented = True
+                return True
+
+    class SegmentTaetigkeitsgebiet(Segment):
+        # example recognition:
+        # Tätigkeitsgebiet: \n Erzeugung von: Erze, Kohle, Strom,
+
+        def __init__(self):
+            super().__init__("Tätigkeitsgebiet")
+            self.disable()
+
+        def match_start_condition(self, line, line_text, line_index, features):
+            match_start = regu.fuzzy_search(r"^Tätigkeitsgebiet\s?:", line_text)
+
+            if match_start is not None:
+                self.set_keytag_indices(match_start)
+                self.start_index = line_index
+                self.start_was_segmented = True
+                return True
+
+        def match_stop_condition(self, line, line_text, line_index, features):
+
+            match_stop = regu.fuzzy_search(r"^Haupterzeugnisse\s?:", line_text)
+
+            if match_stop is not None:
+                self.stop_index = line_index -1
+                self.stop_was_segmented = True
+                return True
 
 class AllSegments(object):
     """
@@ -241,6 +298,8 @@ class AllSegments(object):
     # overall function for iterating over all matches
     def match_my_segments(self, line, line_text, line_index, features):
         for segment_class in self.my_classes:
+            if not segment_class.enabled:
+                continue
 
             start_updated = False
             stop_updated = False
