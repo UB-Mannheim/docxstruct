@@ -19,8 +19,11 @@ class Segment(object):
     def __init__(self, segment_tag):
         self.start_was_segmented = False
         self.stop_was_segmented = False
-        self.start_index = -1
-        self.stop_index = -1
+        self.start_line_index = -1
+        self.stop_line_index = -1
+        self.key_tag_cindex_start = -1 # character index of keytag: 'Vorstand: Name' ---> 0
+        self.key_tag_cindex_stop = -1  # character index of keytag: 'Vorstand: Name' ---> 9
+        self.restcontent_in_start_line = -1
         self.segment_tag = segment_tag
 
     @abc.abstractmethod
@@ -30,7 +33,7 @@ class Segment(object):
     @abc.abstractmethod
     def match_stop_condition(self, line, line_text, line_index, features):
         # by default it's the same line as stop line as start line recognized
-        self.stop_index = self.start_index
+        self.stop_line_index = self.start_line_index
         return
 
     def start_or_stop_segmented(self):
@@ -44,6 +47,26 @@ class Segment(object):
 
     def is_stop_segmented(self):
         return self.stop_was_segmented
+
+    def set_keytag_indices(self, match):
+        """
+        From regex match set the keytag indices, takes 1st occurence,
+        also checks if there is restcontent besides the match in the
+        line to check
+        :param match: regex match
+        :return:
+        """
+        start_m = match.regs[0][0]
+        stop_m = match.regs[0][1]
+
+        self.key_tag_cindex_start = start_m
+        self.key_tag_cindex_stop = stop_m
+        len_match = stop_m-start_m
+        len_rest = len(match.string)-len_match
+        if len_rest > 0:
+            self.restcontent_in_start_line = len_rest
+
+
 
 class SegmentHolder(object):
     """
@@ -60,8 +83,9 @@ class SegmentHolder(object):
             super().__init__("Sitz")
 
         def match_start_condition(self, line, line_text, line_index, features):
-            match_sitz = regu.fuzzy_search(r"^Sitz\s?:.+", line_text)
+            match_sitz = regu.fuzzy_search(r"^Sitz\s?:", line_text)
             if match_sitz is not None:
+                self.set_keytag_indices(match_sitz)
                 self.start_index = line_index
                 self.start_was_segmented = True
                 return True
@@ -80,9 +104,10 @@ class SegmentHolder(object):
             super().__init__("Fernruf")
 
         def match_start_condition(self, line, line_text, line_index, features):
-            match_start = regu.fuzzy_search(r"^Fernruf\s?:.+", line_text)
+            match_start = regu.fuzzy_search(r"^Fernruf\s?:", line_text)
 
             if match_start is not None:
+                self.set_keytag_indices(match_start)
                 self.start_index = line_index
                 self.start_was_segmented = True
                 return True
@@ -106,6 +131,7 @@ class SegmentHolder(object):
             match_start = regu.fuzzy_search(r"^Fernschreiber\s?:", line_text)
 
             if match_start is not None:
+                self.set_keytag_indices(match_start)
                 self.start_index = line_index
                 self.start_was_segmented = True
                 return True
@@ -132,6 +158,7 @@ class SegmentHolder(object):
 
 
             if match_start is not None:
+                self.set_keytag_indices(match_start)
                 self.start_index = line_index
                 self.start_was_segmented = True
                 return True
@@ -144,7 +171,31 @@ class SegmentHolder(object):
                 self.stop_was_segmented = True
                 return True
 
+    class SegmentAufsichtsrat(Segment):
+        # example recognition:
+        # Aufsichtsrat: Julius Fromme, Peine, Vors.; \n Hermann Beermann, Hannover, 1.stellv. \n
 
+
+        def __init__(self):
+            super().__init__("Aufsichtsrat")
+
+        def match_start_condition(self, line, line_text, line_index, features):
+            match_start = regu.fuzzy_search(r"^Aufsichtsrat\s?:", line_text)
+
+
+            if match_start is not None:
+                self.set_keytag_indices(match_start)
+                self.start_index = line_index
+                self.start_was_segmented = True
+                return True
+
+        def match_stop_condition(self, line, line_text, line_index, features):
+            match_stop = regu.fuzzy_search(r"^Gründung\s?:", line_text)
+
+            if match_stop is not None:
+                self.stop_index = line_index -1
+                self.stop_was_segmented = True
+                return True
 
 
 class AllSegments(object):
@@ -167,8 +218,8 @@ class AllSegments(object):
 
     def update_index_field(self, segmentation_class):
         segment_tag = segmentation_class.segment_tag
-        start_index = segmentation_class.start_index
-        stop_index = segmentation_class.stop_index
+        start_index = segmentation_class.start_line_index
+        stop_index = segmentation_class.stop_line_index
 
         if start_index > stop_index:
             stop_index = start_index
