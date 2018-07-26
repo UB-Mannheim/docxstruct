@@ -1,12 +1,13 @@
 from akf_corelib.conditional_print import ConditionalPrint
 from akf_corelib.configuration_handler import ConfigurationHandler
 from akf_corelib.random import Random
+from akf_corelib.regex_util import RegexUtil as regu
+
 import re
 import abc
 import sys
 import inspect
 import regex
-from akf_corelib.regex_util import RegexUtil as regu
 ##
 # notes to regex
 # re.match("c", "abcdef")    # No match
@@ -85,18 +86,20 @@ class SegmentHolder(object):
 
         def __init__(self):
             super().__init__("Sitz")
+            # self.disable() # comment out to disable a segment
+
 
         def match_start_condition(self, line, line_text, line_index, features):
             match_sitz = regu.fuzzy_search(r"^Sitz\s?:", line_text)
             if match_sitz is not None:
                 self.set_keytag_indices(match_sitz)
-                self.start_index = line_index
+                self.start_line_index = line_index
                 self.start_was_segmented = True
                 return True
 
         def match_stop_condition(self, line, line_text, line_index, features):
             if self.start_was_segmented is True:
-                self.stop_index = self.start_index
+                self.stop_line_index = self.start_line_index
                 self.stop_was_segmented = True
                 return True
 
@@ -112,7 +115,7 @@ class SegmentHolder(object):
 
             if match_start is not None:
                 self.set_keytag_indices(match_start)
-                self.start_index = line_index
+                self.start_line_index = line_index
                 self.start_was_segmented = True
                 return True
 
@@ -120,7 +123,7 @@ class SegmentHolder(object):
             match_stop = regu.fuzzy_search(r"^Fernschreiber\s?:", line_text)
 
             if match_stop is not None:
-                self.stop_index = line_index -1
+                self.stop_line_index = line_index -1
                 self.stop_was_segmented = True
                 return True
 
@@ -136,7 +139,7 @@ class SegmentHolder(object):
 
             if match_start is not None:
                 self.set_keytag_indices(match_start)
-                self.start_index = line_index
+                self.start_line_index = line_index
                 self.start_was_segmented = True
                 return True
 
@@ -144,7 +147,7 @@ class SegmentHolder(object):
             match_stop = regu.fuzzy_search(r"^Vorstand\s?:", line_text)
 
             if match_stop is not None:
-                self.stop_index = line_index -1
+                self.stop_line_index = line_index -1
                 self.stop_was_segmented = True
                 return True
 
@@ -156,7 +159,6 @@ class SegmentHolder(object):
 
         def __init__(self):
             super().__init__("Vorstand")
-            self.disable()
 
         def match_start_condition(self, line, line_text, line_index, features):
             match_start = regu.fuzzy_search(r"^Vorstand\s?:", line_text)
@@ -164,7 +166,7 @@ class SegmentHolder(object):
 
             if match_start is not None:
                 self.set_keytag_indices(match_start)
-                self.start_index = line_index
+                self.start_line_index = line_index
                 self.start_was_segmented = True
                 return True
 
@@ -172,7 +174,7 @@ class SegmentHolder(object):
             match_stop = regu.fuzzy_search(r"^Aufsichtsrat\s?:", line_text)
 
             if match_stop is not None:
-                self.stop_index = line_index -1
+                self.stop_line_index = line_index -1
                 self.stop_was_segmented = True
                 return True
 
@@ -183,7 +185,7 @@ class SegmentHolder(object):
 
         def __init__(self):
             super().__init__("Aufsichtsrat")
-            self.disable()
+
 
         def match_start_condition(self, line, line_text, line_index, features):
             match_start = regu.fuzzy_search(r"^Aufsichtsrat\s?:", line_text)
@@ -191,7 +193,7 @@ class SegmentHolder(object):
 
             if match_start is not None:
                 self.set_keytag_indices(match_start)
-                self.start_index = line_index
+                self.start_line_index = line_index
                 self.start_was_segmented = True
                 return True
 
@@ -199,7 +201,7 @@ class SegmentHolder(object):
             match_stop = regu.fuzzy_search(r"^Gründung\s?:", line_text)
 
             if match_stop is not None:
-                self.stop_index = line_index -1
+                self.stop_line_index = line_index -1
                 self.stop_was_segmented = True
                 return True
 
@@ -210,7 +212,6 @@ class SegmentHolder(object):
 
         def __init__(self):
             super().__init__("Gründung")
-            self.disable()
 
         def match_start_condition(self, line, line_text, line_index, features):
             match_start = regu.fuzzy_search(r"^Gründung\s?:", line_text)
@@ -218,14 +219,14 @@ class SegmentHolder(object):
 
             if match_start is not None:
                 self.set_keytag_indices(match_start)
-                self.start_index = line_index
+                self.start_line_index = line_index
                 self.start_was_segmented = True
                 return True
 
         def match_stop_condition(self, line, line_text, line_index, features):
 
             if self.start_was_segmented and not self.stop_was_segmented:
-                self.stop_index = self.start_index
+                self.stop_line_index = self.start_line_index
                 self.stop_was_segmented = True
                 return True
 
@@ -235,14 +236,13 @@ class SegmentHolder(object):
 
         def __init__(self):
             super().__init__("Tätigkeitsgebiet")
-            self.disable()
 
         def match_start_condition(self, line, line_text, line_index, features):
             match_start = regu.fuzzy_search(r"^Tätigkeitsgebiet\s?:", line_text)
 
             if match_start is not None:
                 self.set_keytag_indices(match_start)
-                self.start_index = line_index
+                self.start_line_index = line_index
                 self.start_was_segmented = True
                 return True
 
@@ -251,7 +251,7 @@ class SegmentHolder(object):
             match_stop = regu.fuzzy_search(r"^Haupterzeugnisse\s?:", line_text)
 
             if match_stop is not None:
-                self.stop_index = line_index -1
+                self.stop_line_index = line_index -1
                 self.stop_was_segmented = True
                 return True
 
@@ -263,11 +263,12 @@ class AllSegments(object):
     # idea indices mathed
     index_field = []
 
-    def __init__(self, number_of_lines):
+    def __init__(self, number_of_lines, cpr):
         # init all internal-classification classes
         self.my_classes = []
         self.instantiate_classification_classes()
         self.initialize_index_field(number_of_lines)
+        self.cpr = cpr
 
     def initialize_index_field(self, number_of_lines):
         for ctr in range(0, number_of_lines):
@@ -275,14 +276,17 @@ class AllSegments(object):
 
     def update_index_field(self, segmentation_class):
         segment_tag = segmentation_class.segment_tag
-        start_index = segmentation_class.start_line_index
-        stop_index = segmentation_class.stop_line_index
+        start_line_index = segmentation_class.start_line_index
+        stop_line_index = segmentation_class.stop_line_index
 
-        if start_index > stop_index:
-            stop_index = start_index
+        if start_line_index == -1 or stop_line_index == -1:
+            return
+
+        if start_line_index > stop_line_index:
+            stop_index = start_line_index
 
         #stop_index = start_index+ 5 # just a test
-        self.index_field[start_index:stop_index] = [segment_tag] * (stop_index-start_index+1)
+        self.index_field[start_line_index:stop_line_index] = [segment_tag] * (stop_line_index-start_line_index+1)
 
 
     def instantiate_classification_classes(self):
@@ -333,9 +337,7 @@ class SegmentClassifier():
     def classify_file_segments(self, ocromore_data):
         lines = ocromore_data['lines']
         feats = ocromore_data['line_features']
-        all_file_segments = AllSegments(len(lines))
-
-
+        all_file_segments = AllSegments(len(lines), self.cpr)
 
         for current_line_index, current_line in enumerate(lines):
             current_features = feats[current_line_index]

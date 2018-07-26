@@ -41,7 +41,7 @@ for key in hocr_files:
         # output file synthesis
         # todo
         break
-
+    break
 
 # 4. content classifictation
 
