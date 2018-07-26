@@ -43,6 +43,3 @@ for key in hocr_files:
         break
     break
 
-# 4. content classifictation
-
-# 5. output synthesis (if not done in previous steps)

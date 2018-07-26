@@ -21,6 +21,7 @@ class Segment(object):
         self.start_was_segmented = False
         self.stop_was_segmented = False
         self.enabled = True
+        self.only = False
         self.start_line_index = -1
         self.stop_line_index = -1
         self.key_tag_cindex_start = -1 # character index of keytag: 'Vorstand: Name' ---> 0
@@ -30,6 +31,9 @@ class Segment(object):
 
     def disable(self):
         self.enabled = False
+
+    def set_only(self):
+        self.only = True
 
     @abc.abstractmethod
     def match_start_condition(self, line, line_text, line_index, features):
@@ -86,8 +90,8 @@ class SegmentHolder(object):
 
         def __init__(self):
             super().__init__("Sitz")
-            # self.disable() # comment out to disable a segment
-
+            # self.disable()  # comment out to disable a segment
+            # self.set_only() # comment out to segment this segments and other segments with that tag exclusively
 
         def match_start_condition(self, line, line_text, line_index, features):
             match_sitz = regu.fuzzy_search(r"^Sitz\s?:", line_text)
@@ -266,9 +270,23 @@ class AllSegments(object):
     def __init__(self, number_of_lines, cpr):
         # init all internal-classification classes
         self.my_classes = []
+        self.my_only_indices = []
         self.instantiate_classification_classes()
         self.initialize_index_field(number_of_lines)
         self.cpr = cpr
+        self.get_only_classes()
+
+    def get_only_classes(self):
+        """
+        Get all classes which are tagged by the only flag
+        :return:
+        """
+        for segment_index, segment_class in enumerate(self.my_classes):
+            if segment_class.only is True:
+                self.my_only_indices.append(segment_index)
+
+        if len(self.my_only_indices) >= 1:
+            self.cpr.print("using only indices, since there is at least one class set to only")
 
     def initialize_index_field(self, number_of_lines):
         for ctr in range(0, number_of_lines):
@@ -301,9 +319,21 @@ class AllSegments(object):
 
     # overall function for iterating over all matches
     def match_my_segments(self, line, line_text, line_index, features):
-        for segment_class in self.my_classes:
+
+        # 'only'-tagged class usage
+        using_only_classes = False
+        if len(self.my_only_indices) >= 1:
+            using_only_classes = True
+
+        # iterate classes
+        for segment_class_index, segment_class in enumerate(self.my_classes):
             if not segment_class.enabled:
                 continue
+
+            if using_only_classes:
+                # if at least one class was tagged only, skip all other classes who are only tagged
+                if segment_class_index not in self.my_only_indices:
+                    continue
 
             start_updated = False
             stop_updated = False
