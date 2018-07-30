@@ -83,17 +83,9 @@ class AllSegments(object):
         if start_line_index == stop_line_index:
             stop_line_index = start_line_index +1
 
-        oldlen = len(self.index_field)
-        #stop_index = start_index+ 5 # just a test
-
         for index in range(start_line_index,stop_line_index+1):
             self.index_field[index] = segment_tag
 
-        #self.index_field[start_line_index:stop_line_index] = [segment_tag] * (stop_line_index-start_line_index+1)
-
-        newlen = len(self.index_field)
-        if oldlen != newlen:
-            print("asd")
 
     def instantiate_classification_classes(self):
         dict_test = SegmentHolder.__dict__.items()

@@ -6,6 +6,7 @@ from akf_corelib.configuration_handler import ConfigurationHandler
 from akf_corelib.database_handler import DatabaseHandler
 from lib.feature_extractor import FeatureExtractor
 from lib.segment_classifier import SegmentClassifier
+from lib.output_analysis import OutputAnalysis
 
 # load configuration
 CODED_CONFIGURATION_PATH= './configuration/config_parse_hocr_js.conf'
@@ -17,6 +18,8 @@ config = config_handler.get_config()
 # Basic steps:
 feature_extractor = FeatureExtractor()
 segment_classifier = SegmentClassifier()
+output_analyzer = OutputAnalysis()
+
 
 dh = DatabaseHandler(dbdir="")
 dh.set_dirpos(tablename_pos=config.TABLENAME_POS,ocr_profile_pos=config.OCR_PROFILE_POS,\
@@ -30,6 +33,9 @@ hocr_files = dh.get_files()
 # main iteration loop
 for key in hocr_files:
     for file in hocr_files[key]:
+        if "msa_best" not in file.ocr_profile:
+            continue
+
         # fetch basic data for current file
         ocromore_data = dh.fetch_ocromore_data(file)
         # extract features from basic data
@@ -40,6 +46,10 @@ for key in hocr_files:
         # todo
         # output file synthesis
         # todo
+
+        # output analysis steps
+        output_analyzer.log_segmentation_simple(ocromore_data)
+
         break
     break
 
