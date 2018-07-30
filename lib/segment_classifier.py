@@ -47,6 +47,7 @@ class AllSegments(object):
         self.my_classes = []
         self.my_only_indices = []
         self.instantiate_classification_classes()
+        self.number_of_lines = number_of_lines
         self.initialize_index_field(number_of_lines)
         self.cpr = cpr
         self.get_only_classes()
@@ -78,9 +79,13 @@ class AllSegments(object):
         if start_line_index > stop_line_index:
             stop_index = start_line_index
 
+        oldlen = len(self.index_field)
         #stop_index = start_index+ 5 # just a test
         self.index_field[start_line_index:stop_line_index] = [segment_tag] * (stop_line_index-start_line_index+1)
 
+        newlen = len(self.index_field)
+        if oldlen != newlen:
+            print("asd")
 
     def instantiate_classification_classes(self):
         dict_test = SegmentHolder.__dict__.items()
@@ -113,9 +118,9 @@ class AllSegments(object):
             start_updated = False
             stop_updated = False
             if not segment_class.is_start_segmented():
-                start_updated = segment_class.match_start_condition(line, line_text, line_index, features)
+                start_updated = segment_class.match_start_condition(line, line_text, line_index, features, self.number_of_lines)
             if not segment_class.is_stop_segmented():
-                stop_updated = segment_class.match_stop_condition(line, line_text, line_index, features)
+                stop_updated = segment_class.match_stop_condition(line, line_text, line_index, features,self.number_of_lines)
 
             if start_updated or stop_updated:
                 # there was a change -> update the indices fields
