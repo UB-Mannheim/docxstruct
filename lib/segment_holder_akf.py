@@ -532,6 +532,6 @@ class SegmentHolder(object):
             match_stop = line_index == num_lines-2
 
             if match_stop is True:
-                self.stop_line_index = line_index
+                self.stop_line_index = line_index -1
                 self.stop_was_segmented = True
                 return True
