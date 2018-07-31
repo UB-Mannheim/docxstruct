@@ -49,7 +49,7 @@ for key in hocr_files:
         # todo
 
         # output analysis steps
-        ok = ocromore_data['segmentation'].correct_overlaps_index_field()
+        ok = ocromore_data['segmentation'].correct_overlaps_index_field(only_start_tags=True)
 
         output_analyzer.log_segmentation_simple(ocromore_data)
 

@@ -69,7 +69,7 @@ class AllSegments(object):
         for ctr in range(0, number_of_lines):
             self.index_field.append(False)
 
-    def correct_overlaps_index_field(self):
+    def correct_overlaps_index_field(self, only_start_tags=False):
         """
         Debugging function to correct areas which are overlapping with stop taq the next start tag
         Attention: This reinitializes (overwrites) the existing index field
@@ -85,6 +85,9 @@ class AllSegments(object):
                 continue
 
             self.update_index_field(segment_class, only_start_tags=True)
+
+        if only_start_tags is True:
+            return self
 
         # iterate again and update the stop tags in manner that they are only updated until the next start tag
         for segment_class_index, segment_class in enumerate(self.my_classes):
