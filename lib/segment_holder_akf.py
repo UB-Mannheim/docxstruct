@@ -220,7 +220,6 @@ class SegmentHolder(object):
     class SegmentSpezialitaeten(Segment):
         # example recognition:
         # Spezialitäten: \n Breitflanschträger ("'Peiner Träger"),
-        # todo this is very long content, check this and maybe do subclassification segments here, maybe subsegments
 
         def __init__(self):
             super().__init__("Spezialitäten")
@@ -236,12 +235,115 @@ class SegmentHolder(object):
 
         def match_stop_condition(self, line, line_text, line_index, features, num_lines):
 
-            match_stop = regu.fuzzy_search(r"^Grundkapital\s?:", line_text)
+            match_stop = regu.fuzzy_search(r"bung der Tochtergesellschaften\s?:", line_text)
+
+            if match_stop is not None:
+                self.stop_line_index = line_index - 2
+                self.stop_was_segmented = True
+                return True
+
+    class SegmentTochtergesellschaften(Segment):
+        # example recognition:
+        # Besitz- und Betriebsbeschreibung der Tochtergesellschaften: \n
+        # todo this is very long content, check this and maybe do subclassification segments here, maybe subsegments
+
+        def __init__(self):
+            super().__init__("Tochtergesellschaften")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+            match_start = regu.fuzzy_search(r"bung der Tochtergesellschaften\s?:", line_text)
+
+            if match_start is not None:
+                self.set_keytag_indices(match_start)
+                self.start_line_index = line_index
+                self.start_was_segmented = True
+                return True
+
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+
+            match_stop = regu.fuzzy_search(r"^Geschäftsjahr\s?:", line_text)
 
             if match_stop is not None:
                 self.stop_line_index = line_index -1
                 self.stop_was_segmented = True
                 return True
+
+    class SegmentGeschaeftsjahr(Segment):
+        # example recognition:
+        # Geschäftsjahr:  Kalenderjahr....
+
+        def __init__(self):
+            super().__init__("Geschäftsjahr")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+            match_start = regu.fuzzy_search(r"^Geschäftsjahr\s?:", line_text)
+
+            if match_start is not None:
+                self.set_keytag_indices(match_start)
+                self.start_line_index = line_index
+                self.start_was_segmented = True
+                return True
+
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+
+            match_stop = regu.fuzzy_search(r"^Stimmrecht d.+ Aktien.+\s?:", line_text)
+
+            if match_stop is not None:
+                self.stop_line_index = line_index - 1
+                self.stop_was_segmented = True
+                return True
+
+
+    class SegmentStimmrechtAktien(Segment):
+        # example recognition:
+        # Stimmrecht d. Aktien i.d.H. -V: \n Je nom. DM 100. - = 1 Stimme.
+
+        def __init__(self):
+            super().__init__("StimmrechtAktien")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+            match_start = regu.fuzzy_search(r"^Stimmrecht d.+ Aktien.+\s?:", line_text)
+
+            if match_start is not None:
+                self.set_keytag_indices(match_start)
+                self.start_line_index = line_index
+                self.start_was_segmented = True
+                return True
+
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+
+            match_stop = regu.fuzzy_search(r"^Zahlstellen\s?:", line_text)
+
+            if match_stop is not None:
+                self.stop_line_index = line_index - 1
+                self.stop_was_segmented = True
+                return True
+
+    class SegmentZahlstellen(Segment):
+        # example recognition:
+        # Zahlstellen: \n Gesellschaftskasse; ...
+
+        def __init__(self):
+            super().__init__("Zahlstellen")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+            match_start = regu.fuzzy_search(r"^Zahlstellen\s?:", line_text)
+
+            if match_start is not None:
+                self.set_keytag_indices(match_start)
+                self.start_line_index = line_index
+                self.start_was_segmented = True
+                return True
+
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+
+            match_stop = regu.fuzzy_search(r"^Grundkapital\s?:", line_text)
+
+            if match_stop is not None:
+                self.stop_line_index = line_index - 1
+                self.stop_was_segmented = True
+                return True
+
 
     class SegmentGrundkapital(Segment):
         # example recognition:
