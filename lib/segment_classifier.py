@@ -34,16 +34,15 @@ class SegmentClassifier(object):
         ocromore_data['segmentation'] = all_file_segments
         return ocromore_data
 
+
 class AllSegments(object):
     """
     Accessor class for the segmentation of a file
     """
 
-    # idea indices mathed
-    index_field = []
-
     def __init__(self, number_of_lines, cpr):
         # init all internal-classification classes
+        self.index_field = []
         self.my_classes = []
         self.my_only_indices = []
         self.instantiate_classification_classes()
@@ -65,10 +64,39 @@ class AllSegments(object):
             self.cpr.print("using only indices, since there is at least one class set to only")
 
     def initialize_index_field(self, number_of_lines):
+        self.index_field = []
+
         for ctr in range(0, number_of_lines):
             self.index_field.append(False)
 
-    def update_index_field(self, segmentation_class):
+    def correct_overlaps_index_field(self):
+        """
+        Debugging function to correct areas which are overlapping with stop taq the next start tag
+        Attention: This reinitializes (overwrites) the existing index field
+        :return:
+        """
+
+        # reinitialize index field
+        self.initialize_index_field(self.number_of_lines)
+
+        # iterate classes - this not using only classes cause it's more for bigger sets of classes
+        for segment_class_index, segment_class in enumerate(self.my_classes):
+            if not segment_class.enabled:
+                continue
+
+            self.update_index_field(segment_class, only_start_tags=True)
+
+        # iterate again and update the stop tags in manner that they are only updated until the next start tag
+        for segment_class_index, segment_class in enumerate(self.my_classes):
+            if not segment_class.enabled:
+                continue
+
+            self.update_stop_tags(segment_class)
+
+
+        return self
+
+    def update_index_field(self, segmentation_class, only_start_tags=False):
         segment_tag = segmentation_class.segment_tag
         start_line_index = segmentation_class.start_line_index
         stop_line_index = segmentation_class.stop_line_index
@@ -83,9 +111,25 @@ class AllSegments(object):
         if start_line_index == stop_line_index:
             stop_line_index = start_line_index +1
 
-        for index in range(start_line_index,stop_line_index+1):
+        # special option for debugging purposes
+        if only_start_tags is True:
+            stop_line_index = start_line_index
+
+        for index in range(start_line_index, stop_line_index+1):
             self.index_field[index] = segment_tag
 
+    def update_stop_tags(self, segmentation_class):
+        segment_tag = segmentation_class.segment_tag
+        start_line_index = segmentation_class.start_line_index
+        stop_line_index = segmentation_class.stop_line_index
+
+        for index in range(start_line_index+1, stop_line_index+1):
+
+            # update until the next defined field appeads
+            if self.index_field[index] is not False:
+                break
+
+            self.index_field[index] = segment_tag
 
     def instantiate_classification_classes(self):
         dict_test = SegmentHolder.__dict__.items()

@@ -610,13 +610,12 @@ class SegmentHolder(object):
                 return True
 
 
-    class SegmentAusDenGewinnUndVerlustrechnungen(Segment):
+    class SegmentAusGewinnVerlustrechnungen(Segment):
         # example recognition:
         # Aus den Gewinn- und Verlust- \n rechnungen \n Löhne und Gehälter 568 620
 
-
         def __init__(self):
-            super().__init__("AusDenGewinnUndVerlustrechnungen")
+            super().__init__("AusGewinnVerlustrechnungen")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines):
             # matches ss or ß (group is not capturing)

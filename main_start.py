@@ -35,9 +35,10 @@ for key in hocr_files:
     for file in hocr_files[key]:
         if "msa_best" not in file.ocr_profile:
             continue
-
         # fetch basic data for current file
         ocromore_data = dh.fetch_ocromore_data(file)
+        print("Checking file:", ocromore_data['file_info'].path)
+
         # extract features from basic data
         ocromore_data = feature_extractor.extract_file_features(ocromore_data)
         # line segmentation
@@ -48,8 +49,9 @@ for key in hocr_files:
         # todo
 
         # output analysis steps
+        ok = ocromore_data['segmentation'].correct_overlaps_index_field()
+
         output_analyzer.log_segmentation_simple(ocromore_data)
 
-        break
     break
 

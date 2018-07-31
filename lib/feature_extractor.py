@@ -171,7 +171,7 @@ class FeatureExtractor():
 
 
         if counter_chars == 0:
-            self.cpr.printw("no chars shouldn't happen, no recognizion")
+            self.cpr.printw("no chars shouldn't happen, no recognition")
             return False
 
         special_chars_ratio = counter_special_chars/ counter_chars
