@@ -104,8 +104,13 @@ class AllSegments(object):
         start_line_index = segmentation_class.start_line_index
         stop_line_index = segmentation_class.stop_line_index
 
-        if start_line_index == -1 or stop_line_index == -1:
+        # if no start condition set - no update
+        if start_line_index == -1:
             return
+
+        # if start condition but no endcondition just update 1st line
+        if stop_line_index == -1:
+            stop_line_index = start_line_index + 1
 
         # fix some index glitches
         if start_line_index > stop_line_index:
