@@ -244,6 +244,32 @@ class SegmentHolder(object):
                 self.stop_was_segmented = True
                 return True
 
+    class SegmentBeteiligungen(Segment):
+        # example recognition:
+        # Beteiligungen: \n Hamburger Verkehrsmittel-Werbung ...
+
+        def __init__(self):
+            super().__init__("Beteiligungen")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+            match_start = regu.fuzzy_search(r"^Beteiligungen\s?:", line_text)
+
+            if match_start is not None:
+                self.set_keytag_indices(match_start)
+                self.start_line_index = line_index
+                self.start_was_segmented = True
+                return True
+
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+
+            match_stop = None # regu.fuzzy_search(r"^Haupterzeugnisse\s?:", line_text)
+
+            if match_stop is not None:
+                self.stop_line_index = line_index -1
+                self.stop_was_segmented = True
+                return True
+
+
     class SegmentHaupterzeugnisse(Segment):
         # example recognition:
         # Haupterzeugnisse: \n Form- und Stabstahl.
