@@ -36,7 +36,8 @@ class OutputAnalysis(object):
         for line_index, line in enumerate(lines):
             segment_tag = str(index_field[line_index])
             line_text = line['text']
-            final_text_lines.append(segment_tag+seperator+line_text)
+            final_line_text = ('%-30s%-30s' % (segment_tag, seperator+line_text))
+            final_text_lines.append(final_line_text)
 
         self.write_array_to_root("segmentation_simple/", final_text_lines, ocromore_data)
 
