@@ -24,20 +24,17 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Sitz")
             # self.disable()  # comment out to disable a segment
-            # self.set_only() # comment out to segment this segments and other segments with that tag exclusively
+            self.set_only()  # comment out to segment this segments and other segments with that tag exclusively
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines):
-            match_sitz = regu.fuzzy_search(r"^Sitz\s?:", line_text)
+            match_sitz, errors = regu.fuzzy_search(r"^Sitz\s?:", line_text)
             if match_sitz is not None:
-                self.set_keytag_indices(match_sitz)
-                self.start_line_index = line_index
-                self.start_was_segmented = True
+                self.do_match_work(True, match_sitz, line_index, errors)
                 return True
 
         def match_stop_condition(self, line, line_text, line_index, features, num_lines):
             if self.start_was_segmented is True:
-                self.stop_line_index = self.start_line_index
-                self.stop_was_segmented = True
+                self.do_match_work(False, None, self.start_line_index, 0)
                 return True
 
     class SegmentFernruf(Segment):
@@ -250,25 +247,18 @@ class SegmentHolder(object):
 
         def __init__(self):
             super().__init__("Beteiligungen")
+            self.set_only()
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines):
-            match_start = regu.fuzzy_search(r"^Beteiligungen\s?:", line_text)
-
-            if match_start is not None:
-                self.set_keytag_indices(match_start)
-                self.start_line_index = line_index
-                self.start_was_segmented = True
+            match_sitz, errors = regu.fuzzy_search(r"^Beteiligungen\s?:", line_text)
+            if match_sitz is not None:
+                self.do_match_work(True, match_sitz, line_index, errors)
                 return True
 
         def match_stop_condition(self, line, line_text, line_index, features, num_lines):
-
-            match_stop = None # regu.fuzzy_search(r"^Haupterzeugnisse\s?:", line_text)
-
-            if match_stop is not None:
-                self.stop_line_index = line_index -1
-                self.stop_was_segmented = True
+            if self.start_was_segmented is True:
+                self.do_match_work(False, None, line_index -1, 0)
                 return True
-
 
     class SegmentHaupterzeugnisse(Segment):
         # example recognition:
