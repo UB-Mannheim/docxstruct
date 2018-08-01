@@ -250,7 +250,7 @@ class SegmentHolder(object):
             self.set_only()
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines):
-            match_sitz, errors = regu.fuzzy_search(r"^Beteiligungen\s?:", line_text)
+            match_sitz, errors = regu.fuzzy_search(r"^Beteiligungen:", line_text)
             if match_sitz is not None:
                 self.do_match_work(True, match_sitz, line_index, errors)
                 return True
