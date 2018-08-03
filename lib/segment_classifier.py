@@ -24,12 +24,14 @@ class SegmentClassifier(object):
         feats = ocromore_data['line_features']
         all_file_segments = AllSegments(len(lines), self.cpr)
 
+        prev_line = None
         for current_line_index, current_line in enumerate(lines):
             current_features = feats[current_line_index]
             current_text = current_line['text']
             current_index = current_line['line_index']
 
-            all_file_segments.match_my_segments(current_line, current_text, current_index, current_features)
+            all_file_segments.match_my_segments(current_line, current_text, current_index, current_features, prev_line)
+            prev_line = current_line
 
         ocromore_data['segmentation'] = all_file_segments
         return ocromore_data
@@ -150,7 +152,7 @@ class AllSegments(object):
 
 
     # overall function for iterating over all matches
-    def match_my_segments(self, line, line_text, line_index, features):
+    def match_my_segments(self, line, line_text, line_index, features, prev_line):
 
         # 'only'-tagged class usage
         using_only_classes = False
@@ -170,9 +172,9 @@ class AllSegments(object):
             start_updated = False
             stop_updated = False
             if not segment_class.is_start_segmented():
-                start_updated = segment_class.match_start_condition(line, line_text, line_index, features, self.number_of_lines)
+                start_updated = segment_class.match_start_condition(line, line_text, line_index, features, self.number_of_lines, prev_line)
             if not segment_class.is_stop_segmented():
-                stop_updated = segment_class.match_stop_condition(line, line_text, line_index, features,self.number_of_lines)
+                stop_updated = segment_class.match_stop_condition(line, line_text, line_index, features,self.number_of_lines, prev_line)
 
             if start_updated or stop_updated:
                 # there was a change -> update the indices fields

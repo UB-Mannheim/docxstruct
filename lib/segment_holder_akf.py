@@ -26,7 +26,7 @@ class SegmentHolder(object):
             # self.disable()  # comment out to disable a segment
             # self.set_only() # comment out to segment this segments and other segments with that tag exclusively
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_sitz = regu.fuzzy_search(r"^Sitz\s?:", line_text)
             if match_sitz is not None:
                 self.set_keytag_indices(match_sitz)
@@ -34,7 +34,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             if self.start_was_segmented is True:
                 self.stop_line_index = self.start_line_index
                 self.stop_was_segmented = True
@@ -47,7 +47,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Fernruf")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start = regu.fuzzy_search(r"^Fernruf\s?:", line_text)
 
             if match_start is not None:
@@ -56,7 +56,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_stop = regu.fuzzy_search(r"^Fernschreiber\s?:", line_text)
 
             if match_stop is not None:
@@ -71,7 +71,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Fernschreiber")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start = regu.fuzzy_search(r"^Fernschreiber\s?:", line_text)
 
             if match_start is not None:
@@ -80,7 +80,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_stop = regu.fuzzy_search(r"^Vorstand\s?:", line_text)
 
             if match_stop is not None:
@@ -97,7 +97,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Vorstand")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start = regu.fuzzy_search(r"^Vorstand\s?:", line_text)
 
 
@@ -107,7 +107,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_stop = regu.fuzzy_search(r"^Aufsichtsrat\s?:", line_text)
 
             if match_stop is not None:
@@ -124,7 +124,7 @@ class SegmentHolder(object):
             super().__init__("Aufsichtsrat")
 
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start = regu.fuzzy_search(r"^Aufsichtsrat\s?:", line_text)
 
 
@@ -134,7 +134,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_stop = regu.fuzzy_search(r"^Gründung\s?:", line_text)
 
             if match_stop is not None:
@@ -150,7 +150,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Gründung")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start = regu.fuzzy_search(r"^Gründung\s?:", line_text)
 
 
@@ -160,7 +160,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             if self.start_was_segmented and not self.stop_was_segmented:
                 self.stop_line_index = self.start_line_index
@@ -174,7 +174,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Tätigkeitsgebiet")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start = regu.fuzzy_search(r"^Tätigkeitsgebiet\s?:", line_text)
 
             if match_start is not None:
@@ -183,7 +183,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = regu.fuzzy_search(r"^Haupterzeugnisse\s?:", line_text)
 
@@ -201,8 +201,9 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Werke")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
-            match_start = regu.fuzzy_search(r"^Werke\s?:", line_text)
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            # error number set to one cause very short statement
+            match_start = regu.fuzzy_search(r"^(?:Werke|Werke in)\s?:", line_text, err_number=1)
 
             if match_start is not None:
                 self.set_keytag_indices(match_start)
@@ -210,7 +211,38 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+
+            match_stop = None # regu.fuzzy_search(r"^Haupterzeugnisse\s?:", line_text)
+
+            if match_stop is not None:
+                self.stop_line_index = line_index -1
+                self.stop_was_segmented = True
+                return True
+
+
+    class SegmentInlaendischeBeteiligungsGesellsch(Segment):
+        # example recognition:
+        # Wichtigste inländische Beteili- \n gungsgesellschaften
+
+        def __init__(self):
+            super().__init__("Inl.Beteiligungsgesellschaften")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            prev_text = ""
+            if prev_line is not None:
+                prev_text = prev_line['text']
+            combi_text = prev_text + line_text
+
+            match_start = regu.fuzzy_search(r"inländische Beteiligung.+gesellschaft.+:", combi_text)
+
+            if match_start is not None:
+                self.set_keytag_indices(match_start)
+                self.start_line_index = line_index-1
+                self.start_was_segmented = True
+                return True
+
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = None # regu.fuzzy_search(r"^Haupterzeugnisse\s?:", line_text)
 
@@ -226,7 +258,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("NamhafteBeteiligungen")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start = regu.fuzzy_search(r"^Namhafte Beteiligungen\s?:", line_text)
 
             if match_start is not None:
@@ -235,7 +267,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = None # regu.fuzzy_search(r"^Haupterzeugnisse\s?:", line_text)
 
@@ -251,7 +283,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Beteiligungen")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start = regu.fuzzy_search(r"^Beteiligungen\s?:", line_text)
 
             if match_start is not None:
@@ -260,7 +292,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = None # regu.fuzzy_search(r"^Haupterzeugnisse\s?:", line_text)
 
@@ -277,7 +309,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Haupterzeugnisse")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start = regu.fuzzy_search(r"^Haupterzeugnisse\s?:", line_text)
 
             if match_start is not None:
@@ -286,7 +318,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = regu.fuzzy_search(r"^Spezialitäten\s?:", line_text)
 
@@ -302,7 +334,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Spezialitäten")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start = regu.fuzzy_search(r"^Spezialitäten\s?:", line_text)
 
             if match_start is not None:
@@ -311,7 +343,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = regu.fuzzy_search(r"bung der Tochtergesellschaften\s?:", line_text)
 
@@ -328,7 +360,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Tochtergesellschaften")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start = regu.fuzzy_search(r"bung der Tochtergesellschaften\s?:", line_text)
 
             if match_start is not None:
@@ -337,7 +369,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = regu.fuzzy_search(r"^Geschäftsjahr\s?:", line_text)
 
@@ -353,7 +385,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Geschäftsjahr")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start = regu.fuzzy_search(r"^Geschäftsjahr\s?:", line_text)
 
             if match_start is not None:
@@ -362,7 +394,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = regu.fuzzy_search(r"^Stimmrecht d.+ Aktien.+\s?:", line_text)
 
@@ -379,7 +411,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("StimmrechtAktien")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start = regu.fuzzy_search(r"^Stimmrecht d.+ Aktien.+\s?:", line_text)
 
             if match_start is not None:
@@ -388,7 +420,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = regu.fuzzy_search(r"^Zahlstellen\s?:", line_text)
 
@@ -404,7 +436,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Zahlstellen")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start = regu.fuzzy_search(r"^Zahlstellen\s?:", line_text)
 
             if match_start is not None:
@@ -413,7 +445,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = regu.fuzzy_search(r"^Grundkapital\s?:", line_text)
 
@@ -430,7 +462,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Grundkapital")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start = regu.fuzzy_search(r"^Grundkapital\s?:", line_text)
 
             if match_start is not None:
@@ -439,7 +471,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = regu.fuzzy_search(r"^Börsennotiz\s?:", line_text)
 
@@ -456,7 +488,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Börsennotiz")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start = regu.fuzzy_search(r"^Börsennotiz\s?:", line_text)
 
             if match_start is not None:
@@ -465,7 +497,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = regu.fuzzy_search(r"^Ordnungsn.+Aktien\s?:", line_text)
 
@@ -481,7 +513,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("OrdnungsNrAktien")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start = regu.fuzzy_search(r"^Ordnungsn.+Aktien\s?:", line_text)
 
             if match_start is not None:
@@ -490,7 +522,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = regu.fuzzy_search(r"^Stückelung\s?:", line_text)
 
@@ -506,7 +538,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Stückelung")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start = regu.fuzzy_search(r"^Stückelung\s?:", line_text)
 
             if match_start is not None:
@@ -515,7 +547,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = regu.fuzzy_search(r"^Grossaktionär\s?:", line_text)
 
@@ -531,7 +563,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Großaktionär")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             # matches ss or ß (group is not capturing)
             match_start = regu.fuzzy_search(r"Gro(?:ss|ß)aktionär\s?:", line_text)
 
@@ -541,7 +573,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = regu.fuzzy_search(r"^Anleihe\s?:", line_text)
 
@@ -558,7 +590,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Anleihe")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             # matches ss or ß (group is not capturing)
             match_start = regu.fuzzy_search(r"Anleihe\s?:", line_text)
 
@@ -568,7 +600,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = regu.fuzzy_search(r"^Aktienkurse\s?:", line_text)
 
@@ -584,7 +616,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Aktienkurse")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             # matches ss or ß (group is not capturing)
             match_start = regu.fuzzy_search(r"Aktienkurse\s?:", line_text)
 
@@ -594,7 +626,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = regu.fuzzy_search(r"^Dividenden(?:.+)Stammaktien\s?:", line_text)
 
@@ -611,7 +643,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("DividendenAufStammaktien")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             # matches ss or ß (group is not capturing)
             match_start = regu.fuzzy_search(r"^Dividenden(?:.+)Stammaktien\s?:", line_text)
 
@@ -621,7 +653,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = regu.fuzzy_search(r"^Zur Geschäftslage?:", line_text)
 
@@ -639,7 +671,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("ZurGeschäftslage")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             # matches ss or ß (group is not capturing)
             match_start = regu.fuzzy_search(r"^Zur Geschäftslage\s?:", line_text)
 
@@ -649,7 +681,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = regu.fuzzy_search(r"^Aus den Bilanzen\s?:?", line_text)
 
@@ -668,7 +700,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("AusDenBilanzen")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             # matches ss or ß (group is not capturing)
             match_start = regu.fuzzy_search(r"^Aus d(?:en)? Bilanzen\s?:", line_text)
 
@@ -678,7 +710,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             match_stop = regu.fuzzy_search(r"^Aus d(?:en)? Gewinn- und Verlust- \s?:?", line_text)
 
@@ -695,7 +727,7 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("AusGewinnVerlustrechnungen")
 
-        def match_start_condition(self, line, line_text, line_index, features, num_lines):
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             # matches ss or ß (group is not capturing)
             match_start = regu.fuzzy_search(r"^Aus d(?:en)? Gewinn- und Verlust- ", line_text)
 
@@ -705,7 +737,7 @@ class SegmentHolder(object):
                 self.start_was_segmented = True
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
 
             #match_stop = regu.fuzzy_search(r"^Aus d(?:en)? Gewinn- und Verlust- \s?:?", line_text)
             match_stop = line_index == num_lines-2

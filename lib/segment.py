@@ -29,11 +29,11 @@ class Segment(object):
         self.only = True
 
     @abc.abstractmethod
-    def match_start_condition(self, line, line_text, line_index, features, num_lines):
+    def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
         return
 
     @abc.abstractmethod
-    def match_stop_condition(self, line, line_text, line_index, features, num_lines):
+    def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
         # by default it's the same line as stop line as start line recognized
         self.stop_line_index = self.start_line_index
         return

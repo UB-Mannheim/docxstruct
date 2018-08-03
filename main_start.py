@@ -32,6 +32,9 @@ hocr_files = dh.get_files()
 
 # main iteration loop
 for key in hocr_files:
+    if "1961" not in key:
+        continue
+
     for file in hocr_files[key]:
         if "msa_best" not in file.ocr_profile:
             continue
@@ -53,5 +56,4 @@ for key in hocr_files:
 
         output_analyzer.log_segmentation_simple(ocromore_data)
 
-    break
 
