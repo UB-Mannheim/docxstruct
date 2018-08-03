@@ -185,7 +185,7 @@ class SegmentHolder(object):
             super().__init__("Werke")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-            match_start, errors = regu.fuzzy_search(r"^Werke\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"^Werke\s?:", line_text, err_number=1)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
@@ -520,17 +520,18 @@ class SegmentHolder(object):
                 self.do_match_work(False, match_stop, line_index-1, errors)
                 return True
 
-    class SegmentAnleihe(Segment):
+    class SegmentAnleihen(Segment):
         # example recognition:
         # Anleihe: \n 6 % Amerika-Anleihe von 1928/48
         # todo this has subentry 'Emissionsbeitrag:'
+        # Anleihen: \n ... (todo is anleihen anleihe same?)
 
         def __init__(self):
-            super().__init__("Anleihe")
+            super().__init__("Anleihen")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             # matches ss or ß (group is not capturing)
-            match_start, errors = regu.fuzzy_search(r"Anleihe\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"Anleihe(?:n?)\s?:", line_text)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
@@ -547,6 +548,7 @@ class SegmentHolder(object):
     class SegmentAktienkurse(Segment):
         # example recognition:
         # Aktienkurse: \n ultimo 1948 19,5 % \n <table> ...
+
 
         def __init__(self):
             super().__init__("Aktienkurse")
@@ -567,9 +569,34 @@ class SegmentHolder(object):
                 self.do_match_work(False, match_stop, line_index-1, errors)
                 return True
 
+    class SegmentDividenden(Segment):
+        # example recognition:
+        # Dividenden: \n 1949/50: 0% (this is for the table dividenden!)
+        # todo think about combining with dividenden auf stammaktien
+
+        def __init__(self):
+            super().__init__("Dividenden")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Dividenden\s?:$", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+
+            match_stop, errors = regu.fuzzy_search(r"^Zur Geschäftslage?:", line_text)
+
+            if match_stop is not None:
+                self.do_match_work(False, match_stop, line_index-1, errors)
+                return True
+
+
     class SegmentDividendenAStammaktien(Segment):
         # example recognition:
         # Dividenden auf Stammaktien: \n 1948/49: 0% \n 1950: 0% ...
+        # todo think about combining with dividenden
 
 
         def __init__(self):
