@@ -22,7 +22,7 @@ class SegmentClassifier(object):
     def classify_file_segments(self, ocromore_data):
         lines = ocromore_data['lines']
         feats = ocromore_data['line_features']
-        all_file_segments = AllSegments(len(lines), self.cpr)
+        all_file_segments = AllSegments(len(lines), self.cpr, self.config)
 
         prev_line = None
         for current_line_index, current_line in enumerate(lines):
@@ -42,7 +42,7 @@ class AllSegments(object):
     Accessor class for the segmentation of a file
     """
 
-    def __init__(self, number_of_lines, cpr):
+    def __init__(self, number_of_lines, cpr, config):
         # init all internal-classification classes
         self.index_field = []
         self.my_classes = []
@@ -51,6 +51,7 @@ class AllSegments(object):
         self.number_of_lines = number_of_lines
         self.initialize_index_field(number_of_lines)
         self.cpr = cpr
+        self.config = config
         self.get_only_classes()
 
     def get_only_classes(self):
@@ -171,10 +172,31 @@ class AllSegments(object):
 
             start_updated = False
             stop_updated = False
-            if not segment_class.is_start_segmented():
-                start_updated = segment_class.match_start_condition(line, line_text, line_index, features, self.number_of_lines, prev_line)
-            if not segment_class.is_stop_segmented():
-                stop_updated = segment_class.match_stop_condition(line, line_text, line_index, features,self.number_of_lines, prev_line)
+
+
+            if self.config.REMATCH_START_CONDITION_UNTIL_ZERO_ERROR is True:
+                # do segmenting until error rate of zero is reached
+                start_error_number_before_match = segment_class.get_start_error_number()
+                if not segment_class.is_start_segmented() or segment_class.get_start_error_number() >= 1:
+                    start_updated = segment_class.match_start_condition(line, line_text, line_index, features,
+                                                                        self.number_of_lines, prev_line)
+                    start_error_number_after_match = segment_class.get_start_error_number()
+                    if start_error_number_before_match <= start_error_number_after_match:
+                        # only update if the recognized number is lower
+                        start_updated = False
+                if not segment_class.is_stop_segmented() or segment_class.get_stop_error_number() >= 1:
+                    stop_updated = segment_class.match_stop_condition(line, line_text, line_index, features,
+                                                                      self.number_of_lines, prev_line)
+            else:
+                # just hit the first match and stop matching then -> standard  mode
+                if not segment_class.is_start_segmented():
+                    start_updated = segment_class.match_start_condition(line, line_text, line_index, features,
+                                                                        self.number_of_lines, prev_line)
+                if not segment_class.is_stop_segmented():
+                    stop_updated = segment_class.match_stop_condition(line, line_text, line_index, features,
+                                                                      self.number_of_lines, prev_line)
+
+
 
             if start_updated or stop_updated:
                 # there was a change -> update the indices fields

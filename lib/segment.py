@@ -13,6 +13,9 @@ class Segment(object):
     def __init__(self, segment_tag):
         self.start_was_segmented = False
         self.stop_was_segmented = False
+        self.start_error_number = 0
+        self.stop_error_number = 0
+
         self.enabled = True
         self.only = False
         self.start_line_index = -1
@@ -27,6 +30,29 @@ class Segment(object):
 
     def set_only(self):
         self.only = True
+
+    def set_start_error_number(self, start_error_number):
+        self.start_error_number = start_error_number
+
+    def get_start_error_number(self):
+        return self.start_error_number
+
+    def set_stop_error_number(self, stop_error_number):
+        self.stop_error_number = stop_error_number
+
+    def get_stop_error_number(self):
+        return self.stop_error_number
+
+    def do_match_work(self, start_or_stop, match, line_index, match_errors):
+        if start_or_stop is True: # it's a start match
+            self.set_keytag_indices(match) # this separates keytag from rest of line
+            self.start_line_index = line_index
+            self.start_was_segmented = True
+            self.set_start_error_number(match_errors)
+        else:
+            self.stop_line_index = line_index
+            self.stop_was_segmented = True
+            self.set_stop_error_number(match_errors)
 
     @abc.abstractmethod
     def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
