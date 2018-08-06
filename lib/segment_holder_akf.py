@@ -53,6 +53,35 @@ class SegmentHolder(object):
                 return True
 
 
+    class SegmentBeratendeMitglieder(Segment):
+        # example recognition:
+        # Beratende Mitglieder: \n H.S.A.Hartog, Hamburg;
+
+        def __init__(self):
+            super().__init__("BeratendeMitglieder")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Beratende Mitglieder\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
+
+    class SegmentSekretaere(Segment):
+        # example recognition:
+        # Sekretäre: \n C. Zwagerman, London; ...
+
+        def __init__(self):
+            super().__init__("Sekretäre")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Sekretäre\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
     class SegmentFernruf(Segment):
         # example recognition:
         # Fernruf: Peine 26 41, 26 09 und \n 2741, \n Grossilsede 5 41.
