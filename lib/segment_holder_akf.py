@@ -484,6 +484,23 @@ class SegmentHolder(object):
                 self.do_match_work(False, match_stop, line_index-1, errors)
                 return True
 
+
+    class SegmentWKN(Segment):
+        # example recognition:
+        # Wertpapier-Kenn-Nr.: \n 692100
+
+        def __init__(self):
+            super().__init__("Wertpapier-Kenn-Nr")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Wertpapier-Kenn-Nr\.\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
+
+
     class SegmentOrdnungsnrDaktien(Segment):
         # example recognition:
         # Ordnungsnr.d.Aktien: 620200.
@@ -668,6 +685,7 @@ class SegmentHolder(object):
     class SegmentBezugsrechte(Segment):
         # example recognition:
         # Bezugsrechte: \n 1955: i.V. 4:1 zu 130 %; Abschlag 20 %
+
 
         def __init__(self):
             super().__init__("Bezugsrechte")
