@@ -38,6 +38,21 @@ class SegmentHolder(object):
                 self.do_match_work(False, None, self.start_line_index, 0)
                 return True
 
+    class SegmentVerwaltung(Segment):
+        # example recognition:
+        # Verwaltung: 8045 Ismaning bei Mün- \n chen ...
+
+        def __init__(self):
+            super().__init__("Verwaltung")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Verwaltung\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
+
     class SegmentFernruf(Segment):
         # example recognition:
         # Fernruf: Peine 26 41, 26 09 und \n 2741, \n Grossilsede 5 41.
@@ -129,6 +144,22 @@ class SegmentHolder(object):
             if match_stop is not None:
                 self.do_match_work(False, match_stop, line_index-1, errors)
                 return True
+
+    class SegmentArbeitnehmervertreter(Segment):
+        # example recognition:
+        # Arbeitnehmervertreter: \n Martin Birkel, Ehrang;
+
+
+        def __init__(self):
+            super().__init__("Arbeitnehmervertreter")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Arbeitnehmervertreter\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
 
     class SegmentGruendung(Segment):
         # example recognition:
@@ -497,6 +528,22 @@ class SegmentHolder(object):
                 self.do_match_work(False, match_stop, line_index-1, errors)
                 return True
 
+    class SegmentAktionaere(Segment):
+        # example recognition:
+        # Aktionäre: \n Bankhaus August Lenz & Co., München
+
+        def __init__(self):
+            super().__init__("Aktionäre")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Aktionäre\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
+
+
     class SegmentGrossaktionaer(Segment):
         # example recognition:
         # Grossaktionär: \n Vereinigte Industrie-Unternehmungen
@@ -618,6 +665,19 @@ class SegmentHolder(object):
                 self.do_match_work(False, match_stop, line_index-1, errors)
                 return True
 
+    class SegmentBezugsrechte(Segment):
+        # example recognition:
+        # Bezugsrechte: \n 1955: i.V. 4:1 zu 130 %; Abschlag 20 %
+
+        def __init__(self):
+            super().__init__("Bezugsrechte")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Bezugsrechte\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
 
     class SegmentZurGeschaeftslage(Segment):
         # example recognition:
