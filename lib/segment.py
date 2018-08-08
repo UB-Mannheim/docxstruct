@@ -60,8 +60,8 @@ class Segment(object):
 
     @abc.abstractmethod
     def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-        # by default it's the same line as stop line as start line recognized
-        self.stop_line_index = self.start_line_index
+        # by default don't assign any stop condition, leave at initial value
+        # self.stop_line_index = self.start_line_index
         return
 
     def start_or_stop_segmented(self):
