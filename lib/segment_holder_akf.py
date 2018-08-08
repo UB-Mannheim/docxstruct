@@ -83,6 +83,20 @@ class SegmentHolder(object):
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 
+    class SegmentGeschaeftsleitung(Segment):
+        # example recognition:
+        # Geschäftsleitung: \n Harry Heltzer, Vors. des A. -R.; \n
+
+        def __init__(self):
+            super().__init__("Geschäftsleitung")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Geschäftsleitung\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
 
     class SegmentGeneraldirektion(Segment):
         # example recognition:
@@ -824,6 +838,38 @@ class SegmentHolder(object):
 
             if match_stop is not None:
                 self.do_match_work(False, match_stop, line_index-1, errors)
+                return True
+
+    class SegmentKonsolBilanzen(Segment):
+        # example recognition:
+        # Aus den konsolidierten Bilanzen \n 31.12.1971 5 7 31.12.1972
+
+        def __init__(self):
+            super().__init__("AusDenKonsolidiertenBilanzen")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Aus.+konsolidiert.+Bilanzen\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
+    class SegmentKonsolGuVRechnungen(Segment):
+        # example recognition:
+        # Aus den konsolidierten Gewinn- \n und Verlustrechnungen
+
+        def __init__(self):
+            super().__init__("Konsolid.Gewinn-u.Verlustrechnungen")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            if prev_line is None or False:
+                return
+            prev_text = prev_line['text']
+            combined_text = prev_text + line_text
+            match_start, errors = regu.fuzzy_search(r"Aus.+konsolidiert.+(?:G|g)ewinn.+(?:V|v)erlustrechnungen", combined_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
                 return True
 
     class SegmentBezugsrechte(Segment):
