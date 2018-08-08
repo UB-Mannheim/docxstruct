@@ -32,7 +32,7 @@ hocr_files = dh.get_files()
 
 # main iteration loop
 for key in hocr_files:
-    if "1973" not in key:
+    if "Extra" not in key:
         continue
 
     for file in hocr_files[key]:

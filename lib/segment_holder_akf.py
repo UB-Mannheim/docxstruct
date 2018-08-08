@@ -41,12 +41,13 @@ class SegmentHolder(object):
     class SegmentVerwaltung(Segment):
         # example recognition:
         # Verwaltung: 8045 Ismaning bei Mün- \n chen ...
+        # Verwaltungsrat:
 
         def __init__(self):
             super().__init__("Verwaltung")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-            match_start, errors = regu.fuzzy_search(r"^Verwaltung\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"^Verwaltung(:?srat\s?|\s?):", line_text)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
@@ -82,16 +83,16 @@ class SegmentHolder(object):
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 
-    class SegmentFernruf(Segment):
+    class SegmentTelefon(Segment):
         # example recognition:
-        # Fernruf: Peine 26 41, 26 09 und \n 2741, \n Grossilsede 5 41.
-
+        # Fernruf: Pei  ne 26 41, 26 09 und \n 2741, \n Grossilsede 5 41.
+        # Telefon: (02 21)Sa.-Nr. 772 11
         def __init__(self):
-            super().__init__("Fernruf")
+            super().__init__("Telefon/Fernruf")
 
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-            match_start, errors = regu.fuzzy_search(r"^Fernruf\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"^(?:Fernruf|Telefon)\s?:", line_text)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
@@ -108,13 +109,14 @@ class SegmentHolder(object):
 
     class SegmentFernschreiber(Segment):
         # example recognition:
-        # Fernruf: Peine 26 41, 26 09 und \n 2741, \n Grossilsede 5 41.
+        # Fernschreiber : ...
+        # Telex: 8 885 706 (telex is same)
 
         def __init__(self):
             super().__init__("Fernschreiber")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-            match_start, errors = regu.fuzzy_search(r"^Fernschreiber\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"^(?:Fernschreiber|Telex)\s?:", line_text)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
@@ -210,6 +212,54 @@ class SegmentHolder(object):
             if self.start_was_segmented and not self.stop_was_segmented:
                 self.do_match_work(False, None, self.start_line_index, 0)
                 return True
+
+    class SegmentFilialen(Segment):
+        # example recognition:
+        # Filialen: \n Aachen / Ahlen (Westf.) / Altena (Westf.)/ ...
+
+        def __init__(self):
+            super().__init__("Filialen")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Filialen\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
+    class SegmentAuslandsvertretungen(Segment):
+        # example recognition:
+        # Auslandsvertretungen: \n Beirut (für Nah- und Mittel-Ost), Buenos \n ...
+
+        def __init__(self):
+            super().__init__("Auslandsvertretungen")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Auslandsvertretungen\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
+    class SegmentKommanditeUndBank(Segment):
+        # example recognition:
+        # Kommandite und verbundene  \n Bank: \n von der Heydt-Kersten & Söhne, Wupper- \n
+
+        def __init__(self):
+            super().__init__("KommanditeUndBank")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            if prev_line is None or False:
+                return
+            prev_text = prev_line['text']
+            combined_text = prev_text + line_text
+            match_start, errors = regu.fuzzy_search(r"^Kommandite.+und.+Bank.+:", combined_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
+
 
     class SegmentTaetigkeitsgebiet(Segment):
         # example recognition:
