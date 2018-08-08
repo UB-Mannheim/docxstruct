@@ -230,7 +230,7 @@ class SegmentHolder(object):
                 return True
 
         def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-            match_stop, errors = regu.fuzzy_search(r"^Gründung\s?:", line_text)
+            match_stop, errors = regu.fuzzy_search(r"^Gründung\s?:", line_text, err_number=1)
 
             if match_stop is not None:
                 self.do_match_work(False, match_stop, line_index-1, errors)
@@ -399,38 +399,19 @@ class SegmentHolder(object):
                 self.do_match_work(False, match_stop, line_index-1, 0)
                 return True
 
-    class SegmentNamhafteBeteiligungen(Segment):
-        # example recognition:
-        # Namhafte Beteiligungen: \n Stahlwerke Brüninghaus GmbH ...
-
-        def __init__(self):
-            super().__init__("NamhafteBeteiligungen")
-
-        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-            match_start, errors = regu.fuzzy_search(r"^Namhafte Beteiligungen\s?:", line_text)
-
-            if match_start is not None:
-                self.do_match_work(True, match_start, line_index, errors)
-                return True
-
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-
-            match_stop = None # regu.fuzzy_search(r"^Haupterzeugnisse\s?:", line_text)
-
-            if match_stop is not None:
-                self.do_match_work(False, match_stop, line_index-1, 0)
-                return True
-
     class SegmentBeteiligungen(Segment):
         # example recognition:
         # Beteiligungen: \n Hamburger Verkehrsmittel-Werbung ...
+        # Namhafte Beteiligungen: \n Stahlwerke Brüninghaus GmbH ...
+        # Wesentliche Beteiligungen: \n Stahlwerke Brüninghaus GmbH ...
+        # Maßgebliche Beteiligungen: \n Stahlwerke Brüninghaus GmbH ...
 
         def __init__(self):
             super().__init__("Beteiligungen")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             # reduced error number to prevent confusion with "Beteiligung:"
-            match_sitz, errors = regu.fuzzy_search(r"^Beteiligungen\s?:", line_text, err_number=1)
+            match_sitz, errors = regu.fuzzy_search(r"^(?:.?|Namhafte|Wesentliche|Maßgebliche)\s?Beteiligungen\s?:", line_text, err_number=1)
             if match_sitz is not None:
                 self.do_match_work(True, match_sitz, line_index, errors)
                 return True
