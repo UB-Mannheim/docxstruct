@@ -83,6 +83,52 @@ class SegmentHolder(object):
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 
+
+    class SegmentGeneraldirektion(Segment):
+        # example recognition:
+        # Generaldirektion: \n Niccolä Gioia; Francesco Rota
+
+        def __init__(self):
+            super().__init__("Generaldirektion")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Generaldirektion\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
+    class SegmentDirektionskomitee(Segment):
+        # example recognition:
+        # Direktionskomitee: \n Es besteht aus der Generaldirektion und
+
+        def __init__(self):
+            super().__init__("Direktionskomitee")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Direktionskomitee\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
+
+    class SegmentVizegeneraldirektoren(Segment):
+        # example recognition:
+        # Vizegeneraldirektoren: \n Riccardo Chivino; Umberto Cuttica; Sanzio \n
+
+        def __init__(self):
+            super().__init__("Vizegeneraldirektoren")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Vizegeneraldirektoren\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
+
+
     class SegmentTelefon(Segment):
         # example recognition:
         # Fernruf: Pei  ne 26 41, 26 09 und \n 2741, \n Grossilsede 5 41.
@@ -622,6 +668,25 @@ class SegmentHolder(object):
 
             if match_stop is not None:
                 self.do_match_work(False, match_stop, line_index-1, errors)
+                return True
+
+
+    class SegmentRechteVorzugsaktien(Segment):
+        # example recognition:
+        # Besondere Rechte der Vorzugs- \n aktien: \n Vorzugsdividende bis 10 % des Nennbetra- ..
+
+        def __init__(self):
+            super().__init__("RechteVorzugsaktien")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            if prev_line is None or False:
+                return
+            prev_text = prev_line['text']
+            combined_text = prev_text + line_text
+            match_start, errors = regu.fuzzy_search(r"Rechte.+Vorzugs.+(?:a|A)ktien.+:", combined_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
                 return True
 
     class SegmentAktionaere(Segment):
