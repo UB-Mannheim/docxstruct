@@ -8,7 +8,7 @@ from akf_corelib.database_handler import DatabaseHandler
 from lib.feature_extractor import FeatureExtractor
 from lib.segment_classifier import SegmentClassifier
 from lib.output_analysis import OutputAnalysis
-from lib.additional_information import fetch_additional_information, write_excel_to_json
+from lib.additional_info_handler import AdditionalInfoHandler
 
 # load configuration
 CODED_CONFIGURATION_PATH= './configuration/config_parse_hocr_js.conf'
@@ -19,6 +19,7 @@ config = config_handler.get_config()
 
 # Basic steps:
 feature_extractor = FeatureExtractor()
+add_info_handler = AdditionalInfoHandler()
 segment_classifier = SegmentClassifier()
 output_analyzer = OutputAnalysis()
 
@@ -34,20 +35,21 @@ hocr_files = dh.get_files()
 
 # main iteration loop
 for key in hocr_files:
-    if "Extra" not in key:
+    if "Extra" in key:
         continue
 
     for file in hocr_files[key]:
-        if "default" not in file.ocr_profile:
+        if "msa_best" not in file.ocr_profile:
             continue
-        # fetch additional information for current file
-        if config.ADDITIONAL_INFORMATION:
-            additional_info = fetch_additional_information(file,config.INPUT_ADDINFOPATH,idxcol=config.IDXCOL,parse_cols=config.PARSE_COLS, filetype = config.INPUT_ADDINFOFILETPYE)
-        else: additional_info = None
-        # fetch basic data for current file
-        ocromore_data = dh.fetch_ocromore_data(file,additional_info=additional_info)
 
         print("Checking file:", ocromore_data['file_info'].path)
+
+
+        # fetch additional information for current file (if toggled in info)
+        additional_info = add_info_handler.fetch_additional_information_simple(file)
+
+        # fetch basic data for current file
+        ocromore_data = dh.fetch_ocromore_data(file,additional_info=additional_info)
 
         # extract features from basic data
         ocromore_data = feature_extractor.extract_file_features(ocromore_data)
