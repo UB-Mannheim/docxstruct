@@ -91,14 +91,21 @@ class AdditionalInfoHandler(object):
         elif filetype == "json":
             with open(file, "r") as add_info_file:
                 infos = json.load(add_info_file)
+
             for possible_db_or_tablenames in reversed(list(infos.keys())):
-                if possible_db_or_tablenames not in current_db_and_table.values():
-                    del infos[possible_db_or_tablenames]
+                possible_db_or_tablenames_orig = possible_db_or_tablenames # unchanged name
+
+                if self.config.ADD_INFO_SIMPLIFIED_NAME_COMPARISON:
+                    psplit = possible_db_or_tablenames.split("-")
+                    possible_db_or_tablenames = psplit[0]
+
+                if possible_db_or_tablenames not in current_db_and_table['table']:
+                    del infos[possible_db_or_tablenames_orig]
                 else:
                     for db_and_table_id, current_db_and_tablename in current_db_and_table.items():
                         if possible_db_or_tablenames == current_db_and_tablename:
-                            infos[db_and_table_id] = infos[possible_db_or_tablenames]
-                            del infos[possible_db_or_tablenames]
+                            infos[db_and_table_id] = infos[possible_db_or_tablenames_orig]
+                            del infos[possible_db_or_tablenames_orig]
         else:
             return None
         return infos
