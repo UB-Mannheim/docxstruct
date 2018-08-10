@@ -40,7 +40,7 @@ class SegmentClassifier(object):
 
     def adapt_non_explicit_indices(self, all_file_segments):
         # todo conntinue here friday
-
+        print("asd")
 
 class AllSegments(object):
     """
