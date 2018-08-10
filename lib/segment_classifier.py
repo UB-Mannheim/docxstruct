@@ -33,8 +33,13 @@ class SegmentClassifier(object):
             all_file_segments.match_my_segments(current_line, current_text, current_index, current_features, prev_line)
             prev_line = current_line
 
+        # todo add flag here ?
+        self.adapt_non_explicit_indices(all_file_segments)
         ocromore_data['segmentation'] = all_file_segments
         return ocromore_data
+
+    def adapt_non_explicit_indices(self, all_file_segments):
+        # todo conntinue here friday
 
 
 class AllSegments(object):
@@ -184,9 +189,16 @@ class AllSegments(object):
                     if start_error_number_before_match <= start_error_number_after_match:
                         # only update if the recognized number is lower
                         start_updated = False
+
+                stop_error_number_before_match = segment_class.get_stop_error_number()
                 if not segment_class.is_stop_segmented() or segment_class.get_stop_error_number() >= 1:
                     stop_updated = segment_class.match_stop_condition(line, line_text, line_index, features,
                                                                       self.number_of_lines, prev_line)
+                    stop_error_number_after_match = segment_class.get_stop_error_number()
+                    if stop_error_number_before_match <= stop_error_number_after_match:
+                        # only update if the recognized number is lower
+                        stop_updated = False
+
             else:
                 # just hit the first match and stop matching then -> standard  mode
                 if not segment_class.is_start_segmented():

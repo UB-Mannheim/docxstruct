@@ -56,13 +56,13 @@ class Segment(object):
 
     @abc.abstractmethod
     def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-        return
+        return # 0  # return number 0 for indication undefined, don't return this in overwritten conditions
 
     @abc.abstractmethod
     def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
         # by default don't assign any stop condition, leave at initial value
         # self.stop_line_index = self.start_line_index
-        return
+        return # 0  # return number 0 for indication undefined, don't return this in overwritten conditions
 
     def start_or_stop_segmented(self):
         if self.start_was_segmented or self.stop_was_segmented:
