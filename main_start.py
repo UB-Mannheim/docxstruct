@@ -42,14 +42,15 @@ for key in hocr_files:
         if "msa_best" not in file.ocr_profile:
             continue
 
-        print("Checking file:", ocromore_data['file_info'].path)
 
 
-        # fetch additional information for current file (if toggled in info)
-        additional_info = add_info_handler.fetch_additional_information_simple(file)
 
         # fetch basic data for current file
         ocromore_data = dh.fetch_ocromore_data(file,additional_info=additional_info)
+        print("Checking file:", ocromore_data['file_info'].path)
+
+        # fetch additional information for current file (if toggled in info)
+        additional_info = add_info_handler.fetch_additional_information_simple(file)
 
         # extract features from basic data
         ocromore_data = feature_extractor.extract_file_features(ocromore_data)
