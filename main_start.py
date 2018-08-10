@@ -1,4 +1,5 @@
 # TODO's
+# TODO-(jk): ocromore_data -> hocr_data -> data?
 # Utils folder which is redundant to python-ocr as an extra repository
 
 # custom imports
@@ -7,6 +8,7 @@ from akf_corelib.database_handler import DatabaseHandler
 from lib.feature_extractor import FeatureExtractor
 from lib.segment_classifier import SegmentClassifier
 from lib.output_analysis import OutputAnalysis
+from lib.additional_information import fetch_additional_information, write_excel_to_json
 
 # load configuration
 CODED_CONFIGURATION_PATH= './configuration/config_parse_hocr_js.conf'
@@ -36,10 +38,15 @@ for key in hocr_files:
         continue
 
     for file in hocr_files[key]:
-        if "msa_best" not in file.ocr_profile:
+        if "default" not in file.ocr_profile:
             continue
+        # fetch additional information for current file
+        if config.ADDITIONAL_INFORMATION:
+            additional_info = fetch_additional_information(file,config.INPUT_ADDINFOPATH,idxcol=config.IDXCOL,parse_cols=config.PARSE_COLS, filetype = config.INPUT_ADDINFOFILETPYE)
+        else: additional_info = None
         # fetch basic data for current file
-        ocromore_data = dh.fetch_ocromore_data(file)
+        ocromore_data = dh.fetch_ocromore_data(file,additional_info=additional_info)
+
         print("Checking file:", ocromore_data['file_info'].path)
 
         # extract features from basic data
