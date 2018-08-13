@@ -17,7 +17,7 @@ class AdditionalInfoHandler(object):
         self.config = config_handler.get_config()
         self.cpr = ConditionalPrint(self.config.PRINT_ADDITIONAL_INFO_HANDLER, self.config.PRINT_EXCEPTION_LEVEL,
                                     self.config.PRINT_WARNING_LEVEL, leading_tag=self.__class__.__name__)
-        self.cpr.print("init segment classifier")
+        self.cpr.print("init additional info handler")
 
 
     def write_excel_to_json(self, fileinfo,filepath,filetype,idxcol=None,parse_cols=None,page=0):

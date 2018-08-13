@@ -33,11 +33,6 @@ class SegmentHolder(object):
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-            if self.start_was_segmented is True:
-                self.do_match_work(False, None, self.start_line_index, 0)
-                return True
-
     class SegmentVerwaltung(Segment):
         # example recognition:
         # Verwaltung: 8045 Ismaning bei Mün- \n chen ...
@@ -209,7 +204,6 @@ class SegmentHolder(object):
         # example recognition:
         # Arbeitnehmervertreter: \n Martin Birkel, Ehrang;
 
-
         def __init__(self):
             super().__init__("Arbeitnehmervertreter")
 
@@ -220,11 +214,9 @@ class SegmentHolder(object):
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 
-
     class SegmentGruendung(Segment):
         # example recognition:
         # Gründung: 1858.
-
 
         def __init__(self):
             super().__init__("Gründung")
@@ -234,12 +226,6 @@ class SegmentHolder(object):
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
-                return True
-
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-
-            if self.start_was_segmented and not self.stop_was_segmented:
-                self.do_match_work(False, None, self.start_line_index, 0)
                 return True
 
     class SegmentFilialen(Segment):
@@ -445,15 +431,6 @@ class SegmentHolder(object):
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
-
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-
-            match_stop, errors = regu.fuzzy_search(r"^Grundkapital\s?:", line_text)
-
-            if match_stop is not None:
-                self.do_match_work(False, match_stop, line_index-1, errors)
-                return True
-
 
     class SegmentGrundkapital(Segment):
         # example recognition:
@@ -740,14 +717,4 @@ class SegmentHolder(object):
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
-                return True
-
-        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-
-            #match_stop = regu.fuzzy_search(r"^Aus d(?:en)? Gewinn- und Verlust- \s?:?", line_text)
-            match_stop = line_index == num_lines-2
-
-            if match_stop is True:
-                self.do_match_work(False, match_stop, line_index-1, 0)
-
                 return True
