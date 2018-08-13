@@ -2,6 +2,7 @@ from akf_corelib.conditional_print import ConditionalPrint
 from akf_corelib.configuration_handler import ConfigurationHandler
 from akf_corelib.filehandler import FileHandler as fh
 
+import re
 
 class OutputAnalysis(object):
     """
@@ -20,6 +21,12 @@ class OutputAnalysis(object):
         self.cpr.print("init output analysis")
         self.analysis_root = self.config.OUTPUT_ROOT_PATH + "/analysis/"
         self.clear_output_folder()
+
+        # starts with at least X or more alphabetical chars (and arbitrary amount of other chars)  [to exclude years 1999: xxx and so on]
+        # has then a ':' has optional trailing chars (get tag as reference group)
+        self.regex_advanced_segtest = re.compile(r"(?P<TAG>^[a-zA-Z]{2,}.*):.*")
+        # more simple for verification, arbitrary chars then : then some other chars
+        self.regex_simple_segtest = re.compile(r"(?P<TAG>^.+):.*")
 
     def clear_output_folder(self):
         """
@@ -47,6 +54,45 @@ class OutputAnalysis(object):
         :param ocromore_data:
         :return:
         """
+        self.create_test_segmentation(ocromore_data)
+
+
+    def create_test_segmentation(self, ocromore_data):
+        """
+        Creates a simple segmentation dictionary for this file
+        which assumes each leading characters before a ':' are
+        segmentation tags
+        :param ocromore_data:
+        :return:
+        """
+        ADVANCED_MODE = False # True is preferred
+        segmentation_dict = {}
+
+        lines = ocromore_data['lines']
+        previous_line_text = ""
+
+        for line in lines:
+            line_text = line['text']
+            if ADVANCED_MODE is True:
+                result = self.regex_advanced_segtest.search(line_text)
+            else:
+                result = self.regex_simple_segtest.search(line_text)
+
+            if result is not None:
+                tag = result.group('TAG')  # get the tag
+
+                len_pre_line = len(previous_line_text)
+                if len_pre_line >=1 and \
+                        previous_line_text[len_pre_line-1] == "-":
+                    tag = previous_line_text[0:len_pre_line-1] + tag  # add previous line text to tag (w/o dash)
+                if tag in segmentation_dict.keys():
+                    segmentation_dict[tag] = segmentation_dict[tag]+1
+                else:
+                    segmentation_dict[tag] = 1
+            previous_line_text = line_text.strip()
+
+        print("asd")
+
     def write_array_to_root(self, base_path, text_lines, ocromore_data):
         """
         Writes a line-array to the base path in root path with ocromore data file and db name

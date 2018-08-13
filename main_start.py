@@ -48,9 +48,8 @@ for key in hocr_files:
         additional_info = add_info_handler.fetch_additional_information_simple(file)
 
         # fetch basic data for current file
-        ocromore_data = dh.fetch_ocromore_data(file,additional_info=additional_info)
+        ocromore_data = dh.fetch_ocromore_data(file, additional_info=additional_info)
         cpr.print("Checking file:", ocromore_data['file_info'].path)
-
 
         # extract features from basic data
         ocromore_data = feature_extractor.extract_file_features(ocromore_data)
@@ -63,5 +62,6 @@ for key in hocr_files:
 
         # output analysis steps
         output_analyzer.log_segmentation_simple(ocromore_data)
+        output_analyzer.log_unsegmentated(ocromore_data)
 
 
