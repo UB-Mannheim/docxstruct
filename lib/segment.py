@@ -76,6 +76,14 @@ class Segment(object):
     def is_stop_segmented(self):
         return self.stop_was_segmented
 
+    def set_stop_segmented(self, stop_index):
+        self.stop_line_index = stop_index
+        self.stop_was_segmented = True
+
+    def set_start_segmented(self, start_index):
+        self.start_line_index = start_index
+        self.start_was_segmented = True
+
     def set_keytag_indices(self, match):
         """
         From regex match set the keytag indices, takes 1st occurence,

@@ -33,14 +33,22 @@ class SegmentClassifier(object):
             all_file_segments.match_my_segments(current_line, current_text, current_index, current_features, prev_line)
             prev_line = current_line
 
-        # todo add flag here ?
-        self.adapt_non_explicit_indices(all_file_segments)
+        if self.config.MATCH_UNTIL_NEXT_START_THEN_STOP_CONDITION:
+            self.adapt_non_explicit_indices(all_file_segments)
+        else:
+            all_file_segments.correct_overlaps_index_field(only_start_tags=True)
+
         ocromore_data['segmentation'] = all_file_segments
         return ocromore_data
 
     def adapt_non_explicit_indices(self, all_file_segments):
-        # todo conntinue here friday
-        print("asd")
+
+        # update start and explicit stop tags first
+        all_file_segments.correct_overlaps_index_field(only_start_tags=False)
+
+        # fill undefined stop regions until next start region
+        all_file_segments.fill_start_index_until_next_stop()
+
 
 class AllSegments(object):
     """
@@ -106,6 +114,34 @@ class AllSegments(object):
 
 
         return self
+
+    def fill_start_index_until_next_stop(self):
+        """
+        Fills all segments start to next segments stop, if they don't have explicitly defined stop tags
+        Adapts index field and the segment stop properties
+        :return:
+        """
+        for segment_class_index, segment_class in enumerate(self.my_classes):
+            if not segment_class.enabled:
+                continue
+            if segment_class.is_start_segmented() is False:
+                # the segment wasn't found at all so no filling needed
+                continue
+            if segment_class.is_stop_segmented() is True:
+                # class already has stop and therefore doesn't need to be filled
+                continue
+
+            # search until next found tag
+            for index in range(segment_class.start_line_index+1, len(self.index_field)):
+                current_field_item = self.index_field[index]
+                if current_field_item is not False:
+                    # next item begins, done with filling
+                    segment_class.set_stop_segmented(index-1) # toggles stop_segmented, sets index
+                    break
+                else:
+                    # field item is False, fill with the current segment tag
+                    self.index_field[index] = segment_class.segment_tag
+
 
     def update_index_field(self, segmentation_class, only_start_tags=False):
         segment_tag = segmentation_class.segment_tag
@@ -207,8 +243,6 @@ class AllSegments(object):
                 if not segment_class.is_stop_segmented():
                     stop_updated = segment_class.match_stop_condition(line, line_text, line_index, features,
                                                                       self.number_of_lines, prev_line)
-
-
 
             if start_updated or stop_updated:
                 # there was a change -> update the indices fields
