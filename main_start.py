@@ -5,17 +5,19 @@
 # custom imports
 from akf_corelib.configuration_handler import ConfigurationHandler
 from akf_corelib.database_handler import DatabaseHandler
+from akf_corelib.conditional_print import ConditionalPrint
 from lib.feature_extractor import FeatureExtractor
 from lib.segment_classifier import SegmentClassifier
 from lib.output_analysis import OutputAnalysis
 from lib.additional_info_handler import AdditionalInfoHandler
 
-# load configuration
+# load configuration and printer
 CODED_CONFIGURATION_PATH= './configuration/config_parse_hocr_js.conf'
 config_handler = ConfigurationHandler(first_init=True, fill_unkown_args=True, \
                                       coded_configuration_paths=[CODED_CONFIGURATION_PATH])
 config = config_handler.get_config()
-
+cpr = ConditionalPrint(config.PRINT_MAIN, config.PRINT_EXCEPTION_LEVEL,
+                            config.PRINT_WARNING_LEVEL, leading_tag="main_start")
 
 # Basic steps:
 feature_extractor = FeatureExtractor()
@@ -47,7 +49,7 @@ for key in hocr_files:
 
         # fetch basic data for current file
         ocromore_data = dh.fetch_ocromore_data(file,additional_info=additional_info)
-        print("Checking file:", ocromore_data['file_info'].path)
+        cpr.print("Checking file:", ocromore_data['file_info'].path)
 
 
         # extract features from basic data

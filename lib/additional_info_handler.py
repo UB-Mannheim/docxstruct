@@ -16,7 +16,7 @@ class AdditionalInfoHandler(object):
 
         self.config = config_handler.get_config()
         self.cpr = ConditionalPrint(self.config.PRINT_ADDITIONAL_INFO_HANDLER, self.config.PRINT_EXCEPTION_LEVEL,
-                                    self.config.PRINT_WARNING_LEVEL)
+                                    self.config.PRINT_WARNING_LEVEL, leading_tag=self.__class__.__name__)
         self.cpr.print("init segment classifier")
 
 

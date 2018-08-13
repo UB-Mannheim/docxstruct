@@ -56,7 +56,7 @@ class FeatureExtractor():
 
         self.config = config_handler.get_config()
         self.cpr = ConditionalPrint(self.config.PRINT_FEATURE_EXTRACTOR, self.config.PRINT_EXCEPTION_LEVEL,
-                                    self.config.PRINT_WARNING_LEVEL)
+                                    self.config.PRINT_WARNING_LEVEL, leading_tag=self.__class__.__name__ )
 
         self.filter_start_words = ["Fernruf:", "Vorstand:", "Fernschreiber:",
                                    "von","Gründung:", "Ordnungsnr.", "Ordnungsnr",
@@ -171,7 +171,7 @@ class FeatureExtractor():
 
 
         if counter_chars == 0:
-            self.cpr.printw("no chars shouldn't happen, no recognition")
+            self.cpr.printw("no chars in line:", str(line['line_index']),"no features here")
             return False
 
         special_chars_ratio = counter_special_chars/ counter_chars

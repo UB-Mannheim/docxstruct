@@ -15,7 +15,7 @@ class OutputAnalysis(object):
 
         self.config = config_handler.get_config()
         self.cpr = ConditionalPrint(self.config.PRINT_OUTPUT_ANALYSIS, self.config.PRINT_EXCEPTION_LEVEL,
-                                    self.config.PRINT_WARNING_LEVEL)
+                                    self.config.PRINT_WARNING_LEVEL, leading_tag=self.__class__.__name__)
 
         self.cpr.print("init output analysis")
         self.analysis_root = self.config.OUTPUT_ROOT_PATH + "/analysis/"

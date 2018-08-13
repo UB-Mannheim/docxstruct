@@ -53,7 +53,6 @@ class SegmentHolder(object):
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 
-
     class SegmentBeratendeMitglieder(Segment):
         # example recognition:
         # Beratende Mitglieder: \n H.S.A.Hartog, Hamburg;
