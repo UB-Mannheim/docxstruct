@@ -279,6 +279,7 @@ class SegmentHolder(object):
     class SegmentTaetigkeitsgebiet(Segment):
         # example recognition:
         # Tätigkeitsgebiet: \n Erzeugung von: Erze, Kohle, Strom,
+        # todo check if 'Unternehmensgliederung is really part of this
 
         def __init__(self):
             super().__init__("Tätigkeitsgebiet")
@@ -292,6 +293,19 @@ class SegmentHolder(object):
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 
+    class SegmentZweigniederlassungen(Segment):
+        # example recognition:
+        # Zweigniederlassungen: \n Berlin, Bielefeld, Bremen, Dortmund,
+
+        def __init__(self):
+            super().__init__("Zweigniederlassungen")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Zweigniederlassungen\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
 
     class SegmentWerke(Segment):
         # example recognition:
@@ -301,18 +315,19 @@ class SegmentHolder(object):
             super().__init__("Werke")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-            match_start, errors = regu.fuzzy_search(r"^Werke\s?:", line_text, err_number=1)
+            match_start, errors = regu.fuzzy_search(r"^(Werke|Werke in)\s?:", line_text, err_number=1)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 
-    class SegmentInlaendischeBeteiligungsGesellsch(Segment):
+    class SegmentBeteiligungsGesellschaften(Segment):
         # example recognition:
         # Wichtigste inländische Beteili- \n gungsgesellschaften
+        # Beteiligungsgesellschaften: \n Deutsche Bau- und Siedlungs-Gesellschaft
 
         def __init__(self):
-            super().__init__("Inl.Beteiligungsgesellschaften")
+            super().__init__("Beteiligungsgesellschaften")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             prev_text = ""
@@ -320,10 +335,12 @@ class SegmentHolder(object):
                 prev_text = prev_line['text']
             combi_text = prev_text + line_text
 
-            match_start, errors = regu.fuzzy_search(r"inländische Beteiligung.+gesellschaft.+:", combi_text)
+            match_start, errors = regu.fuzzy_search(r"(?:^|inländische\s?)Beteiligung.+gesellschaft.+:", combi_text)
 
             if match_start is not None:
+
                 self.do_match_work(True, match_start, line_index-1, errors)
+
                 return True
 
     class SegmentBeteiligungen(Segment):
@@ -332,13 +349,14 @@ class SegmentHolder(object):
         # Namhafte Beteiligungen: \n Stahlwerke Brüninghaus GmbH ...
         # Wesentliche Beteiligungen: \n Stahlwerke Brüninghaus GmbH ...
         # Maßgebliche Beteiligungen: \n Stahlwerke Brüninghaus GmbH ...
+        # Sonstige Beteiligungen: \n ...
 
         def __init__(self):
             super().__init__("Beteiligungen")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             # reduced error number to prevent confusion with "Beteiligung:"
-            match_sitz, errors = regu.fuzzy_search(r"^(?:.?|Namhafte|Wesentliche|Maßgebliche)\s?Beteiligungen\s?:", line_text, err_number=1)
+            match_sitz, errors = regu.fuzzy_search(r"^(?:.*|Namhafte|Wesentliche|Maßgebliche)\s?Beteiligungen\s?:", line_text, err_number=1)
             if match_sitz is not None:
                 self.do_match_work(True, match_sitz, line_index, errors)
                 return True
@@ -576,6 +594,7 @@ class SegmentHolder(object):
     class SegmentAktienkurse(Segment):
         # example recognition:
         # Aktienkurse: \n ultimo 1948 19,5 % \n <table> ...
+        # Aktienkurse (Düsseldorf): \n ...
 
 
         def __init__(self):
@@ -583,7 +602,7 @@ class SegmentHolder(object):
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             # matches ss or ß (group is not capturing)
-            match_start, errors = regu.fuzzy_search(r"Aktienkurse\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"Aktienkurse\s?.*:", line_text)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)

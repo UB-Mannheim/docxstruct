@@ -23,7 +23,8 @@ class DataHelper(object):
 
         # remove trailing ':'
         if remove_trailing_colon:
-            if text[len_text-1] == ":":
+
+            if len_text >= 1 and text[len_text-1] == ":":
                 text = text[0:len_text-1]
 
         return text

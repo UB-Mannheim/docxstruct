@@ -37,8 +37,8 @@ hocr_files = dh.get_files()
 
 # main iteration loop
 for key in hocr_files:
-    if "Extra" in key:
-        continue
+    #if "1976" not in key:
+    #    continue
 
     for file in hocr_files[key]:
         if "msa_best" not in file.ocr_profile:
