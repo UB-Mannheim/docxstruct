@@ -1,7 +1,7 @@
 from akf_corelib.conditional_print import ConditionalPrint
 from akf_corelib.configuration_handler import ConfigurationHandler
 from akf_corelib.filehandler import FileHandler as fh
-
+from lib.data_helper import DataHelper as dh
 import re
 
 class OutputAnalysis(object):
@@ -24,7 +24,7 @@ class OutputAnalysis(object):
 
         # starts with at least X or more alphabetical chars (and arbitrary amount of other chars)  [to exclude years 1999: xxx and so on]
         # has then a ':' has optional trailing chars (get tag as reference group)
-        self.regex_advanced_segtest = re.compile(r"(?P<TAG>^[a-zA-Z]{2,}.*):.*")
+        self.regex_advanced_segtest = re.compile(r"(?P<TAG>^[a-zA-ZäÄüÜöÖß]{2,}.*):.*")
         # more simple for verification, arbitrary chars then : then some other chars
         self.regex_simple_segtest = re.compile(r"(?P<TAG>^.+):.*")
 
@@ -54,10 +54,35 @@ class OutputAnalysis(object):
         :param ocromore_data:
         :return:
         """
-        self.create_test_segmentation(ocromore_data)
+        self.create_dict_main_segmentation(ocromore_data)
+        self.create_dict_test_segmentation(ocromore_data)
+        self.create_dict_test_segmentation(ocromore_data, simple_mode=True) #checked result ok
 
+    def create_dict_main_segmentation(self, ocromore_data):
+        """
+        Create a dictionary for segmentation from existing segmentation
+        index field
+        :param ocromore_data:
+        :return:
+        """
+        segmentation_dict = {}
+        seg_data = ocromore_data['segmentation']
+        seg_classes = seg_data.my_classes
+        lines = ocromore_data['lines']
+        for segclass in seg_classes:
+            if not segclass.is_start_segmented():
+                continue
+            start_index = segclass.get_start_line_index()
+            # extract the real tag from line
+            tag = dh.get_real_tag_from_segment(segclass,lines[start_index])
+            if tag in segmentation_dict.keys():
+                segmentation_dict[tag] = segmentation_dict[tag] + 1
+            else:
+                segmentation_dict[tag] = 1
 
-    def create_test_segmentation(self, ocromore_data):
+        return segmentation_dict
+
+    def create_dict_test_segmentation(self, ocromore_data, simple_mode=False):
         """
         Creates a simple segmentation dictionary for this file
         which assumes each leading characters before a ':' are
@@ -65,7 +90,10 @@ class OutputAnalysis(object):
         :param ocromore_data:
         :return:
         """
-        ADVANCED_MODE = False # True is preferred
+        advanced_mode = True  # default is True
+        if simple_mode is True:
+            advanced_mode = False
+
         segmentation_dict = {}
 
         lines = ocromore_data['lines']
@@ -73,7 +101,7 @@ class OutputAnalysis(object):
 
         for line in lines:
             line_text = line['text']
-            if ADVANCED_MODE is True:
+            if advanced_mode is True:
                 result = self.regex_advanced_segtest.search(line_text)
             else:
                 result = self.regex_simple_segtest.search(line_text)
@@ -91,7 +119,8 @@ class OutputAnalysis(object):
                     segmentation_dict[tag] = 1
             previous_line_text = line_text.strip()
 
-        print("asd")
+        # todo 14.08 verify result add some data and write then comparison function
+        self.cpr.print(segmentation_dict)
 
     def write_array_to_root(self, base_path, text_lines, ocromore_data):
         """
