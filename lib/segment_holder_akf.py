@@ -598,25 +598,27 @@ class SegmentHolder(object):
             super().__init__("Dividenden")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-            match_start, errors = regu.fuzzy_search(r"^Dividenden\s?:$", line_text)
+            match_start, errors = regu.fuzzy_search(r"^Dividenden\s?:", line_text)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 
 
-    class SegmentDividendenAStammaktien(Segment):
+    class SegmentDividendenAxyAktien(Segment):
         # example recognition:
         # Dividenden auf Stammaktien: \n 1948/49: 0% \n 1950: 0% ...
+        # Dividenden auf A-Aktien
+
         # todo think about combining with dividenden
 
 
         def __init__(self):
-            super().__init__("DividendenAufStammaktien")
+            super().__init__("DividendenAufXYaktien")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             # matches ss or ß (group is not capturing)
-            match_start, errors = regu.fuzzy_search(r"^Dividenden(?:.+)Stammaktien\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"^Dividenden(?:.+)aktien\s?:", line_text)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)

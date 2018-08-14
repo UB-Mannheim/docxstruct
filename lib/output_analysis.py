@@ -23,8 +23,8 @@ class OutputAnalysis(object):
         self.clear_output_folder()
 
         # starts with at least X or more alphabetical chars (and arbitrary amount of other chars)  [to exclude years 1999: xxx and so on]
-        # has then a ':' has optional trailing chars (get tag as reference group)
-        self.regex_advanced_segtest = re.compile(r"(?P<TAG>^[a-zA-ZäÄüÜöÖß]{2,}.*):.*")
+        # has then a ':' has optional trailing chars (get tag as reference group), match the first colon from left side as TAG seperator
+        self.regex_advanced_segtest = re.compile(r"(?P<TAG>^[a-zA-ZäÄüÜöÖß]{2,}[^:]*)(?=:).*")
         # more simple for verification, arbitrary chars then : then some other chars
         self.regex_simple_segtest = re.compile(r"(?P<TAG>^.+):.*")
 
@@ -71,7 +71,7 @@ class OutputAnalysis(object):
         for key in missing_keys:
             final_lines.append(key)
         final_lines.append("")
-        
+
         # linify additional keys + headline
         final_lines.append("### Additional keys (there in main-seg, missing in test-seg)---------------------")
         for key in additional_keys:
@@ -165,8 +165,8 @@ class OutputAnalysis(object):
                 tag = result.group('TAG')  # get the tag
 
                 len_pre_line = len(previous_line_text)
-                if len_pre_line >=1 and \
-                        previous_line_text[len_pre_line-1] == "-":
+                if len_pre_line >= 1 and \
+                        previous_line_text[len_pre_line-1] == "-" and previous_line_text[len_pre_line-2] != '.':
                     tag = previous_line_text[0:len_pre_line-1] + tag  # add previous line text to tag (w/o dash)
                 if tag in segmentation_dict.keys():
                     segmentation_dict[tag] = segmentation_dict[tag]+1
