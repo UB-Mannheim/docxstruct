@@ -1,3 +1,6 @@
+from akf_corelib.filehandler import FileHandler as fh
+
+
 class DataHelper(object):
     """
     Class with helper functions for handling the data block
@@ -24,3 +27,27 @@ class DataHelper(object):
                 text = text[0:len_text-1]
 
         return text
+
+    @staticmethod
+    def write_array_to_root(base_path, text_lines, ocromore_data, analysis_root):
+        """
+        Writes a line-array to the base path in root path with ocromore data file and db name
+        :param base_path:
+        :param text_lines:
+        :param ocromore_data:
+        :return:
+        """
+
+        dbpath = ocromore_data['file_info'].dbpath
+        tablename = ocromore_data['file_info'].tablename
+
+        full_dir = analysis_root + base_path + dbpath+"/"
+        full_path = full_dir + tablename + ".txt"
+        fh.create_directory_tree(full_dir)
+
+        my_file = open(full_path, 'w')
+
+        for text_line in text_lines:
+            my_file.write(text_line+"\n")
+
+        my_file.close()

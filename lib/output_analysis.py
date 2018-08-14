@@ -46,7 +46,7 @@ class OutputAnalysis(object):
             final_line_text = ('%-30s%-30s' % (segment_tag, seperator+line_text))
             final_text_lines.append(final_line_text)
 
-        self.write_array_to_root("segmentation_simple/", final_text_lines, ocromore_data)
+        dh.write_array_to_root("segmentation_simple/", final_text_lines, ocromore_data, self.analysis_root)
 
     def log_unsegmentated(self, ocromore_data):
         """
@@ -54,9 +54,64 @@ class OutputAnalysis(object):
         :param ocromore_data:
         :return:
         """
-        self.create_dict_main_segmentation(ocromore_data)
-        self.create_dict_test_segmentation(ocromore_data)
-        self.create_dict_test_segmentation(ocromore_data, simple_mode=True) #checked result ok
+        main_seg = self.create_dict_main_segmentation(ocromore_data)
+        test_seg_simple = self.create_dict_test_segmentation(ocromore_data, simple_mode=True)
+        test_seg_advan = self.create_dict_test_segmentation(ocromore_data)
+        diff_info = self.create_diff_segmetation(main_seg, test_seg_advan, skip_multi_keys=True)
+        linified_diff_info = self.diff_data_to_array(diff_info)
+        dh.write_array_to_root("diff_info/", linified_diff_info, ocromore_data, self.analysis_root)
+
+
+    def diff_data_to_array(self, diff_info):
+        (missing_keys, additional_keys, same_keys) = diff_info
+        final_lines = []
+
+        # linify missing keys + headline
+        final_lines.append("### Missing keys (missing in main-seg, there in test-seg)------------------------")
+        for key in missing_keys:
+            final_lines.append(key)
+        final_lines.append("")
+        
+        # linify additional keys + headline
+        final_lines.append("### Additional keys (there in main-seg, missing in test-seg)---------------------")
+        for key in additional_keys:
+            final_lines.append(key)
+        final_lines.append("")
+
+        # linify same keys + headline
+        final_lines.append("### Same keys (there in main-seg and also in test-seg)---------------------------")
+        for key in same_keys:
+            final_lines.append(key)
+        final_lines.append("")
+
+        return final_lines
+
+    def create_diff_segmetation(self, main_seg, test_seg, skip_multi_keys=False):
+
+        same_keys = []
+        missing_keys = []
+        additional_keys = []
+
+        for key_test in test_seg.keys():
+            value_test = test_seg[key_test]
+
+            # ignore multi entries if toggled, assuming they are second order elements
+            if skip_multi_keys and value_test > 1:
+                continue
+            if key_test in main_seg.keys():
+                same_keys.append(key_test)
+            else:
+                missing_keys.append(key_test)
+
+        for key_main in main_seg.keys():
+            if key_main not in test_seg.keys():
+                additional_keys.append(key_main)
+
+
+        return (missing_keys, additional_keys, same_keys)
+
+
+
 
     def create_dict_main_segmentation(self, ocromore_data):
         """
@@ -119,28 +174,6 @@ class OutputAnalysis(object):
                     segmentation_dict[tag] = 1
             previous_line_text = line_text.strip()
 
-        # todo 14.08 verify result add some data and write then comparison function
-        self.cpr.print(segmentation_dict)
+        return segmentation_dict
 
-    def write_array_to_root(self, base_path, text_lines, ocromore_data):
-        """
-        Writes a line-array to the base path in root path with ocromore data file and db name
-        :param base_path:
-        :param text_lines:
-        :param ocromore_data:
-        :return:
-        """
 
-        dbpath = ocromore_data['file_info'].dbpath
-        tablename = ocromore_data['file_info'].tablename
-
-        full_dir = self.analysis_root + base_path + dbpath+"/"
-        full_path = full_dir + tablename + ".txt"
-        fh.create_directory_tree(full_dir)
-
-        my_file = open(full_path, 'w')
-
-        for text_line in text_lines:
-            my_file.write(text_line+"\n")
-
-        my_file.close()
