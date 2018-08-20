@@ -92,10 +92,12 @@ class OutputAnalysis(object):
         return accumulated_diff_info
 
 
-    def acc_diff_data_to_array(self, accumulated_diff_info, separator='¦¦'):
+    def acc_diff_data_to_array(self, accumulated_diff_info, separator='¦¦', shorten_tablenames=True):
         """
         creates an text-line-array of accumulated_diff_info for print out
         :param accumulated_diff_info:
+        :param separator: seperator char of columns in output
+        :param shorten_tablenames: shorten the tablenames like 0001_1956_230-6_B_049_0005_msa_best
         :return: final lines array
         """
         final_lines = []
@@ -114,12 +116,15 @@ class OutputAnalysis(object):
 
                 for table in miss_info_obj.tables:
                     table_occurence = str(miss_info_obj.tables.get(table))
+                    # cut the long tablenames like 0001_1956_230-6_B_049_0005_msa_best
+                    if shorten_tablenames:
+                        table = table.split('_')[0]
                     table_str = table + "(" + table_occurence + ");"
                     table_all_str += table_str
 
                 # format the line in two columns with a separator
                 final_line_text = (
-                        '%-30s%-15s%-30s' % (miss_info_tag, separator + counter_str, separator + table_all_str))
+                        '%-90s%-15s%-30s' % (miss_info_tag, separator + counter_str, separator + table_all_str))
                 lines_local.append(final_line_text)
 
             return lines_local
