@@ -55,11 +55,37 @@ class OutputAnalysis(object):
         :return:
         """
         main_seg = self.create_dict_main_segmentation(ocromore_data)
-        test_seg_simple = self.create_dict_test_segmentation(ocromore_data, simple_mode=True)
+        # test_seg_simple = self.create_dict_test_segmentation(ocromore_data, simple_mode=True)
         test_seg_advan = self.create_dict_test_segmentation(ocromore_data)
         diff_info = self.create_diff_segmetation(main_seg, test_seg_advan, skip_multi_keys=True)
         linified_diff_info = self.diff_data_to_array(diff_info)
         dh.write_array_to_root("diff_info/", linified_diff_info, ocromore_data, self.analysis_root)
+        return diff_info
+
+    def accumulate_diff_info(self, ocromore_data, diff_info, accumulated_diff_info):
+        """
+        Accumulate diff info for one file to the accumulated diff info object for later logging
+        (one accumulated info per akf-year)
+        :param ocromore_data:
+        :param diff_info:
+        :param accumulated_diff_info:
+        :return:
+        """
+        table_name = ocromore_data['file_info'].tablename
+        (missing_keys, additional_keys, same_keys) = diff_info
+
+        #'key': (counter, tables_array)
+
+        for tag in missing_keys:
+            accumulated_diff_info.add_info_at(tag, table_name, True, False, False)
+        for tag in additional_keys:
+            accumulated_diff_info.add_info_at(tag, table_name, False, True, False)
+        for tag in same_keys:
+            accumulated_diff_info.add_info_at(tag, table_name, False, False, True)
+
+
+        return accumulated_diff_info
+
 
 
     def diff_data_to_array(self, diff_info):
@@ -176,4 +202,60 @@ class OutputAnalysis(object):
 
         return segmentation_dict
 
+
+    class AccumulatedInfo(object):
+
+        class InfoObj(object):
+            def __init__(self, tag):
+                self.counter = 0  # how often does the tag occur overall
+                self.tables = {}  # how often does the tag occur in specific tablename (which is key to this dict)
+                self.tag = tag    # related tag
+
+            def add_tag_from_table(self, tag, tablename):
+                if tablename in self.tables.keys():
+                    self.counter += 1
+                    self.tables[tablename] += 1
+                else:
+                    self.counter += 1
+                    self.tables[tablename] = 1
+
+        def __init__(self):
+            self.missing_tags = {}
+            self.additional_tags = {}
+            self.same_tags = {}
+
+
+        def add_info_at(self, tag, tablename, missing, additional, same):
+            """
+            Adds or updates infoobjects with
+            :param tablename:
+            :param tag:
+            :param missing:
+            :param additional:
+            :param same:
+            :return:
+            """
+            def update_ref_dict(tag, tablename, ref_obj):
+                if tag in ref_obj.keys():
+                    info_obj = ref_obj[tag]
+                    info_obj.add_tag_from_table(tag, tablename)
+                    ref_obj[tag] = info_obj
+
+                else:
+                    info_obj = self.InfoObj(tag)
+                    info_obj.add_tag_from_table(tag, tablename)
+                    ref_obj[tag] = info_obj
+                return ref_obj
+
+
+
+            if missing is True:
+                updated_ref = update_ref_dict(tag, tablename, self.missing_tags)
+                self.missing_tags = updated_ref
+            if additional is True:
+                updated_ref = update_ref_dict(tag, tablename, self.additional_tags)
+                self.additional_tags = updated_ref
+            if same is True:
+                updated_ref = update_ref_dict(tag, tablename, self.same_tags)
+                self.same_tags = updated_ref
 
