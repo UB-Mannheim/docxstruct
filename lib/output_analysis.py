@@ -35,7 +35,7 @@ class OutputAnalysis(object):
         """
         fh.delete_directory_tree(self.analysis_root)
 
-    def log_segmentation_simple(self, ocromore_data, seperator='¦¦'):
+    def log_segmentation_simple(self, ocromore_data, separator='¦¦'):
         lines = ocromore_data['lines']
         index_field = ocromore_data['segmentation'].index_field
         final_text_lines = []
@@ -43,7 +43,8 @@ class OutputAnalysis(object):
         for line_index, line in enumerate(lines):
             segment_tag = str(index_field[line_index])
             line_text = line['text']
-            final_line_text = ('%-30s%-30s' % (segment_tag, seperator+line_text))
+            # format the line in two columns with a separator
+            final_line_text = ('%-30s%-30s' % (segment_tag, separator+line_text))
             final_text_lines.append(final_line_text)
 
         dh.write_array_to_root("segmentation_simple/", final_text_lines, ocromore_data, self.analysis_root)
@@ -62,6 +63,12 @@ class OutputAnalysis(object):
         dh.write_array_to_root("diff_info/", linified_diff_info, ocromore_data, self.analysis_root)
         return diff_info
 
+    def log_accumulated_unsegmentated(self, accumulated_diff_info, ocromore_data):
+        acc_diff_array =  self.acc_diff_data_to_array(accumulated_diff_info)
+        dh.write_array_to_root("diff_info/", acc_diff_array, ocromore_data, \
+                               self.analysis_root, accumulated=True)
+
+
     def accumulate_diff_info(self, ocromore_data, diff_info, accumulated_diff_info):
         """
         Accumulate diff info for one file to the accumulated diff info object for later logging
@@ -69,12 +76,10 @@ class OutputAnalysis(object):
         :param ocromore_data:
         :param diff_info:
         :param accumulated_diff_info:
-        :return:
+        :return:accumulated_diff_info modified
         """
         table_name = ocromore_data['file_info'].tablename
         (missing_keys, additional_keys, same_keys) = diff_info
-
-        #'key': (counter, tables_array)
 
         for tag in missing_keys:
             accumulated_diff_info.add_info_at(tag, table_name, True, False, False)
@@ -87,6 +92,55 @@ class OutputAnalysis(object):
         return accumulated_diff_info
 
 
+    def acc_diff_data_to_array(self, accumulated_diff_info, separator='¦¦'):
+        """
+        creates an text-line-array of accumulated_diff_info for print out
+        :param accumulated_diff_info:
+        :return: final lines array
+        """
+        final_lines = []
+
+        def create_lines(reference_dict):
+            """
+            Helper function to fetch data from referenced dictionary and format it
+            :param reference_dict:
+            :return:
+            """
+            lines_local = []
+            for miss_info_tag in reference_dict:
+                miss_info_obj = reference_dict.get(miss_info_tag)
+                counter_str = str(miss_info_obj.counter)
+                table_all_str = ""
+
+                for table in miss_info_obj.tables:
+                    table_occurence = str(miss_info_obj.tables.get(table))
+                    table_str = table + "(" + table_occurence + ");"
+                    table_all_str += table_str
+
+                # format the line in two columns with a separator
+                final_line_text = (
+                        '%-30s%-15s%-30s' % (miss_info_tag, separator + counter_str, separator + table_all_str))
+                lines_local.append(final_line_text)
+
+            return lines_local
+
+        # linify missing info accumulated
+        final_lines.append("### Missing keys (missing in main-seg, there in test-seg)------------------------")
+        lines_missing = create_lines(accumulated_diff_info.missing_tags)
+        final_lines.extend(lines_missing)
+
+        # linify additional info accumulated
+        final_lines.append("### Additional keys (there in main-seg, missing in test-seg)---------------------")
+        lines_additional = create_lines(accumulated_diff_info.additional_tags)
+        final_lines.extend(lines_additional)
+
+        # linify same keys + headline accumulated
+        final_lines.append("### Same keys (there in main-seg and also in test-seg)---------------------------")
+        lines_same = create_lines(accumulated_diff_info.same_tags)
+        final_lines.extend(lines_same)
+
+
+        return final_lines
 
     def diff_data_to_array(self, diff_info):
         (missing_keys, additional_keys, same_keys) = diff_info

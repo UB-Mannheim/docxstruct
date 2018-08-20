@@ -30,12 +30,14 @@ class DataHelper(object):
         return text
 
     @staticmethod
-    def write_array_to_root(base_path, text_lines, ocromore_data, analysis_root):
+    def write_array_to_root(base_path, text_lines, ocromore_data, analysis_root, accumulated=False):
         """
         Writes a line-array to the base path in root path with ocromore data file and db name
         :param base_path:
         :param text_lines:
         :param ocromore_data:
+        :param analysis_root: root path in base directory
+        :param accumulated: file is accumulated file naming different
         :return:
         """
 
@@ -43,7 +45,11 @@ class DataHelper(object):
         tablename = ocromore_data['file_info'].tablename
 
         full_dir = analysis_root + base_path + dbpath+"/"
-        full_path = full_dir + tablename + ".txt"
+        if accumulated is False:
+            full_path = full_dir + tablename + ".txt"
+        else:
+            full_path = full_dir +"accumulated_report"+".txt"
+
         fh.create_directory_tree(full_dir)
 
         my_file = open(full_path, 'w')
