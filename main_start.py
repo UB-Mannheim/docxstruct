@@ -69,8 +69,11 @@ for key in hocr_files:
         diff_info = output_analyzer.log_unsegmentated(ocromore_data)
         accumulated_diff_info = output_analyzer.accumulate_diff_info(ocromore_data, diff_info, accumulated_diff_info)
         ctr_test += 1
-        #if ctr_test >= 2:
-        #    break
+        if ctr_test >= 5:
+            break
 
     # output analysis: print diff info for this year (accumulated over all tables/year)
     output_analyzer.log_accumulated_unsegmentated(accumulated_diff_info, ocromore_data)
+
+print("asd")
+

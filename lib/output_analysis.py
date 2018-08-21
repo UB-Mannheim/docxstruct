@@ -58,7 +58,7 @@ class OutputAnalysis(object):
         main_seg = self.create_dict_main_segmentation(ocromore_data)
         # test_seg_simple = self.create_dict_test_segmentation(ocromore_data, simple_mode=True)
         test_seg_advan = self.create_dict_test_segmentation(ocromore_data)
-        diff_info = self.create_diff_segmetation(main_seg, test_seg_advan, skip_multi_keys=True)
+        diff_info = self.create_diff_segmetation(main_seg, test_seg_advan, skip_multi_keys=False)
         linified_diff_info = self.diff_data_to_array(diff_info)
         dh.write_array_to_root("diff_info/", linified_diff_info, ocromore_data, self.analysis_root)
         return diff_info
@@ -96,7 +96,7 @@ class OutputAnalysis(object):
         """
         creates an text-line-array of accumulated_diff_info for print out
         :param accumulated_diff_info:
-        :param separator: seperator char of columns in output
+        :param separator: separator char of columns in output
         :param shorten_tablenames: shorten the tablenames like 0001_1956_230-6_B_049_0005_msa_best
         :return: final lines array
         """
@@ -147,7 +147,7 @@ class OutputAnalysis(object):
 
         return final_lines
 
-    def diff_data_to_array(self, diff_info):
+    def diff_data_to_array(self, diff_info, separator='¦¦'):
         (missing_keys, additional_keys, same_keys) = diff_info
         final_lines = []
 
@@ -173,6 +173,11 @@ class OutputAnalysis(object):
 
     def create_diff_segmetation(self, main_seg, test_seg, skip_multi_keys=False):
 
+        def append_multi(ref_list, value, count):
+            for i in range(0, count):
+                ref_list.append(value)
+            return ref_list
+
         same_keys = []
         missing_keys = []
         additional_keys = []
@@ -184,19 +189,20 @@ class OutputAnalysis(object):
             if skip_multi_keys and value_test > 1:
                 continue
             if key_test in main_seg.keys():
-                same_keys.append(key_test)
+                value_main = main_seg[key_test]
+                same_overlap = min(value_main, value_test)
+                same_keys = append_multi(same_keys, key_test, same_overlap)
             else:
-                missing_keys.append(key_test)
+                missing_keys = append_multi(missing_keys, key_test, value_test)
 
         for key_main in main_seg.keys():
+            value_main = main_seg[key_main]
+
             if key_main not in test_seg.keys():
-                additional_keys.append(key_main)
+                 additional_keys = append_multi(additional_keys, key_main, value_main)
 
 
         return (missing_keys, additional_keys, same_keys)
-
-
-
 
     def create_dict_main_segmentation(self, ocromore_data):
         """
@@ -271,6 +277,8 @@ class OutputAnalysis(object):
                 self.tag = tag    # related tag
 
             def add_tag_from_table(self, tag, tablename):
+                if "Kapital" in tag:
+                    print("asd")
                 if tablename in self.tables.keys():
                     self.counter += 1
                     self.tables[tablename] += 1
@@ -295,6 +303,10 @@ class OutputAnalysis(object):
             :return:
             """
             def update_ref_dict(tag, tablename, ref_obj):
+
+                if "Kapital" in tag:
+                    print("asd")
+
                 if tag in ref_obj.keys():
                     info_obj = ref_obj[tag]
                     info_obj.add_tag_from_table(tag, tablename)

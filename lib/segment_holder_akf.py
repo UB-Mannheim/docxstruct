@@ -284,10 +284,36 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Tätigkeitsgebiet")
 
-
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             match_start, errors = regu.fuzzy_search(r"^Tätigkeitsgebiet\s?:", line_text)
 
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
+    class SegmentErzeugnisse(Segment):
+        # example recognition:
+        # Erzeugnisse: \n Ober- und untergäriges Bier; DAB-
+
+        def __init__(self):
+            super().__init__("Erzeugnisse")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Erzeugnisse\s?:", line_text, err_number=1)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
+    class SegmentAnlagen(Segment):
+        # example recognition:
+        # Anlagen: \n Brauerei in Dortmund; Restaurants und ...
+
+        def __init__(self):
+            super().__init__("Anlagen")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Anlagen\s?:", line_text, err_number=1)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
