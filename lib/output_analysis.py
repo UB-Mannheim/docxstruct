@@ -277,8 +277,6 @@ class OutputAnalysis(object):
                 self.tag = tag    # related tag
 
             def add_tag_from_table(self, tag, tablename):
-                if "Kapital" in tag:
-                    print("asd")
                 if tablename in self.tables.keys():
                     self.counter += 1
                     self.tables[tablename] += 1
@@ -303,9 +301,6 @@ class OutputAnalysis(object):
             :return:
             """
             def update_ref_dict(tag, tablename, ref_obj):
-
-                if "Kapital" in tag:
-                    print("asd")
 
                 if tag in ref_obj.keys():
                     info_obj = ref_obj[tag]

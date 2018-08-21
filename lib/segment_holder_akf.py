@@ -37,12 +37,13 @@ class SegmentHolder(object):
         # example recognition:
         # Verwaltung: 8045 Ismaning bei Mün- \n chen ...
         # Verwaltungsrat:
+        # Verw.: (20b) Hannover ...
 
         def __init__(self):
             super().__init__("Verwaltung")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-            match_start, errors = regu.fuzzy_search(r"^Verwaltung(:?srat\s?|\s?):", line_text)
+            match_start, errors = regu.fuzzy_search(r"^((Verwaltung(:?srat\s?|\s?))|Verw\.\s?):", line_text, err_number=1)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
@@ -299,7 +300,7 @@ class SegmentHolder(object):
             super().__init__("Erzeugnisse")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-            match_start, errors = regu.fuzzy_search(r"^Erzeugnisse\s?:", line_text, err_number=1)
+            match_start, errors = regu.fuzzy_search(r"^(Es werden erzeugt|Erzeugnisse)\s?:", line_text, err_number=1)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
@@ -382,7 +383,7 @@ class SegmentHolder(object):
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             # reduced error number to prevent confusion with "Beteiligung:"
-            match_sitz, errors = regu.fuzzy_search(r"^(?:.*|Namhafte|Wesentliche|Maßgebliche)\s?Beteiligungen\s?:", line_text, err_number=1)
+            match_sitz, errors = regu.fuzzy_search(r"^(?:Namhafte|Wesentliche|Maßgebliche|.*)\s?Beteiligung(en)?\s?:", line_text, err_number=1)
             if match_sitz is not None:
                 self.do_match_work(True, match_sitz, line_index, errors)
                 return True
@@ -620,7 +621,7 @@ class SegmentHolder(object):
     class SegmentAktienkurse(Segment):
         # example recognition:
         # Aktienkurse: \n ultimo 1948 19,5 % \n <table> ...
-        # Aktienkurse (Düsseldorf): \n ...
+        # Aktienkurse (Düsseldorf): \n ...f
 
 
         def __init__(self):
@@ -634,21 +635,55 @@ class SegmentHolder(object):
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 
+    class SegmentKursZuteilungsrechte(Segment):
+        # example recognition:
+        # c:\n Düsseldorf am 10. Okt ...
+
+
+        def __init__(self):
+            super().__init__("KursVonZuteilungsrechten")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            # matches ss or ß (group is not capturing)
+            match_start, errors = regu.fuzzy_search(r"Kurs von Zuteilungsrechten\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
     class SegmentDividenden(Segment):
         # example recognition:
         # Dividenden: \n 1949/50: 0% (this is for the table dividenden!)
+        # not, because sub-item: Dividenden 1949/50-1953/54: \n
+        # not, because sub-item: Dividenden ab 1948/50: \n
+        #
         # todo think about combining with dividenden auf stammaktien
 
         def __init__(self):
             super().__init__("Dividenden")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-            match_start, errors = regu.fuzzy_search(r"^Dividenden\s?:", line_text)
-
+            match_start, errors = regu.fuzzy_search \
+                (r"^Dividenden\s?:", line_text)
+                #(r"^(Dividenden ab (\d{4}\/\d{2})?(\-\d{4}\/\d{2})?|Dividenden)s?:", line_text)
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 
+    class SegmentEmissionsbetrag(Segment):
+        # example recognition:
+        # Emissionsbetrag: \n DM 15 000 000.-.
+
+        def __init__(self):
+            super().__init__("Emissionsbetrag")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search \
+                (r"^Emissionsbetrag\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
 
     class SegmentDividendenAxyAktien(Segment):
         # example recognition:
