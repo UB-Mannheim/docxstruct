@@ -292,6 +292,22 @@ class SegmentHolder(object):
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 
+    class SegmentNiederlassungen(Segment):
+        # example recognition:
+        # Niederlasungen: \n Hannover, Berlin-Charlottenburg 1,
+
+        def __init__(self):
+            super().__init__("Niederlassungen")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Niederlassungen\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
+
+
     class SegmentErzeugnisse(Segment):
         # example recognition:
         # Erzeugnisse: \n Ober- und untergäriges Bier; DAB-
@@ -337,16 +353,33 @@ class SegmentHolder(object):
     class SegmentWerke(Segment):
         # example recognition:
         # Werke: \n Werksgruppe Geisweid
-
+        # Betriebsstätten: \n Altona, Hamburg-St.Pauli, Hamburg-
         def __init__(self):
-            super().__init__("Werke")
+            super().__init__("Werke/Betriebsstätten")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-            match_start, errors = regu.fuzzy_search(r"^(Werke|Werke in)\s?:", line_text, err_number=1)
+            match_start, errors = regu.fuzzy_search(r"^(Werke|Werke in|Betriebsstätten)\s?:", line_text, err_number=1)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
+
+
+    class SegmentBetriebsanlagen(Segment):
+        # example recognition:
+        # Betriebsanlagen:  \n Beize und Wäscherei, Glüherei, Draht-
+
+        def __init__(self):
+            super().__init__("Betriebsanlagen")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+            match_start, errors = regu.fuzzy_search(r"^Betriebsanlagen\s?:", line_text, err_number=1)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
+
 
     class SegmentBeteiligungsGesellschaften(Segment):
         # example recognition:
@@ -383,7 +416,7 @@ class SegmentHolder(object):
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             # reduced error number to prevent confusion with "Beteiligung:"
-            match_sitz, errors = regu.fuzzy_search(r"^(?:Namhafte|Wesentliche|Maßgebliche|.*)\s?Beteiligung(en)?\s?:", line_text, err_number=1)
+            match_sitz, errors = regu.fuzzy_search(r"^(?:Namhafte|Wesentliche|Maßgebliche|.*)\s?Beteiligungen\s?:", line_text, err_number=1)
             if match_sitz is not None:
                 self.do_match_work(True, match_sitz, line_index, errors)
                 return True

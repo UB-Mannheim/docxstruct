@@ -48,6 +48,8 @@ for key in hocr_files:
         if "msa_best" not in file.ocr_profile:
             continue
 
+        if not "0064_1" in file.name and not "0142_1" in file.name:
+            continue
         # fetch additional information for current file (if toggled in info)
         additional_info = add_info_handler.fetch_additional_information_simple(file)
 
@@ -68,7 +70,7 @@ for key in hocr_files:
         output_analyzer.log_segmentation_simple(ocromore_data)
         diff_info = output_analyzer.log_unsegmentated(ocromore_data)
         accumulated_diff_info = output_analyzer.accumulate_diff_info(ocromore_data, diff_info, accumulated_diff_info)
-        ctr_test += 1
+        #ctr_test += 1
         #if ctr_test >= 30:
         #    break
 
