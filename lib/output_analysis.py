@@ -2,6 +2,7 @@ from akf_corelib.conditional_print import ConditionalPrint
 from akf_corelib.configuration_handler import ConfigurationHandler
 from akf_corelib.filehandler import FileHandler as fh
 from lib.data_helper import DataHelper as dh
+from lib.known_uncategories_akf import KnownUncategories
 import re
 
 class OutputAnalysis(object):
@@ -27,6 +28,7 @@ class OutputAnalysis(object):
         self.regex_advanced_segtest = re.compile(r"(?P<TAG>^[a-zA-ZäÄüÜöÖß]{2,}[^:]*)(?=:).*")
         # more simple for verification, arbitrary chars then : then some other chars
         self.regex_simple_segtest = re.compile(r"(?P<TAG>^.+):.*")
+        self.known_ucs = KnownUncategories()
 
     def clear_output_folder(self):
         """
@@ -109,13 +111,21 @@ class OutputAnalysis(object):
             :return:
             """
             lines_local = []
-            for miss_info_tag in reference_dict:
-                miss_info_obj = reference_dict.get(miss_info_tag)
-                counter_str = str(miss_info_obj.counter)
+            for info_tag in reference_dict:
+                info_obj = reference_dict.get(info_tag)
+
+                # if the tag is in one of the filtered list, which indicate no category, don't append to lines
+                if self.config.FILTER_UNCATEGORIES_OVERALL:
+                    is_uc = self.known_ucs.check_uncategories(info_tag)
+                    if is_uc:
+                        continue
+
+
+                counter_str = str(info_obj.counter)
                 table_all_str = ""
 
-                for table in miss_info_obj.tables:
-                    table_occurence = str(miss_info_obj.tables.get(table))
+                for table in info_obj.tables:
+                    table_occurence = str(info_obj.tables.get(table))
                     # cut the long tablenames like 0001_1956_230-6_B_049_0005_msa_best
                     if shorten_tablenames:
                         table = table.split('_')[0]
@@ -124,7 +134,7 @@ class OutputAnalysis(object):
 
                 # format the line in two columns with a separator
                 final_line_text = (
-                        '%-90s%-15s%-30s' % (miss_info_tag, separator + counter_str, separator + table_all_str))
+                        '%-90s%-15s%-30s' % (info_tag, separator + counter_str, separator + table_all_str))
                 lines_local.append(final_line_text)
 
             return lines_local

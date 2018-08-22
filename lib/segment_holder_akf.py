@@ -294,7 +294,7 @@ class SegmentHolder(object):
 
     class SegmentNiederlassungen(Segment):
         # example recognition:
-        # Niederlasungen: \n Hannover, Berlin-Charlottenburg 1,
+        # Niederlassungen: \n Hannover, Berlin-Charlottenburg 1,
 
         def __init__(self):
             super().__init__("Niederlassungen")
@@ -416,7 +416,7 @@ class SegmentHolder(object):
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             # reduced error number to prevent confusion with "Beteiligung:"
-            match_sitz, errors = regu.fuzzy_search(r"^(?:Namhafte|Wesentliche|Maßgebliche|.*)\s?Beteiligungen\s?:", line_text, err_number=1)
+            match_sitz, errors = regu.fuzzy_search(r"(((?:Namhafte|Wesentliche|Maßgebliche)\s?Beteiligung(en)?)|Beteiligungen)\s?:", line_text, err_number=1)
             if match_sitz is not None:
                 self.do_match_work(True, match_sitz, line_index, errors)
                 return True
