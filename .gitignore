@@ -1,6 +1,7 @@
 output/
 output_save/
 laptopdata/
+AKFII_ocromore_results_local/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

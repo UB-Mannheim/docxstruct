@@ -8,6 +8,7 @@ from akf_corelib.database_handler import DatabaseHandler
 from akf_corelib.conditional_print import ConditionalPrint
 from lib.feature_extractor import FeatureExtractor
 from lib.segment_classifier import SegmentClassifier
+from lib.segment_parser import SegmentParser
 from lib.output_analysis import OutputAnalysis
 from lib.additional_info_handler import AdditionalInfoHandler
 
@@ -23,6 +24,7 @@ cpr = ConditionalPrint(config.PRINT_MAIN, config.PRINT_EXCEPTION_LEVEL,
 feature_extractor = FeatureExtractor()
 add_info_handler = AdditionalInfoHandler()
 segment_classifier = SegmentClassifier()
+segment_parser = SegmentParser()
 output_analyzer = OutputAnalysis()
 
 
@@ -62,7 +64,7 @@ for key in hocr_files:
         # line segmentation
         ocromore_data = segment_classifier.classify_file_segments(ocromore_data)
         # segment parsing
-        # todo
+        ocromore_data = segment_parser.parse_segments(ocromore_data)
         # output file synthesis
         # todo
 

@@ -46,6 +46,9 @@ class Segment(object):
     def get_start_line_index(self):
         return self.start_line_index
 
+    def get_segment_tag(self):
+        return self.segment_tag
+
     def do_match_work(self, start_or_stop, match, line_index, match_errors):
         if start_or_stop is True: # it's a start match
             self.set_keytag_indices(match) # this separates keytag from rest of line
