@@ -58,7 +58,7 @@ class SegmentParser(object):
             return
 
         pinfo = self.prepare_parsing_info(segmentation_class, ocromore_data)
-
+        print(pinfo)
         self.function_map[segment_tag].__call__(pinfo)
 
     def prepare_parsing_info(self, segmentation_class, ocromore_data):

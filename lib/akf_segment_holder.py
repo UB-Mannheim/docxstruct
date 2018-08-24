@@ -43,7 +43,7 @@ class SegmentHolder(object):
             super().__init__("Verwaltung")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-            match_start, errors = regu.fuzzy_search(r"^((Verwaltung(:?srat\s?|\s?))|Verw\.\s?):", line_text, err_number=1)
+            match_start, errors = regu.fuzzy_search(r"^((Verwaltung(:?srat\s?|\s?))|Verw\.\s?):", line_text, err_number=0)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)

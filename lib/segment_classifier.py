@@ -44,7 +44,7 @@ class SegmentClassifier(object):
     def adapt_non_explicit_indices(self, all_file_segments):
 
         # update start and explicit stop tags first
-        all_file_segments.correct_overlaps_index_field(only_start_tags=False)
+        all_file_segments.correct_overlaps_index_field(only_start_tags=True)
 
         # fill undefined stop regions until next start region
         all_file_segments.fill_start_index_until_next_stop()
