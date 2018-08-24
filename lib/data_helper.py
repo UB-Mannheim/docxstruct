@@ -40,26 +40,35 @@ class DataHelper(object):
         return rest_start
 
     @staticmethod
-    def get_content(segment_lines, segmentation_class):
+    def get_content(segment_lines, feature_lines, segmentation_class):
         start_index = segmentation_class.get_start_line_index()
         stop_index = segmentation_class.get_stop_line_index()
         selected_start_line = segment_lines[start_index]
+        feature_start_line = feature_lines[start_index]
         real_tag = DataHelper.get_real_tag_from_segment(segmentation_class, selected_start_line)
         rest_content_start_line = DataHelper.get_rest_content_start_line(segmentation_class, selected_start_line)
 
         # if there are no further line, return obtained content
         if start_index == stop_index:
-            return real_tag, [rest_content_start_line]
+            return real_tag, [rest_content_start_line], [selected_start_line], [feature_start_line]
 
         # otherwise fetch the rest of the content
-        other_rest_content = []
-        other_rest_content.append(rest_content_start_line)
+        other_rest_content_texts = []
+        other_rest_content_lines = []
+        other_rest_feature_lines = []
+
+        other_rest_content_texts.append(rest_content_start_line)
+        other_rest_content_lines.append(selected_start_line)
+        other_rest_feature_lines.append(feature_start_line)
 
         for current_index in range(start_index+1, stop_index+1):
             current_line = segment_lines[current_index]
-            other_rest_content.append(current_line['text'])
+            current_feature_lines = feature_lines[current_index]
+            other_rest_content_texts.append(current_line['text'])
+            other_rest_content_lines.append(current_line)
+            other_rest_feature_lines.append(current_feature_lines)
 
-        return real_tag, other_rest_content
+        return real_tag, other_rest_content_texts, other_rest_content_lines, other_rest_feature_lines
 
     @staticmethod
     def write_array_to_root(base_path, text_lines, ocromore_data, analysis_root, accumulated=False):

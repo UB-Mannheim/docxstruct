@@ -57,12 +57,14 @@ class SegmentParser(object):
         if segment_tag not in self.function_map.keys():
             return
 
-        pinfo = self.prepare_parsing_info(segmentation_class, ocromore_data)
-        print(pinfo)
-        self.function_map[segment_tag].__call__(pinfo)
+        real_start_tag, content_texts, content_lines, feature_lines = self.prepare_parsing_info(segmentation_class, ocromore_data)
+
+        self.function_map[segment_tag].__call__(real_start_tag, content_texts, content_lines, feature_lines)
 
     def prepare_parsing_info(self, segmentation_class, ocromore_data):
         lines = ocromore_data['lines']
-        real_start_tag, content_lines = DataHelper.get_content(lines, segmentation_class)
+        line_features = ocromore_data['line_features']
+        real_start_tag, content_texts, content_lines, feature_lines = \
+            DataHelper.get_content(lines,line_features, segmentation_class)
 
-        return real_start_tag, content_lines
+        return real_start_tag, content_texts, content_lines, feature_lines
