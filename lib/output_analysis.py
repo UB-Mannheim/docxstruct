@@ -2,7 +2,7 @@ from akf_corelib.conditional_print import ConditionalPrint
 from akf_corelib.configuration_handler import ConfigurationHandler
 from akf_corelib.filehandler import FileHandler as fh
 from lib.data_helper import DataHelper as dh
-from lib.known_uncategories_akf import KnownUncategories
+from lib.akf_known_uncategories import KnownUncategories
 import re
 
 class OutputAnalysis(object):

@@ -1,6 +1,6 @@
 from akf_corelib.conditional_print import ConditionalPrint
 from akf_corelib.configuration_handler import ConfigurationHandler
-from lib.segment_holder_akf import SegmentHolder
+from lib.akf_segment_holder import SegmentHolder
 
 import inspect
 
@@ -109,6 +109,8 @@ class AllSegments(object):
         for segment_class_index, segment_class in enumerate(self.my_classes):
             if not segment_class.enabled:
                 continue
+            if not segment_class.is_start_segmented():
+                continue
 
             self.update_stop_tags(segment_class)
 
@@ -174,8 +176,11 @@ class AllSegments(object):
         segment_tag = segmentation_class.segment_tag
         start_line_index = segmentation_class.start_line_index
         stop_line_index = segmentation_class.stop_line_index
+        index_field_len = len(self.index_field)
+        if segment_tag is "Verwaltung":
+            print("aqd")
 
-        for index in range(start_line_index+1, stop_line_index+1):
+        for index in range(start_line_index+1, index_field_len):
 
             # update until the next defined field appeads
             if self.index_field[index] is not False:

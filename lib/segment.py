@@ -46,6 +46,9 @@ class Segment(object):
     def get_start_line_index(self):
         return self.start_line_index
 
+    def get_stop_line_index(self):
+        return self.stop_line_index
+
     def get_segment_tag(self):
         return self.segment_tag
 
