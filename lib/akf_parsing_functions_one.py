@@ -39,7 +39,7 @@ class AkfParsingFunctionsOne(object):
         print(real_start_tag, ":", origpost_red)
 
         type = segmentation_class.segment_tag                       # normed tag
-
+        my_ef = EndobjectFactory(type)
         #                            r"(?::(?<Street>.*?))?"                    # find street string, match lazy cause numbers should be in next group
         #                   r"(?::(?<Number>[0-9]+[-\/]*[0-9]*))?",    # find number with greedy quantifier + optional extension (for e.g. 12-13)
 
@@ -54,7 +54,13 @@ class AkfParsingFunctionsOne(object):
 
         numID = dh.strip_if_not_none(match.group("NumID").strip(), "")
         location = dh.strip_if_not_none(match.group("Location"), "")
+        # add stuff to ef
+
+        my_ef.add_to_my_obj("numID", numID, object_number=0)
+        my_ef.add_to_my_obj("location", location, object_number=0)
+
         rest = dh.strip_if_not_none(match.group("Rest").strip(), "")
+
 
         street = ""
         street_number = ""
@@ -70,20 +76,37 @@ class AkfParsingFunctionsOne(object):
                 street = dh.strip_if_not_none(match_rest.group("Street"),"")
                 street_number = dh.strip_if_not_none(match_rest.group("Number"),",\.")
                 additional_info = dh.strip_if_not_none(match_rest.group("Rest"),"")
-
+                my_ef.add_to_my_obj("street", street, object_number=0)
+                my_ef.add_to_my_obj("street_number", street_number, object_number=0)
+                my_ef.add_to_my_obj("additional_info", additional_info, object_number=0)
 
         #number = match.group("Number")
+        my_obj_done = my_ef.print_me_and_return()
         print(street,"|" ,street_number)
+
 
     @staticmethod
     def parse_verwaltung(real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         print("asd")
 
-"""
+
 class EndobjectFactory(object):
 
     def __init__(self, segment_tag):
-        my_object = {}
-        my_object.update(segment_tag,[])
-    def create_factory
-"""
+        self.my_object = {}
+        self.my_object[segment_tag] = []              # create the main list (all subsequent entries are stored here)
+        self.main_list = self.my_object[segment_tag]  # create a short link on the main list
+        self.add_to_my_obj("type",segment_tag,object_number=0)
+
+    def add_to_my_obj(self, key, value, object_number=0):
+        # fill main list if object index not in
+        len_list = len(self.main_list)
+        if len_list < object_number+1:
+            for index in range(len_list,object_number+1):
+                self.main_list.append({})
+        # add or insert to the main_list
+        self.main_list[object_number][key] = value
+
+    def print_me_and_return(self):
+        print("my_object is:", self.my_object)
+        return self.my_object
