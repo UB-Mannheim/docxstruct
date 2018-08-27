@@ -99,3 +99,19 @@ class DataHelper(object):
             my_file.write(text_line+"\n")
 
         my_file.close()
+
+    @staticmethod
+    def create_stringified_linearray(array_of_texts):
+        final_string = ""
+        for line_text in array_of_texts:
+            final_string += line_text+"\n"
+
+        final_string = final_string.strip()
+        return final_string, final_string.replace("\n"," ")
+
+    @staticmethod
+    def strip_if_not_none(text,strip_pattern):
+        if text is None:
+            return text
+        else:
+            return text.strip(strip_pattern)

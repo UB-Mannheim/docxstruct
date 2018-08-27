@@ -59,7 +59,7 @@ class SegmentParser(object):
 
         real_start_tag, content_texts, content_lines, feature_lines = self.prepare_parsing_info(segmentation_class, ocromore_data)
 
-        self.function_map[segment_tag].__call__(real_start_tag, content_texts, content_lines, feature_lines)
+        self.function_map[segment_tag].__call__(real_start_tag, content_texts, content_lines, feature_lines, segmentation_class)
 
     def prepare_parsing_info(self, segmentation_class, ocromore_data):
         lines = ocromore_data['lines']
