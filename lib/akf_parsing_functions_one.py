@@ -1,11 +1,25 @@
+from akf_corelib.conditional_print import ConditionalPrint
+from akf_corelib.configuration_handler import ConfigurationHandler
 from .data_helper import DataHelper as dh
+
 import regex
+
 
 class AkfParsingFunctionsOne(object):
 
+    def __init__(self, endobject_factory):
+        config_handler = ConfigurationHandler(first_init=False)
 
-    @staticmethod
-    def parse_sitz(real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        self.config = config_handler.get_config()
+        self.cpr = ConditionalPrint(self.config.PRINT_SEGMENT_PARSER_AKF_FN_ONE, self.config.PRINT_EXCEPTION_LEVEL,
+                                    self.config.PRINT_WARNING_LEVEL, leading_tag=self.__class__.__name__)
+
+        self.cpr.print("init output analysis")
+
+        self.ef = endobject_factory
+
+
+    def parse_sitz(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         """
 
         :param real_start_tag:
@@ -39,7 +53,8 @@ class AkfParsingFunctionsOne(object):
         print(real_start_tag, ":", origpost_red)
 
         type = segmentation_class.segment_tag                       # normed tag
-        my_ef = EndobjectFactory(type)
+        self.ef.add_to_my_obj("type", segmentation_class.segment_tag, object_number=0)
+
         #                            r"(?::(?<Street>.*?))?"                    # find street string, match lazy cause numbers should be in next group
         #                   r"(?::(?<Number>[0-9]+[-\/]*[0-9]*))?",    # find number with greedy quantifier + optional extension (for e.g. 12-13)
 
@@ -53,11 +68,11 @@ class AkfParsingFunctionsOne(object):
             return
 
         numID = dh.strip_if_not_none(match.group("NumID").strip(), "")
-        location = dh.strip_if_not_none(match.group("Location"), "")
+        city = dh.strip_if_not_none(match.group("Location"), "")
         # add stuff to ef
 
-        my_ef.add_to_my_obj("numID", numID, object_number=0)
-        my_ef.add_to_my_obj("location", location, object_number=0)
+        self.ef.add_to_my_obj("numID", numID, object_number=0)
+        self.ef.add_to_my_obj("city", city, object_number=0)
 
         rest = dh.strip_if_not_none(match.group("Rest").strip(), "")
 
@@ -76,37 +91,18 @@ class AkfParsingFunctionsOne(object):
                 street = dh.strip_if_not_none(match_rest.group("Street"),"")
                 street_number = dh.strip_if_not_none(match_rest.group("Number"),",\.")
                 additional_info = dh.strip_if_not_none(match_rest.group("Rest"),"")
-                my_ef.add_to_my_obj("street", street, object_number=0)
-                my_ef.add_to_my_obj("street_number", street_number, object_number=0)
-                my_ef.add_to_my_obj("additional_info", additional_info, object_number=0)
+                self.ef.add_to_my_obj("street", street, object_number=0)
+                self.ef.add_to_my_obj("street_number", street_number, object_number=0)
+                self.ef.add_to_my_obj("additional_info", additional_info, object_number=0)
 
         #number = match.group("Number")
-        my_obj_done = my_ef.print_me_and_return()
+        my_obj_done = self.ef.print_me_and_return()
         print(street,"|" ,street_number)
-
+        return my_obj_done
 
     @staticmethod
-    def parse_verwaltung(real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+    def parse_verwaltung(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        my_obj_2 = self.ef.print_me_and_return()
         print("asd")
 
 
-class EndobjectFactory(object):
-
-    def __init__(self, segment_tag):
-        self.my_object = {}
-        self.my_object[segment_tag] = []              # create the main list (all subsequent entries are stored here)
-        self.main_list = self.my_object[segment_tag]  # create a short link on the main list
-        self.add_to_my_obj("type",segment_tag,object_number=0)
-
-    def add_to_my_obj(self, key, value, object_number=0):
-        # fill main list if object index not in
-        len_list = len(self.main_list)
-        if len_list < object_number+1:
-            for index in range(len_list,object_number+1):
-                self.main_list.append({})
-        # add or insert to the main_list
-        self.main_list[object_number][key] = value
-
-    def print_me_and_return(self):
-        print("my_object is:", self.my_object)
-        return self.my_object
