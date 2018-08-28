@@ -21,15 +21,7 @@ class AkfParsingFunctionsOne(object):
 
     def parse_sitz(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         """
-
-        :param real_start_tag:
-        :param content_texts:
-        :param content_lines:
-        :param feature_lines:
-        :param segmentation_class:
-        :return:
-
-          "Sitz": [
+         "Sitz": [
                 {
                   "origpost": "Mergenthalerallee 79-81, 65760 Eschborn Telefon:(069) 7 50 06-0 Telefax:(069) 7 50 06-111 e-mail:info@3u.net Internetseite:http://www.3u.net ",
                   "type": "Sitz",
@@ -64,8 +56,7 @@ class AkfParsingFunctionsOne(object):
                             r"(?<Rest>.*+)",                     # just get the rest which is usually streetname and number, but has other possibilities
                             origpost_red)
         if match is None:
-            print("ok")
-            return
+            return False
 
         numID = dh.strip_if_not_none(match.group("NumID").strip(), "")
         city = dh.strip_if_not_none(match.group("Location"), "")
@@ -96,9 +87,8 @@ class AkfParsingFunctionsOne(object):
                 self.ef.add_to_my_obj("additional_info", additional_info, object_number=0)
 
         #number = match.group("Number")
-        my_obj_done = self.ef.print_me_and_return()
-        print(street,"|" ,street_number)
-        return my_obj_done
+        # my_obj_done = self.ef.print_me_and_return()
+        return True
 
     @staticmethod
     def parse_verwaltung(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):

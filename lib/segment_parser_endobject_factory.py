@@ -1,3 +1,5 @@
+import json
+
 class EndobjectFactory(object):
     """
     Creates an object with the following structure and provides exporting methods:
@@ -40,3 +42,7 @@ class EndobjectFactory(object):
     def print_me_and_return(self):
         print("my_object is:", self.my_object)
         return self.my_object
+
+    def export_as_json(self):
+        my_obj_json = json.dumps(self.my_object, indent=5)
+        return my_obj_json

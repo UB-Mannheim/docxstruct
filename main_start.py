@@ -66,6 +66,7 @@ for key in hocr_files:
         # segment parsing
         ocromore_data = segment_parser.parse_segments(ocromore_data)
         # output file synthesis
+        segment_parser.write_result_to_output(True, ocromore_data)
         # todo
 
         # output analysis steps

@@ -3,6 +3,8 @@ from akf_corelib.configuration_handler import ConfigurationHandler
 from .akf_parsing_functions_one import AkfParsingFunctionsOne
 from .data_helper import DataHelper
 from .segment_parser_endobject_factory import EndobjectFactory
+from lib.data_helper import DataHelper as dh
+
 
 class FunctionMapAKF(object):
     """
@@ -45,6 +47,7 @@ class SegmentParser(object):
                                     self.config.PRINT_WARNING_LEVEL, leading_tag=self.__class__.__name__)
 
         self.function_map = fmap.get_function_map()
+        self.result_root = self.config.OUTPUT_ROOT_PATH + "/results/"
 
 
     def parse_segments(self, ocromore_data):
@@ -82,3 +85,9 @@ class SegmentParser(object):
             DataHelper.get_content(lines,line_features, segmentation_class)
 
         return real_start_tag, content_texts, content_lines, feature_lines
+
+    def write_result_to_output(self, as_json, ocromore_data):
+        if as_json is True:
+            my_json = self.ef.export_as_json()
+            my_json_lines = my_json.split("\n")
+            dh.write_array_to_root("result_json/", my_json_lines, ocromore_data, self.result_root)
