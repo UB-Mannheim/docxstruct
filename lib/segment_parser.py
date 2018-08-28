@@ -19,7 +19,9 @@ class FunctionMapAKF(object):
 
         self.function_map = {
             "Sitz": self.akf_one.parse_sitz,
-            "Verwaltung": self.akf_one.parse_verwaltung
+            "Verwaltung": self.akf_one.parse_verwaltung,
+            "Telefon/Fernruf": self.akf_one.parse_telefon_fernruf,
+            "Vorstand": self.akf_one.parse_vorstand
         }
 
     def get_function_map(self):

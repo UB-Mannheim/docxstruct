@@ -40,37 +40,29 @@ class AkfParsingFunctionsOne(object):
                 }
               ],
         """
-
+        # get basic data
         origpost, origpost_red = dh.create_stringified_linearray(content_texts)   # complete text, complete text without \n
-        print(real_start_tag, ":", origpost_red)
-
-        type = segmentation_class.segment_tag                       # normed tag
+        self.cpr.print(real_start_tag, ":", origpost_red)
+        self.ef.add_to_my_obj("origpost", origpost_red, object_number=0)
         self.ef.add_to_my_obj("type", segmentation_class.segment_tag, object_number=0)
-
-        #                            r"(?::(?<Street>.*?))?"                    # find street string, match lazy cause numbers should be in next group
-        #                   r"(?::(?<Number>[0-9]+[-\/]*[0-9]*))?",    # find number with greedy quantifier + optional extension (for e.g. 12-13)
 
 
         match = regex.match(r"(?<NumID>\(.*?\))"                 # find starting number (non greedy to stop at first closing parenthesis)
-                            r"(?<Location>.*?[,\.]|.*?)"             # find location string
+                            r"(?<Location>.*?[,\.]|.*?)"         # find location string
                             r"(?<Rest>.*+)",                     # just get the rest which is usually streetname and number, but has other possibilities
                             origpost_red)
         if match is None:
             return False
 
-        numID = dh.strip_if_not_none(match.group("NumID").strip(), "")
+        numID = dh.strip_if_not_none(match.group("NumID"), "")
         city = dh.strip_if_not_none(match.group("Location"), "")
-        # add stuff to ef
 
+        # add stuff to ef
         self.ef.add_to_my_obj("numID", numID, object_number=0)
         self.ef.add_to_my_obj("city", city, object_number=0)
 
         rest = dh.strip_if_not_none(match.group("Rest").strip(), "")
 
-
-        street = ""
-        street_number = ""
-        additional_info = ""
 
         # parse the rest if there is some
         if rest != "" and rest is not None:
@@ -86,13 +78,45 @@ class AkfParsingFunctionsOne(object):
                 self.ef.add_to_my_obj("street_number", street_number, object_number=0)
                 self.ef.add_to_my_obj("additional_info", additional_info, object_number=0)
 
-        #number = match.group("Number")
+        # optionally print the object for debugging
         # my_obj_done = self.ef.print_me_and_return()
         return True
 
-    @staticmethod
     def parse_verwaltung(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         my_obj_2 = self.ef.print_me_and_return()
         print("asd")
+
+    def parse_telefon_fernruf(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        my_obj_2 = self.ef.print_me_and_return()
+        print("asd")
+
+    def parse_vorstand(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        origpost, origpost_red = dh.create_stringified_linearray(content_texts)   # complete text, complete text without \n
+        self.cpr.print(real_start_tag, ":", origpost_red)
+        self.ef.add_to_my_obj("origpost", origpost_red, object_number=0)
+        self.ef.add_to_my_obj("type", segmentation_class.segment_tag, object_number=0)
+
+
+        split_post = origpost_red.split(';')
+
+        counter = 0
+        for index, entry in enumerate(split_post):
+            match = regex.match(r"(?<Name>.*[,\.])"             # find location string
+                                r"(?<Rest>.*+)",                     # just get the rest which is usually streetname and number, but has other possibilities
+                                entry)
+            if match is None:
+                continue
+
+            name = dh.strip_if_not_none(match.group("Name"), ",.")
+            city = dh.strip_if_not_none(match.group("Rest"), "")
+            self.ef.add_to_my_obj("name", name, object_number=counter)
+            self.ef.add_to_my_obj("city", city, object_number=counter)
+
+            counter += 1
+
+        self.ef.print_current_main()
+        print("asd")
+
+
 
 

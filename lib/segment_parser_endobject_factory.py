@@ -1,4 +1,5 @@
 import json
+import pprint
 
 class EndobjectFactory(object):
     """
@@ -24,6 +25,9 @@ class EndobjectFactory(object):
     """
     def __init__(self):
         self.my_object = {}
+        self.current_main_list = None
+        self.pp = pprint.PrettyPrinter(indent=5)
+
 
     def set_current_main_list(self, segment_tag):
         if segment_tag not in self.my_object.keys():
@@ -40,8 +44,13 @@ class EndobjectFactory(object):
         self.current_main_list[object_number][key] = value
 
     def print_me_and_return(self):
-        print("my_object is:", self.my_object)
+        print("my_object is:")
+        self.pp.pprint(self.my_object)
         return self.my_object
+
+    def print_current_main(self):
+        print("current_main:")
+        self.pp.pprint(self.current_main_list)
 
     def export_as_json(self):
         my_obj_json = json.dumps(self.my_object, indent=5)
