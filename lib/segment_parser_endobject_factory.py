@@ -53,5 +53,5 @@ class EndobjectFactory(object):
         self.pp.pprint(self.current_main_list)
 
     def export_as_json(self):
-        my_obj_json = json.dumps(self.my_object, indent=5)
+        my_obj_json = json.dumps(self.my_object, indent=5,ensure_ascii=False)
         return my_obj_json

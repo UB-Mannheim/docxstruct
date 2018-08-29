@@ -71,9 +71,9 @@ class AkfParsingFunctionsOne(object):
                                      r"(?<Rest>.*+)",
                                      rest)
             if match_rest is not None:
-                street = dh.strip_if_not_none(match_rest.group("Street"),"")
-                street_number = dh.strip_if_not_none(match_rest.group("Number"),",\.")
-                additional_info = dh.strip_if_not_none(match_rest.group("Rest"),"")
+                street = dh.strip_if_not_none(match_rest.group("Street"), "")
+                street_number = dh.strip_if_not_none(match_rest.group("Number"), ",\.")
+                additional_info = dh.strip_if_not_none(match_rest.group("Rest"), "")
                 self.ef.add_to_my_obj("street", street, object_number=0)
                 self.ef.add_to_my_obj("street_number", street_number, object_number=0)
                 self.ef.add_to_my_obj("additional_info", additional_info, object_number=0)

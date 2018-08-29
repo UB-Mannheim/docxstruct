@@ -1,5 +1,5 @@
 from akf_corelib.filehandler import FileHandler as fh
-
+import io
 
 class DataHelper(object):
     """
@@ -93,7 +93,7 @@ class DataHelper(object):
 
         fh.create_directory_tree(full_dir)
 
-        my_file = open(full_path, 'w')
+        my_file = io.open(full_path, 'w', encoding='utf8')
 
         for text_line in text_lines:
             my_file.write(text_line+"\n")
