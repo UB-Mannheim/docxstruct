@@ -114,4 +114,7 @@ class DataHelper(object):
         if text is None:
             return text
         else:
-            return text.strip(strip_pattern)
+            if strip_pattern != "":
+                return text.strip(strip_pattern)
+            else:
+                return text.strip()

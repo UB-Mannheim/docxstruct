@@ -93,30 +93,40 @@ class AkfParsingFunctionsOne(object):
     def parse_vorstand(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         origpost, origpost_red = dh.create_stringified_linearray(content_texts)   # complete text, complete text without \n
         self.cpr.print(real_start_tag, ":", origpost_red)
-        self.ef.add_to_my_obj("origpost", origpost_red, object_number=0)
-        self.ef.add_to_my_obj("type", segmentation_class.segment_tag, object_number=0)
-
+        #self.ef.add_to_my_obj("origpost", origpost_red, object_number=0)
+        #self.ef.add_to_my_obj("type", segmentation_class.segment_tag, object_number=0)
 
         split_post = origpost_red.split(';')
 
         counter = 0
         for index, entry in enumerate(split_post):
-            match = regex.match(r"(?<Name>.*[,\.])"             # find location string
-                                r"(?<Rest>.*+)",                     # just get the rest which is usually streetname and number, but has other possibilities
-                                entry)
+            entry_stripped = entry.strip()
+            match = regex.match(r"(?<Name>.*)[,]"             # find location string
+                                r"(?<Rest>.*+)",              # just get the rest which is usually streetname and number, but has other possibilities
+                                entry_stripped)
             if match is None:
                 continue
 
-            name = dh.strip_if_not_none(match.group("Name"), ",.")
-            city = dh.strip_if_not_none(match.group("Rest"), "")
+            name = dh.strip_if_not_none(match.group("Name"), ", ")
+            rest = dh.strip_if_not_none(match.group("Rest"), ",. ")
+            name_split = name.split(',')
+            if len(name_split) > 1:
+                position = rest
+                name = name_split[0]
+                city = name_split[1]
+            else:
+                city = rest
+                position = ""
+
             self.ef.add_to_my_obj("name", name, object_number=counter)
             self.ef.add_to_my_obj("city", city, object_number=counter)
+            self.ef.add_to_my_obj("position", position, object_number=counter)
 
+            # print(name, "/", city)
             counter += 1
 
-        self.ef.print_current_main()
-        print("asd")
-
+        # self.ef.print_current_main()
+        return True
 
 
 
