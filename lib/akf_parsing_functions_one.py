@@ -18,6 +18,15 @@ class AkfParsingFunctionsOne(object):
 
         self.ef = endobject_factory
 
+    def add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter):
+        origpost, origpost_red = dh.create_stringified_linearray(content_texts)   # complete text, complete text without \n
+
+        if self.config.ADD_INFO_ENTRY_TO_OUTPUT:
+            self.ef.add_to_my_obj("origpost", origpost_red, object_number=element_counter)
+            self.ef.add_to_my_obj("type", segmentation_class.segment_tag, object_number=element_counter)
+            element_counter += 1
+
+        return origpost, origpost_red, element_counter
 
     def parse_sitz(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         """
@@ -41,12 +50,11 @@ class AkfParsingFunctionsOne(object):
               ],
         """
         # get basic data
-        origpost, origpost_red = dh.create_stringified_linearray(content_texts)   # complete text, complete text without \n
-        self.cpr.print(real_start_tag, ":", origpost_red)
-        self.ef.add_to_my_obj("origpost", origpost_red, object_number=0)
-        self.ef.add_to_my_obj("type", segmentation_class.segment_tag, object_number=0)
+        element_counter = 0
+        origpost, origpost_red, element_counter = \
+            self.add_check_element(content_texts, real_start_tag, segmentation_class, element_counter)
 
-
+        # do first match
         match = regex.match(r"(?<NumID>\(.*?\))"                 # find starting number (non greedy to stop at first closing parenthesis)
                             r"(?<Location>.*?[,\.]|.*?)"         # find location string
                             r"(?<Rest>.*+)",                     # just get the rest which is usually streetname and number, but has other possibilities
@@ -58,15 +66,14 @@ class AkfParsingFunctionsOne(object):
         city = dh.strip_if_not_none(match.group("Location"), "")
 
         # add stuff to ef
-        self.ef.add_to_my_obj("numID", numID, object_number=0)
-        self.ef.add_to_my_obj("city", city, object_number=0)
+        self.ef.add_to_my_obj("numID", numID, object_number=element_counter)
+        self.ef.add_to_my_obj("city", city, object_number=element_counter)
 
         rest = dh.strip_if_not_none(match.group("Rest").strip(), "")
 
-
         # parse the rest if there is some
         if rest != "" and rest is not None:
-            match_rest = regex.match(r"(?<Street>.*?)"
+            match_rest = regex.match(r"(?<Street>.*?)"                  # match all characters non-greedy 
                                      r"(?<Number>[0-9]+[-\/]*[0-9]*)"
                                      r"(?<Rest>.*+)",
                                      rest)
@@ -74,9 +81,9 @@ class AkfParsingFunctionsOne(object):
                 street = dh.strip_if_not_none(match_rest.group("Street"), "")
                 street_number = dh.strip_if_not_none(match_rest.group("Number"), ",\.")
                 additional_info = dh.strip_if_not_none(match_rest.group("Rest"), "")
-                self.ef.add_to_my_obj("street", street, object_number=0)
-                self.ef.add_to_my_obj("street_number", street_number, object_number=0)
-                self.ef.add_to_my_obj("additional_info", additional_info, object_number=0)
+                self.ef.add_to_my_obj("street", street, object_number=element_counter)
+                self.ef.add_to_my_obj("street_number", street_number, object_number=element_counter)
+                self.ef.add_to_my_obj("additional_info", additional_info, object_number=element_counter)
 
         # optionally print the object for debugging
         # my_obj_done = self.ef.print_me_and_return()
@@ -91,14 +98,15 @@ class AkfParsingFunctionsOne(object):
         print("asd")
 
     def parse_vorstand(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
-        origpost, origpost_red = dh.create_stringified_linearray(content_texts)   # complete text, complete text without \n
-        self.cpr.print(real_start_tag, ":", origpost_red)
-        #self.ef.add_to_my_obj("origpost", origpost_red, object_number=0)
-        #self.ef.add_to_my_obj("type", segmentation_class.segment_tag, object_number=0)
 
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter = \
+            self.add_check_element(content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # do  matches (;-separated)
         split_post = origpost_red.split(';')
 
-        counter = 0
         for index, entry in enumerate(split_post):
             entry_stripped = entry.strip()
             match = regex.match(r"(?<Name>.*)[,]"             # find location string
@@ -118,14 +126,12 @@ class AkfParsingFunctionsOne(object):
                 city = rest
                 position = ""
 
-            self.ef.add_to_my_obj("name", name, object_number=counter)
-            self.ef.add_to_my_obj("city", city, object_number=counter)
-            self.ef.add_to_my_obj("position", position, object_number=counter)
+            self.ef.add_to_my_obj("name", name, object_number=element_counter)
+            self.ef.add_to_my_obj("city", city, object_number=element_counter)
+            self.ef.add_to_my_obj("position", position, object_number=element_counter)
 
-            # print(name, "/", city)
-            counter += 1
+            element_counter += 1
 
-        # self.ef.print_current_main()
         return True
 
 

@@ -51,10 +51,25 @@ class SegmentParser(object):
         self.function_map = fmap.get_function_map()
         self.result_root = self.config.OUTPUT_ROOT_PATH + "/results/"
 
+    def clear_result(self):
+        # create a new end object factory, new content
+        self.ef = EndobjectFactory()
+        # map to the new ef object which has been recreated
+        fmap = FunctionMapAKF(self.ef)
+        self.function_map = fmap.get_function_map()
+
 
     def parse_segments(self, ocromore_data):
         segmentation = ocromore_data['segmentation']
         segmentation_classes = segmentation.my_classes
+
+        # add all text from original file if activated (i.e. for debugging purposes)
+        if self.config.ADD_FULLTEXT_ENTRY:
+            all_texts = self.get_all_text(ocromore_data)
+            self.ef.set_current_main_list("overall_info")
+            self.ef.add_to_my_obj("fulltexts",all_texts)
+
+        # start parsing for each successfully segmented area
         for segmentation_class in segmentation_classes:
 
             # if the class segment was recognized ...
@@ -63,6 +78,7 @@ class SegmentParser(object):
                 segment_tag = segmentation_class.get_segment_tag()
                 self.trigger_mapped_function(segment_tag, segmentation_class, ocromore_data)
 
+        # add and return result
         ocromore_data['results'] = self.ef
         return ocromore_data
 
@@ -87,6 +103,13 @@ class SegmentParser(object):
             DataHelper.get_content(lines,line_features, segmentation_class)
 
         return real_start_tag, content_texts, content_lines, feature_lines
+
+    def get_all_text(self, ocromore_data):
+        all_text = []
+        for line in ocromore_data['lines']:
+            all_text.append(line['text'])
+        return all_text
+
 
     def write_result_to_output(self, as_json, ocromore_data):
         if as_json is True:

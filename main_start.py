@@ -50,6 +50,7 @@ for key in hocr_files:
         if "msa_best" not in file.ocr_profile:
             continue
 
+
         #if not "0064_1" in file.name and not "0142_1" in file.name:
         #    continue
         # fetch additional information for current file (if toggled in info)
@@ -76,6 +77,11 @@ for key in hocr_files:
         ctr_test += 1
         if ctr_test >= 30:
             break
+
+        ## clear the current result in segment_parser cache to parse the next one
+        #segment_parser.clear_result()
+
+
 
     # output analysis: print diff info for this year (accumulated over all tables/year)
     output_analyzer.log_accumulated_unsegmentated(accumulated_diff_info, ocromore_data)
