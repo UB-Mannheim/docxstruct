@@ -21,7 +21,11 @@ class FunctionMapAKF(object):
             "Sitz": self.akf_one.parse_sitz,
             "Verwaltung": self.akf_one.parse_verwaltung,
             "Telefon/Fernruf": self.akf_one.parse_telefon_fernruf,
-            "Vorstand": self.akf_one.parse_vorstand
+            "Vorstand": self.akf_one.parse_vorstand,
+            "Aufsichtsrat": self.akf_one.parse_aufsichtsrat,
+            "Gründung": self.akf_one.parse_gruendung,
+            "Arbeitnehmervertreter": self.akf_one.parse_arbeitnehmervertreter,
+            "Tätigkeitsgebiet": self.akf_one.parse_taetigkeitsgebiet
         }
 
     def get_function_map(self):

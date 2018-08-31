@@ -90,7 +90,7 @@ class AkfParsingFunctionsOne(object):
         return True
 
     def parse_verwaltung(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
-        my_obj_2 = self.ef.print_me_and_return()
+        # kmy_obj_2 = self.ef.print_me_and_return()
         print("asd")
 
     def parse_telefon_fernruf(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
@@ -166,5 +166,51 @@ class AkfParsingFunctionsOne(object):
 
         return True
 
+    def parse_aufsichtsrat(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
 
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter = \
+            self.add_check_element(content_texts, real_start_tag, segmentation_class, element_counter)
+        print(origpost_red)
+        # do  matches (;-separated)
+        split_post = origpost_red.split(';')
 
+        for index, entry in enumerate(split_post):
+            entry_stripped = entry.strip()
+
+            entry_split = entry_stripped.split(',')
+            name = ""
+            city = ""
+            title = ""
+            rest_info = ""
+            for fragment_index, fragment in enumerate(entry_split):
+                if fragment_index == 0:
+                    name = fragment
+                elif fragment_index == 1:
+                    city = fragment
+                elif fragment_index == 2:
+                    title = fragment
+                elif fragment_index >= 3:
+                    rest_info += fragment
+
+            self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=True)
+            self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=True)
+            self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=True)
+            self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=True)
+
+            element_counter += 1
+
+        return True
+
+    # Arbeitnehmervertreter
+    def parse_arbeitnehmervertreter(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        pass
+
+    # Gruendung
+    def parse_gruendung(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        pass
+
+    # Tätigkeitsgebiet
+    def parse_taetigkeitsgebiet(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        pass

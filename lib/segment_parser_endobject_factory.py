@@ -34,7 +34,11 @@ class EndobjectFactory(object):
             self.my_object[segment_tag] = []              # create the main list (all subsequent entries are stored here)
         self.current_main_list = self.my_object[segment_tag]  # create a short link on the main list
 
-    def add_to_my_obj(self, key, value, object_number=0):
+    def add_to_my_obj(self, key, value, object_number=0, only_filled=False):
+
+        if only_filled is True and (value == None or value == "" or value == [] or value == {}):
+            return
+
         # fill main list if object index not in
         len_list = len(self.current_main_list)
         if len_list < object_number+1:
