@@ -46,7 +46,8 @@ for key in hocr_files:
     ocromore_data = None
     ctr_test = 0
 
-    for file in hocr_files[key]:
+    my_list = hocr_files[key]
+    for file in my_list:
         if "msa_best" not in file.ocr_profile:
             continue
 

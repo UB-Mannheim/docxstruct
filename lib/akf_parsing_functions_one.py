@@ -94,8 +94,40 @@ class AkfParsingFunctionsOne(object):
         print("asd")
 
     def parse_telefon_fernruf(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
-        my_obj_2 = self.ef.print_me_and_return()
-        print("asd")
+        # get basic data
+        origpost, origpost_red, element_counter = self.add_check_element(content_texts,
+                                                                         real_start_tag, segmentation_class,0)
+        origpost_red = "BonnSa.-Nr. 4 2041. Königswinter Sa.-Nr. 24 34."
+
+        # substitute in a seperator char to integrate delimiters in next step
+        origpost_red = regex.sub(r"(\d\.)", r"\1~~~~", origpost_red)
+
+        # do  matches (sc-separated)
+        split_post = regex.split(';|~~~~|\su\.', origpost_red)
+
+        for index, entry in enumerate(split_post):
+            entry_stripped = entry.strip()
+            if entry_stripped == "":
+                continue
+
+            match_word = regex.match(r"(?<Tag>\D*)"
+                                     r"(?<Numbers>[\d\s\W]*)"
+                                     ,entry_stripped)
+            if match_word is not None:
+                tag = dh.strip_if_not_none(match_word.group("Tag"),"")
+                match_tag = regex.match(r"(?<rest_bef>.*)(?<sanr>Sa\.?\-Nr\.?)(?<rest_end>.*)", tag)
+                location = ""
+                if match_tag is not None:
+                    rest_tag = match_tag.group('rest_bef')
+                    rest_tag_2 = match_tag.group('rest_end')
+                    # sanr = match_tag.group('sanr') # this is the filtered group
+                    location = dh.strip_if_not_none(rest_tag +" "+rest_tag_2,"., ")
+                number = dh.strip_if_not_none(match_word.group("Numbers"), "., ")
+                self.ef.add_to_my_obj("number_Sa.-Nr.", number, object_number=element_counter)
+                self.ef.add_to_my_obj("location", location, object_number=element_counter)
+                element_counter += 1
+
+
 
     def parse_vorstand(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
 
