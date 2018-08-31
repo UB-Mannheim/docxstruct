@@ -241,8 +241,20 @@ class AkfParsingFunctionsOne(object):
 
     # Gruendung
     def parse_gruendung(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
-        pass
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter = \
+            self.add_check_element(content_texts, real_start_tag, segmentation_class, element_counter)
+
+        year = dh.strip_if_not_none(origpost_red, ".,\s")
+        self.ef.add_to_my_obj("year", year, object_number=element_counter, only_filled=True)
+
 
     # Tätigkeitsgebiet
     def parse_taetigkeitsgebiet(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
-        pass
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter = \
+            self.add_check_element(content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # print(origpost_red)
