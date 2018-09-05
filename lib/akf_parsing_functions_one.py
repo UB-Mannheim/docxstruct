@@ -1,6 +1,7 @@
 from akf_corelib.conditional_print import ConditionalPrint
 from akf_corelib.configuration_handler import ConfigurationHandler
 from .data_helper import DataHelper as dh
+from .akf_parsing_functions_common import AKFCommonParsingFunctions as cf
 
 import regex
 
@@ -257,4 +258,23 @@ class AkfParsingFunctionsOne(object):
         origpost, origpost_red, element_counter = \
             self.add_check_element(content_texts, real_start_tag, segmentation_class, element_counter)
 
-        # print(origpost_red)
+        # can contain
+        # Kapital: xx-YYYYYY
+        # Tochtergesellschaft und Beteiligung:
+        # Beteiligung:
+        # Flotte:
+        if "Kapital:" in origpost_red:
+            print("asd")
+
+        final_items = cf.parse_general_and_keys(content_texts,
+                                                join_separated_lines=True,
+                                                current_key_initial_value="General_Info")
+
+        for key in final_items.keys():
+            value = final_items[key]
+            if value is None or value == "":
+                continue
+            self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=True)
+            element_counter += 1
+
+        print(origpost_red)
