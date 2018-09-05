@@ -269,6 +269,7 @@ class AkfParsingFunctionsOne(object):
         final_items = cf.parse_general_and_keys(content_texts,
                                                 join_separated_lines=True,
                                                 current_key_initial_value="General_Info")
+        joined_texts = cf.join_separated_lines(content_texts)
 
         for key in final_items.keys():
             value = final_items[key]
