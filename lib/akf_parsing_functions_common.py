@@ -11,7 +11,8 @@ class AKFCommonParsingFunctions(object):
         Categories are found by leading tag followed by ':'
 
         :param content_texts: texts to check
-        :param join_separated_lines: lines which have trailing - get concatinated
+        :param join_separated_lines: lines which have trailing '-'
+                are joined (usually not needed use 'join_separated_lines' instead)
         :param current_key_initial_value: used key initial value (for "General info" key)
         :return: a dictionary with general_content as well as the seperated keytag content
         """
@@ -73,7 +74,12 @@ class AKFCommonParsingFunctions(object):
 
     @staticmethod
     def join_separated_lines(content_texts):
-
+        """
+        Joins dash separated lines in the text list (reduces the number of entries, if
+        there are such lines)
+        :param content_texts: text list to join
+        :return: text array where all dash separated lines are joined
+        """
 
         # final array with joined texts
         joined_texts = []

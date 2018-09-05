@@ -20,14 +20,18 @@ class AkfParsingFunctionsOne(object):
         self.ef = endobject_factory
 
     def add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter):
-        origpost, origpost_red = dh.create_stringified_linearray(content_texts)   # complete text, complete text without \n
 
         if self.config.ADD_INFO_ENTRY_TO_OUTPUT:
+            origpost, origpost_red = dh.create_stringified_linearray(
+                content_texts)  # complete text, complete text without \n
             self.ef.add_to_my_obj("origpost", origpost_red, object_number=element_counter)
             self.ef.add_to_my_obj("type", segmentation_class.segment_tag, object_number=element_counter)
             element_counter += 1
 
-        return origpost, origpost_red, element_counter
+        joined_texts = cf.join_separated_lines(content_texts)  # join dash separated texts
+        origpost, origpost_red = dh.create_stringified_linearray(joined_texts)   # final reduced array for further processing
+
+        return origpost, origpost_red, element_counter, joined_texts
 
     def parse_sitz(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         """
@@ -52,7 +56,8 @@ class AkfParsingFunctionsOne(object):
         """
         # get basic data
         element_counter = 0
-        origpost, origpost_red, element_counter = \
+
+        origpost, origpost_red, element_counter, content_texts = \
             self.add_check_element(content_texts, real_start_tag, segmentation_class, element_counter)
 
         # do first match
@@ -95,10 +100,10 @@ class AkfParsingFunctionsOne(object):
         print("asd")
 
     def parse_telefon_fernruf(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+
         # get basic data
-        origpost, origpost_red, element_counter = self.add_check_element(content_texts,
-                                                                         real_start_tag, segmentation_class,0)
-        origpost_red = "BonnSa.-Nr. 4 2041. Königswinter Sa.-Nr. 24 34."
+        origpost, origpost_red, element_counter, content_texts = self.add_check_element(content_texts,
+                                                                         real_start_tag, segmentation_class, 0)
 
         # substitute in a seperator char to integrate delimiters in next step
         origpost_red = regex.sub(r"(\d\.)", r"\1~~~~", origpost_red)
@@ -134,7 +139,7 @@ class AkfParsingFunctionsOne(object):
 
         # get basic data
         element_counter = 0
-        origpost, origpost_red, element_counter = \
+        origpost, origpost_red, element_counter, content_texts = \
             self.add_check_element(content_texts, real_start_tag, segmentation_class, element_counter)
 
         # do  matches (;-separated)
@@ -171,7 +176,7 @@ class AkfParsingFunctionsOne(object):
 
         # get basic data
         element_counter = 0
-        origpost, origpost_red, element_counter = \
+        origpost, origpost_red, element_counter, content_texts = \
             self.add_check_element(content_texts, real_start_tag, segmentation_class, element_counter)
 
         # do  matches (;-separated)
@@ -207,7 +212,7 @@ class AkfParsingFunctionsOne(object):
     def parse_arbeitnehmervertreter(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
         element_counter = 0
-        origpost, origpost_red, element_counter = \
+        origpost, origpost_red, element_counter, content_texts = \
             self.add_check_element(content_texts, real_start_tag, segmentation_class, element_counter)
 
         # do  matches (;-separated)
@@ -244,7 +249,7 @@ class AkfParsingFunctionsOne(object):
     def parse_gruendung(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
         element_counter = 0
-        origpost, origpost_red, element_counter = \
+        origpost, origpost_red, element_counter, content_texts = \
             self.add_check_element(content_texts, real_start_tag, segmentation_class, element_counter)
 
         year = dh.strip_if_not_none(origpost_red, ".,\s")
@@ -255,7 +260,7 @@ class AkfParsingFunctionsOne(object):
     def parse_taetigkeitsgebiet(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
         element_counter = 0
-        origpost, origpost_red, element_counter = \
+        origpost, origpost_red, element_counter, content_texts = \
             self.add_check_element(content_texts, real_start_tag, segmentation_class, element_counter)
 
         # can contain
@@ -265,11 +270,11 @@ class AkfParsingFunctionsOne(object):
         # Flotte:
         if "Kapital:" in origpost_red:
             print("asd")
-
-        final_items = cf.parse_general_and_keys(content_texts,
-                                                join_separated_lines=True,
-                                                current_key_initial_value="General_Info")
         joined_texts = cf.join_separated_lines(content_texts)
+
+        final_items = cf.parse_general_and_keys(joined_texts,
+                                                join_separated_lines=False,
+                                                current_key_initial_value="General_Info")
 
         for key in final_items.keys():
             value = final_items[key]
