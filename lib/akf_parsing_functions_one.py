@@ -68,7 +68,8 @@ class AkfParsingFunctionsOne(object):
         origpost, origpost_red, element_counter, content_texts = \
             cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
 
-        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+        # logme
+        # self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
         if "srat" in real_start_tag:
             # Verwaltungsrat ..

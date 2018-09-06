@@ -27,15 +27,39 @@ class AkfParsingFunctionsTwo(object):
         origpost, origpost_red, element_counter, content_texts = \
             cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
 
-        self.output_analyzer.log_segment_information(origpost_red)
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
-        final_items = cf.parse_general_and_keys(content_texts,
-                                                join_separated_lines=False,
-                                                current_key_initial_value="General_Info")
+        split_post = origpost_red.split(';')
+        DEFAULT_ENTRY = 1
+        ADDITIONAL_INFO_CITY = 2    # beide - two previous
+        ADDITIONAL_INFO_CITY_2 = 3  # sämtl. - all previous
 
-        for key in final_items.keys():
-            value = final_items[key]
-            if value is None or value == "":
+        final_entries = []
+        for index, entry in enumerate(split_post):
+            entry_stripped = entry.strip()
+
+            if "beide" in entry_stripped:
+                additional_city_info = entry_stripped
+                final_entries.append((ADDITIONAL_INFO_CITY, additional_city_info))
                 continue
-            self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=True)
-            element_counter += 1
+            if "sämtl" in entry_stripped:
+                additional_city_info = entry_stripped
+                final_entries.append((ADDITIONAL_INFO_CITY_2, additional_city_info))
+                continue
+
+            entry_split = entry_stripped.split(',')
+            bank = ""
+            city = ""
+            title = ""
+            rest_info = ""
+            for fragment_index, fragment in enumerate(entry_split):
+                if fragment_index == 0:
+                    bank = fragment
+                elif fragment_index == 1:
+                    city = fragment
+                elif fragment_index >= 2:
+                    rest_info += fragment
+            final_entries.append((DEFAULT_ENTRY,bank,city,title))
+
+        return
