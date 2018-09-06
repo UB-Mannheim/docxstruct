@@ -182,3 +182,37 @@ class AKFCommonParsingFunctions(object):
                 return numID, city, street, street_number, additional_info
 
         return numID, city, None, None, None
+
+
+    @staticmethod
+    def parse_persons(origpost_red):
+        """
+        Parses a ';' separated list of persons i.e.
+        - Karl Markmann, Kiel-Holtenau, Vorstand, (ehem. direktor);
+        - Dr. Paul Leverkuehn, Hamburg.
+
+        :param origpost_red:
+        :return: a list of name, city, title, rest_info tuples
+        """
+        split_post = origpost_red.split(';')
+        final_entries = []
+        for index, entry in enumerate(split_post):
+            entry_stripped = entry.strip()
+
+            entry_split = entry_stripped.split(',')
+            name = ""
+            city = ""
+            title = ""
+            rest_info = ""
+            for fragment_index, fragment in enumerate(entry_split):
+                if fragment_index == 0:
+                    name = fragment
+                elif fragment_index == 1:
+                    city = fragment
+                elif fragment_index == 2:
+                    title = fragment
+                elif fragment_index >= 3:
+                    rest_info += fragment
+
+            final_entries.append((name, city, title, rest_info))
+        return final_entries

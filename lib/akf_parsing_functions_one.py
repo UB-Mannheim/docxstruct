@@ -83,17 +83,45 @@ class AkfParsingFunctionsOne(object):
 
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
-        final_items = cf.parse_general_and_keys(content_texts,
-                                                join_separated_lines=False,
-                                                current_key_initial_value="General_Info")
-        print("Verwaltung:", content_texts)
         if "srat" in real_start_tag:
             # Verwaltungsrat ..
-            print("asd")
+            persons_final = cf.parse_persons(origpost_red)
+            only_add_if_filed = True
+            for entry in persons_final:
+                name, city, title, rest_info = entry
+                self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
+                self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
+                self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
+                self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
+                element_counter += 1
+            return True
+        elif "Verw." in real_start_tag:
+            # Verw.
+            num_id, city, street, street_number, additional_info = cf.parse_id_location(origpost_red)
+
+            # add stuff to ef
+            only_add_if_value = True
+            self.ef.add_to_my_obj("numID", num_id, object_number=element_counter, only_filled=only_add_if_value)
+            self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_value)
+            self.ef.add_to_my_obj("street", street, object_number=element_counter, only_filled=only_add_if_value)
+            self.ef.add_to_my_obj("street_number", street_number, object_number=element_counter,
+                                  only_filled=only_add_if_value)
+            self.ef.add_to_my_obj("additional_info", additional_info, object_number=element_counter,
+                                  only_filled=only_add_if_value)
+
+            return True
         else:
             # Verwaltung
-            print("asd")
-        pass
+            final_items = cf.parse_general_and_keys(content_texts,
+                                                    join_separated_lines=False,
+                                                    current_key_initial_value="General_Info")
+            for key in final_items.keys():
+                value = final_items[key]
+                if value is None or value == "":
+                    continue
+                self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=True)
+                element_counter += 1
+            return True
 
     def parse_telefon_fernruf(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
 
@@ -175,32 +203,14 @@ class AkfParsingFunctionsOne(object):
         origpost, origpost_red, element_counter, content_texts = \
             self.add_check_element(content_texts, real_start_tag, segmentation_class, element_counter)
 
-        # do  matches (;-separated)
-        split_post = origpost_red.split(';')
-
-        for index, entry in enumerate(split_post):
-            entry_stripped = entry.strip()
-
-            entry_split = entry_stripped.split(',')
-            name = ""
-            city = ""
-            title = ""
-            rest_info = ""
-            for fragment_index, fragment in enumerate(entry_split):
-                if fragment_index == 0:
-                    name = fragment
-                elif fragment_index == 1:
-                    city = fragment
-                elif fragment_index == 2:
-                    title = fragment
-                elif fragment_index >= 3:
-                    rest_info += fragment
-
-            self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=True)
-            self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=True)
-            self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=True)
-            self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=True)
-
+        persons_final = cf.parse_persons(origpost_red)
+        only_add_if_filed = True
+        for entry in persons_final:
+            name, city, title, rest_info = entry
+            self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled= only_add_if_filed)
+            self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled= only_add_if_filed)
+            self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled= only_add_if_filed)
+            self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled= only_add_if_filed)
             element_counter += 1
 
         return True
@@ -211,35 +221,17 @@ class AkfParsingFunctionsOne(object):
         origpost, origpost_red, element_counter, content_texts = \
             self.add_check_element(content_texts, real_start_tag, segmentation_class, element_counter)
 
-        # do  matches (;-separated)
-        split_post = origpost_red.split(';')
-
-        for index, entry in enumerate(split_post):
-            entry_stripped = entry.strip()
-
-            entry_split = entry_stripped.split(',')
-            name = ""
-            city = ""
-            title = ""
-            rest_info = ""
-            for fragment_index, fragment in enumerate(entry_split):
-                if fragment_index == 0:
-                    name = fragment
-                elif fragment_index == 1:
-                    city = fragment
-                elif fragment_index == 2:
-                    title = fragment
-                elif fragment_index >= 3:
-                    rest_info += fragment
-
-            self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=True)
-            self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=True)
-            self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=True)
-            self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=True)
-
+        persons_final = cf.parse_persons(origpost_red)
+        only_add_if_filed = True
+        for entry in persons_final:
+            name, city, title, rest_info = entry
+            self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled= only_add_if_filed)
+            self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled= only_add_if_filed)
+            self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled= only_add_if_filed)
+            self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled= only_add_if_filed)
             element_counter += 1
 
-
+        return True
 
     # Gruendung
     def parse_gruendung(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
