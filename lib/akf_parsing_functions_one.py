@@ -98,11 +98,12 @@ class AkfParsingFunctionsOne(object):
 
     def parse_verwaltung(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # kmy_obj_2 = self.ef.print_me_and_return()
-
         # get basic data
         element_counter = 0
         origpost, origpost_red, element_counter, content_texts = \
             self.add_check_element(content_texts, real_start_tag, segmentation_class, element_counter)
+
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
         final_items = cf.parse_general_and_keys(content_texts,
                                                 join_separated_lines=False,

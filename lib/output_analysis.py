@@ -51,6 +51,29 @@ class OutputAnalysis(object):
 
         dh.write_array_to_root("segmentation_simple/", final_text_lines, ocromore_data, self.analysis_root)
 
+    def log_segment_information(self, segment_tag, text_lines, real_segment_tag):
+        """
+        Logs an array with a given tag append wise into a file with the name
+        of segment_tag in 'output/analysis/segmentation_segments' can be used
+        to have a look on specific segments to understand the parsing better
+        :param segment_tag: tag for filename
+        :param text_lines: array of lines which get's logged
+        :param real_segment_tag: can differ to segment tag, is given on each append
+        :return:
+        """
+
+        final_text_lines = []
+
+        # add dividers to the lines
+        final_text_lines.append(real_segment_tag+"------------------------------------------------")
+        final_text_lines.extend(text_lines)
+        final_text_lines.append("")
+        final_text_lines.append("")
+
+        # print to file finally (append style)
+        dh.write_array_to_root_simple("segmentation_segments", segment_tag,
+                                      final_text_lines, self.analysis_root, append_mode=True)
+
     def log_unsegmentated(self, ocromore_data):
         """
         Log unsegmentated areas in ocromore data

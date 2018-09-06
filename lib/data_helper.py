@@ -70,6 +70,24 @@ class DataHelper(object):
 
         return real_tag, other_rest_content_texts, other_rest_content_lines, other_rest_feature_lines
 
+
+    @staticmethod
+    def write_array_to_root_simple(base_path,tag, text_lines, analysis_root, append_mode=False):
+        full_dir = analysis_root + base_path +"/"
+        full_path = full_dir+ tag+".txt"
+
+        fh.create_directory_tree(full_dir)
+        # write append or normal
+        if append_mode is True:
+            my_file = io.open(full_path, 'a', encoding='utf8')
+        else:
+            my_file = io.open(full_path, 'w', encoding='utf8')
+
+        for text_line in text_lines:
+            my_file.write(text_line+"\n")
+
+        my_file.close()
+
     @staticmethod
     def write_array_to_root(base_path, text_lines, ocromore_data, analysis_root, accumulated=False):
         """
