@@ -216,3 +216,18 @@ class AKFCommonParsingFunctions(object):
 
             final_entries.append((name, city, title, rest_info))
         return final_entries
+
+    @staticmethod
+    def add_check_element(topclass, content_texts, real_start_tag, segmentation_class, element_counter):
+
+        if topclass.config.ADD_INFO_ENTRY_TO_OUTPUT:
+            origpost, origpost_red = dh.create_stringified_linearray(
+                content_texts)  # complete text, complete text without \n
+            topclass.ef.add_to_my_obj("origpost", origpost_red, object_number=element_counter)
+            topclass.ef.add_to_my_obj("type", segmentation_class.segment_tag, object_number=element_counter)
+            element_counter += 1
+
+        joined_texts = AKFCommonParsingFunctions.join_separated_lines(content_texts)  # join dash separated texts
+        origpost, origpost_red = dh.create_stringified_linearray(joined_texts)   # final reduced array for further processing
+
+        return origpost, origpost_red, element_counter, joined_texts
