@@ -1,6 +1,8 @@
 from akf_corelib.conditional_print import ConditionalPrint
 from akf_corelib.configuration_handler import ConfigurationHandler
 from .akf_parsing_functions_one import AkfParsingFunctionsOne
+from .akf_parsing_functions_two import AkfParsingFunctionsTwo
+
 from .data_helper import DataHelper
 from .segment_parser_endobject_factory import EndobjectFactory
 from lib.data_helper import DataHelper as dh
@@ -16,6 +18,7 @@ class FunctionMapAKF(object):
     def __init__(self, endobject_factory, output_analyzer):
         self.ef = endobject_factory
         self.akf_one = AkfParsingFunctionsOne(endobject_factory, output_analyzer)
+        self.akf_two = AkfParsingFunctionsTwo(endobject_factory, output_analyzer)
 
         self.function_map = {
             "Sitz": self.akf_one.parse_sitz,
@@ -26,6 +29,7 @@ class FunctionMapAKF(object):
             "Gründung": self.akf_one.parse_gruendung,
             "Arbeitnehmervertreter": self.akf_one.parse_arbeitnehmervertreter,
             "Tätigkeitsgebiet": self.akf_one.parse_taetigkeitsgebiet,
+            "Zahlstellen": self.akf_two.parse_zahlstellen,
         }
 
     def get_function_map(self):

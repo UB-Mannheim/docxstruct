@@ -32,4 +32,23 @@ you can log can log segment specific info to file:
 self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 `
 
- 
+## Parsing code 
+To use your custom parsing code instantiate your 'segment_parser.py'
+FunctionMapAKF constructor. Make sure your function tag is the one
+used in the segment_classifier
+
+`
+    self.akf_one = AkfParsingFunctionsOne(endobject_factory, output_analyzer)
+    self.akf_two = AkfParsingFunctionsTwo(endobject_factory, output_analyzer)
+    self.function_map = {
+        "Sitz": self.akf_one.parse_sitz,
+        "Verwaltung": self.akf_one.parse_verwaltung,
+        "Telefon/Fernruf": self.akf_one.parse_telefon_fernruf,
+        "Vorstand": self.akf_one.parse_vorstand,
+        "Aufsichtsrat": self.akf_one.parse_aufsichtsrat,
+        "Gründung": self.akf_one.parse_gruendung,
+        "Arbeitnehmervertreter": self.akf_one.parse_arbeitnehmervertreter,
+        "Tätigkeitsgebiet": self.akf_one.parse_taetigkeitsgebiet,
+        "Zahlstellen": self.akf_two.parse_zahlstellen,
+    }
+`
