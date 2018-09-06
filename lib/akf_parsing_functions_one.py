@@ -61,39 +61,17 @@ class AkfParsingFunctionsOne(object):
         origpost, origpost_red, element_counter, content_texts = \
             self.add_check_element(content_texts, real_start_tag, segmentation_class, element_counter)
 
-        # do first match
-        match = regex.match(r"(?<NumID>\(.*?\))"                 # find starting number (non greedy to stop at first closing parenthesis)
-                            r"(?<Location>.*?[,\.]|.*?)"         # find location string
-                            r"(?<Rest>.*+)",                     # just get the rest which is usually streetname and number, but has other possibilities
-                            origpost_red)
-        if match is None:
-            return False
-
-        numID = dh.strip_if_not_none(match.group("NumID"), "")
-        city = dh.strip_if_not_none(match.group("Location"), "")
+        # get relevant info
+        num_id, city, street, street_number, additional_info = cf.parse_id_location(origpost_red)
 
         # add stuff to ef
-        self.ef.add_to_my_obj("numID", numID, object_number=element_counter)
-        self.ef.add_to_my_obj("city", city, object_number=element_counter)
+        only_add_if_value = True
+        self.ef.add_to_my_obj("numID", num_id, object_number=element_counter, only_filled=only_add_if_value)
+        self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_value)
+        self.ef.add_to_my_obj("street", street, object_number=element_counter, only_filled=only_add_if_value)
+        self.ef.add_to_my_obj("street_number", street_number, object_number=element_counter, only_filled=only_add_if_value)
+        self.ef.add_to_my_obj("additional_info", additional_info, object_number=element_counter, only_filled=only_add_if_value)
 
-        rest = dh.strip_if_not_none(match.group("Rest").strip(), "")
-
-        # parse the rest if there is some
-        if rest != "" and rest is not None:
-            match_rest = regex.match(r"(?<Street>.*?)"                  # match all characters non-greedy 
-                                     r"(?<Number>[0-9]+[-\/]*[0-9]*)"
-                                     r"(?<Rest>.*+)",
-                                     rest)
-            if match_rest is not None:
-                street = dh.strip_if_not_none(match_rest.group("Street"), "")
-                street_number = dh.strip_if_not_none(match_rest.group("Number"), ",\.")
-                additional_info = dh.strip_if_not_none(match_rest.group("Rest"), "")
-                self.ef.add_to_my_obj("street", street, object_number=element_counter)
-                self.ef.add_to_my_obj("street_number", street_number, object_number=element_counter)
-                self.ef.add_to_my_obj("additional_info", additional_info, object_number=element_counter)
-
-        # optionally print the object for debugging
-        # my_obj_done = self.ef.print_me_and_return()
         return True
 
     def parse_verwaltung(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):

@@ -22,3 +22,14 @@ This is in idea.properties-file which can i.e. be found over Help->Edit Custom P
 `
 editor.soft.wrap.force.limit=10000
 `
+
+
+# Handling Code
+In parsing functions (i.e. within akf_parsing_functions_one), 
+you can log can log segment specific info to file:
+
+`
+self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+`
+
+ 

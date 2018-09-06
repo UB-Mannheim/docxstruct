@@ -1,3 +1,6 @@
+import regex
+from .data_helper import DataHelper as dh
+
 class AKFCommonParsingFunctions(object):
     """
     This is a holder object for commonly ocuring parsing
@@ -144,3 +147,38 @@ class AKFCommonParsingFunctions(object):
 
         # return the modified list
         return joined_texts
+
+    @staticmethod
+    def parse_id_location(origpost_red):
+        """
+        Parses a text for common text block like
+        (24a) Hamburg 13, Mittelweg 180
+        :param origpost_red:
+        :return: tuple with numID, city, street, street_number, additional_info
+        """
+
+        # do first match
+        match = regex.match(r"(?<NumID>\(.*?\))"                 # find starting number (non greedy to stop at first closing parenthesis)
+                            r"(?<Location>.*?[,\.]|.*?)"         # find location string
+                            r"(?<Rest>.*+)",                     # just get the rest which is usually streetname and number, but has other possibilities
+                            origpost_red)
+        if match is None:
+            return None, None, None, None, None
+
+        numID = dh.strip_if_not_none(match.group("NumID"), "")
+        city = dh.strip_if_not_none(match.group("Location"), "")
+        rest = dh.strip_if_not_none(match.group("Rest").strip(), "")
+
+        # parse the rest if there is some
+        if rest != "" and rest is not None:
+            match_rest = regex.match(r"(?<Street>.*?)" # match all characters non-greedy 
+                                     r"(?<Number>[0-9]+[-\/]*[0-9]*)"
+                                     r"(?<Rest>.*+)",
+                                     rest)
+            if match_rest is not None:
+                street = dh.strip_if_not_none(match_rest.group("Street"), "")
+                street_number = dh.strip_if_not_none(match_rest.group("Number"), ",\.")
+                additional_info = dh.strip_if_not_none(match_rest.group("Rest"), "")
+                return numID, city, street, street_number, additional_info
+
+        return numID, city, None, None, None
