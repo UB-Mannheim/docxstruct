@@ -8,16 +8,17 @@ import regex
 
 class AkfParsingFunctionsOne(object):
 
-    def __init__(self, endobject_factory):
+    def __init__(self, endobject_factory, output_analyzer):
         config_handler = ConfigurationHandler(first_init=False)
 
         self.config = config_handler.get_config()
         self.cpr = ConditionalPrint(self.config.PRINT_SEGMENT_PARSER_AKF_FN_ONE, self.config.PRINT_EXCEPTION_LEVEL,
                                     self.config.PRINT_WARNING_LEVEL, leading_tag=self.__class__.__name__)
 
-        self.cpr.print("init output analysis")
+        self.cpr.print("init akf parsing functions one")
 
         self.ef = endobject_factory
+        self.output_analyzer = output_analyzer
 
     def add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter):
 
@@ -97,7 +98,23 @@ class AkfParsingFunctionsOne(object):
 
     def parse_verwaltung(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # kmy_obj_2 = self.ef.print_me_and_return()
-        print("asd")
+
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            self.add_check_element(content_texts, real_start_tag, segmentation_class, element_counter)
+
+        final_items = cf.parse_general_and_keys(content_texts,
+                                                join_separated_lines=False,
+                                                current_key_initial_value="General_Info")
+        print("Verwaltung:", content_texts)
+        if "srat" in real_start_tag:
+            # Verwaltungsrat ..
+            print("asd")
+        else:
+            # Verwaltung
+            print("asd")
+        pass
 
     def parse_telefon_fernruf(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
 
@@ -263,16 +280,7 @@ class AkfParsingFunctionsOne(object):
         origpost, origpost_red, element_counter, content_texts = \
             self.add_check_element(content_texts, real_start_tag, segmentation_class, element_counter)
 
-        # can contain
-        # Kapital: xx-YYYYYY
-        # Tochtergesellschaft und Beteiligung:
-        # Beteiligung:
-        # Flotte:
-        if "Kapital:" in origpost_red:
-            print("asd")
-        joined_texts = cf.join_separated_lines(content_texts)
-
-        final_items = cf.parse_general_and_keys(joined_texts,
+        final_items = cf.parse_general_and_keys(content_texts,
                                                 join_separated_lines=False,
                                                 current_key_initial_value="General_Info")
 
@@ -282,5 +290,3 @@ class AkfParsingFunctionsOne(object):
                 continue
             self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=True)
             element_counter += 1
-
-        print(origpost_red)

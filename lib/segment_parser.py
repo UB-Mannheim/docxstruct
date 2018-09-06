@@ -13,9 +13,9 @@ class FunctionMapAKF(object):
     can be swapped for other projects
     """
 
-    def __init__(self, endobject_factory):
+    def __init__(self, endobject_factory, output_analyzer):
         self.ef = endobject_factory
-        self.akf_one = AkfParsingFunctionsOne(endobject_factory)
+        self.akf_one = AkfParsingFunctionsOne(endobject_factory, output_analyzer)
 
         self.function_map = {
             "Sitz": self.akf_one.parse_sitz,
@@ -25,7 +25,7 @@ class FunctionMapAKF(object):
             "Aufsichtsrat": self.akf_one.parse_aufsichtsrat,
             "Gründung": self.akf_one.parse_gruendung,
             "Arbeitnehmervertreter": self.akf_one.parse_arbeitnehmervertreter,
-            "Tätigkeitsgebiet": self.akf_one.parse_taetigkeitsgebiet
+            "Tätigkeitsgebiet": self.akf_one.parse_taetigkeitsgebiet,
         }
 
     def get_function_map(self):
@@ -40,11 +40,11 @@ class SegmentParser(object):
     each segment defined code the parser points to.
     """
 
-    def __init__(self):
+    def __init__(self, output_analyzer):
 
         self.ef = EndobjectFactory()
         # map which maps tags to functions for parsing -> change constuctor for other project
-        fmap = FunctionMapAKF(self.ef)
+        fmap = FunctionMapAKF(self.ef, output_analyzer)
 
         config_handler = ConfigurationHandler(first_init=False)
 

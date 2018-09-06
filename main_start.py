@@ -24,8 +24,8 @@ cpr = ConditionalPrint(config.PRINT_MAIN, config.PRINT_EXCEPTION_LEVEL,
 feature_extractor = FeatureExtractor()
 add_info_handler = AdditionalInfoHandler()
 segment_classifier = SegmentClassifier()
-segment_parser = SegmentParser()
 output_analyzer = OutputAnalysis()
+segment_parser = SegmentParser(output_analyzer)
 
 
 dh = DatabaseHandler(dbdir="")
@@ -76,7 +76,7 @@ for key in hocr_files:
         diff_info = output_analyzer.log_unsegmentated(ocromore_data)
         accumulated_diff_info = output_analyzer.accumulate_diff_info(ocromore_data, diff_info, accumulated_diff_info)
         ctr_test += 1
-        if ctr_test >= 30:
+        if ctr_test >= 500:
             break
 
         ## clear the current result in segment_parser cache to parse the next one
