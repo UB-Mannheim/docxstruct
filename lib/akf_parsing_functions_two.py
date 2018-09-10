@@ -32,20 +32,20 @@ class AkfParsingFunctionsTwo(object):
 
         split_post = origpost_red.split(';')
         DEFAULT_ENTRY = 1
-        ADDITIONAL_INFO_CITY = 2    # beide - two previous
-        ADDITIONAL_INFO_CITY_2 = 3  # sämtl. - all previous
+        ADDITIONAL_INFO_BOTH = 2      # beide - two previous
+        ADDITIONAL_INFO_ALL_PREV = 3  # sämtl. - all previous
 
         final_entries = []
         for index, entry in enumerate(split_post):
             entry_stripped = entry.strip()
 
             if "beide" in entry_stripped:
-                additional_city_info = entry_stripped
-                final_entries.append((ADDITIONAL_INFO_CITY, additional_city_info))
+                entry_final = regex.sub(r"beide\s?\.?", "", entry_stripped).strip()
+                final_entries.append((ADDITIONAL_INFO_BOTH, entry_final, "", ""))
                 continue
             if "sämtl" in entry_stripped:
-                additional_city_info = entry_stripped
-                final_entries.append((ADDITIONAL_INFO_CITY_2, additional_city_info))
+                entry_final = regex.sub(r"sämtl\s?\.?", "", entry_stripped).strip()
+                final_entries.append((ADDITIONAL_INFO_ALL_PREV, entry_final, "", ""))
                 continue
 
             entry_split = entry_stripped.split(',')
@@ -60,6 +60,42 @@ class AkfParsingFunctionsTwo(object):
                     city = fragment
                 elif fragment_index >= 2:
                     rest_info += fragment
-            final_entries.append((DEFAULT_ENTRY,bank,city,title))
+            final_entries.append((DEFAULT_ENTRY, bank, city, title))
 
-        return
+        # reverse list for better processing
+        reverse_fe = final_entries.__reversed__()
+        current_additional_info = ""
+        current_info_index = None
+        current_entry_type = None
+        final_list = []
+        for item_index, item in enumerate(reverse_fe):
+            entry_type, entryorbank, city, title = item
+            # change current additional info
+            if entry_type == ADDITIONAL_INFO_BOTH or entry_type == ADDITIONAL_INFO_ALL_PREV:
+                current_info_index = item_index
+                current_additional_info = entryorbank
+            elif entry_type == DEFAULT_ENTRY:
+                templist = [(entryorbank, city, title, current_additional_info)]
+                templist.extend(final_list)
+                final_list = templist
+
+            # end 'beide'-entry because it's over after 2 iterations
+            if current_entry_type == ADDITIONAL_INFO_BOTH and item_index-current_info_index >= 1:
+                current_info_index = None
+                current_additional_info = ""
+
+
+        # finally note the entries to output
+        print(final_list)
+        only_add_if_value = True
+        for entry in final_list:
+            bank, city, title, add_info = entry
+            if add_info != "" and add_info != None:
+                city += add_info
+            self.ef.add_to_my_obj("bank", bank, object_number=element_counter, only_filled=only_add_if_value)
+            self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_value)
+            self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_value)
+            element_counter += 1
+
+
+        return True
