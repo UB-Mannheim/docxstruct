@@ -25,12 +25,14 @@ editor.soft.wrap.force.limit=10000
 
 
 # Handling Code
-In parsing functions (i.e. within akf_parsing_functions_one), 
-you can log can log segment specific info to file:
+The akf-hocrparser is made to be adapted for parsing other kinds of content
+than 'Aktienführer'. It can be used as generic text-content recognizer and clarifier 
+and provides lot's of analysis and structure for that. 
 
-`
-self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
-`
+Usually all akf-specific content is stored in files which are called 'akf_....'
+this are the parts where you might want to put your custom functionalities. 
+
+Ways how to do that are described in the following documentation parts.
 
 
 ## Creating segments 
@@ -98,3 +100,90 @@ the keyss noted in your segment holder (i.e. 'akf_segment_holder')
         "Zahlstellen": self.akf_two.parse_zahlstellen,
     }
 ```
+
+### Parsing functions 
+Here is an example of a mapped parsing function from above. These functions
+can be stored in a common parsing class like in 'akf_parsing_functions_one'. 
+The parameters have to be exactly the same like in example.
+
+The add_check_element functionality adds in the output an additional
+element for this segment with the original data (for verifcation later).
+Also it improves the data to be better parsed. (it's recommended to use this function always)
+Options for this function can be found in configuration. 
+
+
+To note results to final output the add_to_my_obj function is used. 
+It works by simple key-value storing. If there are multiple objects within
+one segment element counter can be incremented to assign values to another segment. 
+There is also an option to only store if the value has any content. 
+
+```python
+
+    def parse_gruendung(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        year = dh.strip_if_not_none(origpost_red, ".,\s")
+        self.ef.add_to_my_obj("year", year, object_number=element_counter, only_filled=True)
+```
+Within such parsing functions (i.e. within akf_parsing_functions_one), 
+you can log can log segment specific info to file:
+
+`
+self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+`
+
+
+## Code analysis
+
+## Configuration
+Which configuration file is used is specified in main_start.py here.
+```python
+CODED_CONFIGURATION_PATH= './configuration/config_parse_hocr_js.conf'
+```
+In the configuration files there are several options the same configuration
+keys which are in the given config files can be used as command line parameters
+also. 
+
+At the beginning a common singleton configuration object is created, 
+which allows to access configuration.
+
+Configuration can be accessed in each class of the project without 
+passing it through the constructors from the root class. In a
+non root-class the configuration can be initialised like this. 
+
+```python
+from akf_corelib.configuration_handler import ConfigurationHandler
+
+class Example(object):
+    def __init__(self):
+        config_handler = ConfigurationHandler(first_init=False)
+
+        self.config = config_handler.get_config()
+```
+
+
+
+## Custom logging function
+For general overview in the program output, custom logging functionality
+was created. It's recommended to use this and initialize it in the constructor
+of each class. 
+
+```python
+
+        self.cpr = ConditionalPrint(self.config.PRINT_SEGMENT_PARSER_AKF_FN_TWO, self.config.PRINT_EXCEPTION_LEVEL,
+                                    self.config.PRINT_WARNING_LEVEL, leading_tag=self.__class__.__name__)
+
+        self.cpr.print("init akf parsing functions two")
+```
+Logging with the cpr.print function adds a tag (here the class name) at the start of each 
+output. It only logs if the PRINT_SEGMENT_PARSER_AKF_FN_TWO from config is set to 'True'. 
+
+In this way you can toggle logging each class or even more specific areas by
+defining configuration parameters.
+
+The warning and exception level tags will allow logging even if the base
+'PRINT...' parameter is not true. The cpr.printex and cpr.printw functions provide
+colored output to hint exceptions (red) and warnings (yellow). 
