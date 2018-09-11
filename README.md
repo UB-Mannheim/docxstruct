@@ -35,11 +35,15 @@ self.output_analyzer.log_segment_information(segmentation_class.segment_tag, con
 ## Parsing code 
 To use your custom parsing code instantiate your 'segment_parser.py'
 FunctionMapAKF constructor. Make sure your function tag is the one
-used in the segment_classifier
+used in the segment_classifier. For the keys in 'function_map' use 
+the keyss noted in your segment holder (i.e. 'akf_segment_holder')
 
-`
+```python
     self.akf_one = AkfParsingFunctionsOne(endobject_factory, output_analyzer)
     self.akf_two = AkfParsingFunctionsTwo(endobject_factory, output_analyzer)
+    
+    # for the keys use the keys from 'akf_segment_holder' or similar
+
     self.function_map = {
         "Sitz": self.akf_one.parse_sitz,
         "Verwaltung": self.akf_one.parse_verwaltung,
@@ -51,4 +55,4 @@ used in the segment_classifier
         "Tätigkeitsgebiet": self.akf_one.parse_taetigkeitsgebiet,
         "Zahlstellen": self.akf_two.parse_zahlstellen,
     }
-`
+```

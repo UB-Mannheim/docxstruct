@@ -20,7 +20,6 @@ class AkfParsingFunctionsTwo(object):
         self.ef = endobject_factory
         self.output_analyzer = output_analyzer
 
-
     def parse_zahlstellen(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
         element_counter = 0
@@ -84,9 +83,7 @@ class AkfParsingFunctionsTwo(object):
                 current_info_index = None
                 current_additional_info = ""
 
-
         # finally note the entries to output
-        print(final_list)
         only_add_if_value = True
         for entry in final_list:
             bank, city, title, add_info = entry
@@ -97,5 +94,32 @@ class AkfParsingFunctionsTwo(object):
             self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_value)
             element_counter += 1
 
-
         return True
+
+    def parse_grundkapital(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+    def parse_ordnungsnrdaktien(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+
+    def parse_grossaktionaer(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)

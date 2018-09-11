@@ -20,6 +20,8 @@ class FunctionMapAKF(object):
         self.akf_one = AkfParsingFunctionsOne(endobject_factory, output_analyzer)
         self.akf_two = AkfParsingFunctionsTwo(endobject_factory, output_analyzer)
 
+        # for the keys use the keys from 'akf_segment_holder' or similar
+
         self.function_map = {
             "Sitz": self.akf_one.parse_sitz,
             "Verwaltung": self.akf_one.parse_verwaltung,
@@ -30,6 +32,9 @@ class FunctionMapAKF(object):
             "Arbeitnehmervertreter": self.akf_one.parse_arbeitnehmervertreter,
             "Tätigkeitsgebiet": self.akf_one.parse_taetigkeitsgebiet,
             "Zahlstellen": self.akf_two.parse_zahlstellen,
+            "Grundkapital": self.akf_two.parse_grundkapital,
+            "OrdnungsNrAktien": self.akf_two.parse_ordnungsnrdaktien,
+            "Großaktionär": self.akf_two.parse_grossaktionaer
         }
 
     def get_function_map(self):
