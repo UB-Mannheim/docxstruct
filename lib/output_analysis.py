@@ -37,6 +37,30 @@ class OutputAnalysis(object):
         """
         fh.delete_directory_tree(self.analysis_root)
 
+    def log_parsed_output(self, ocromore_data, separator='¦¦'):
+        if self.config.LOG_PARSED_SEGMENTED_OUTPUT is False:
+            return
+        results = ocromore_data['results']
+
+        # iterate the recognized tags
+        for key in results.my_object:
+            value_json = results.export_as_json_at_key(key)
+            lines_json = value_json.split('\n')
+            final_text_lines = []
+            # add dividers to the lines
+            final_text_lines.append(key + "------------------------------------------------")
+            final_text_lines.extend(lines_json)
+            final_text_lines.append("")
+            final_text_lines.append("")
+
+            key = key.replace("/", "_")  # fix to prevent folder hop in filename
+
+            # print to file finally (append style)
+            dh.write_array_to_root_simple("parsed_output", key,
+                                          final_text_lines, self.analysis_root, append_mode=True)
+
+
+
     def log_segmentation_simple(self, ocromore_data, separator='¦¦'):
         lines = ocromore_data['lines']
         index_field = ocromore_data['segmentation'].index_field

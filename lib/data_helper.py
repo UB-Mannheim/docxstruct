@@ -72,9 +72,9 @@ class DataHelper(object):
 
 
     @staticmethod
-    def write_array_to_root_simple(base_path,tag, text_lines, analysis_root, append_mode=False):
-        full_dir = analysis_root + base_path +"/"
-        full_path = full_dir+ tag+".txt"
+    def write_array_to_root_simple(base_path, tag, text_lines, analysis_root, append_mode=False):
+        full_dir = analysis_root + base_path + "/"
+        full_path = full_dir + tag + ".txt"
 
         fh.create_directory_tree(full_dir)
         # write append or normal
