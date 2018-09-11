@@ -97,6 +97,7 @@ class AkfParsingFunctionsTwo(object):
         return True
 
     def parse_grundkapital(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # todo validate other currencies than 'DM'
         # get basic data
         element_counter = 0
         origpost, origpost_red, element_counter, content_texts = \
@@ -104,6 +105,45 @@ class AkfParsingFunctionsTwo(object):
 
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        final_entries =  []
+        current_ref_index = -1
+        for text_index, text in enumerate(content_texts):
+            match_dm = regex.match(r"^DM.*", text)
+            if match_dm is not None:
+                print("sads")
+                final_entries.append(text)
+                # get last entry as ref
+                current_ref_index += 1
+            else:
+                if current_ref_index == -1:
+                    # special case there was no leading dm entry
+                    final_entries.append(text)
+                    # get last entry as ref
+                    current_ref_index += 1
+
+                # update ref
+                final_entries[current_ref_index] += " "+text
+
+        only_add_if_value = True
+        for entry in final_entries:
+            match_entry = regex.match(r"(?<amount>.*?\.\-)"     # match until first '.-'
+                                      r"(?<add_info>.*)",       # match the rest string
+                                      entry)
+            if match_entry is None:
+                self.ef.add_to_my_obj("amount", entry, object_number=element_counter, only_filled=only_add_if_value)
+                element_counter += 1
+                continue
+
+            amount = dh.strip_if_not_none(match_entry.group("amount"), "")
+            add_info = dh.strip_if_not_none(match_entry.group("add_info"), "")
+
+            self.ef.add_to_my_obj("amount", amount, object_number=element_counter, only_filled=only_add_if_value)
+            self.ef.add_to_my_obj("additional_info", add_info, object_number=element_counter, only_filled=only_add_if_value)
+            element_counter += 1
+
+        return True
+
 
     def parse_ordnungsnrdaktien(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
