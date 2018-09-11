@@ -81,7 +81,7 @@ for key in hocr_files:
             break
 
         ## clear the current result in segment_parser cache to parse the next one
-        #segment_parser.clear_result()
+        segment_parser.clear_result(output_analyzer)
 
 
 

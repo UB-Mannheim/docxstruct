@@ -64,11 +64,11 @@ class SegmentParser(object):
         self.function_map = fmap.get_function_map()
         self.result_root = self.config.OUTPUT_ROOT_PATH + "/results/"
 
-    def clear_result(self):
+    def clear_result(self, output_analyzer):
         # create a new end object factory, new content
         self.ef = EndobjectFactory()
         # map to the new ef object which has been recreated
-        fmap = FunctionMapAKF(self.ef)
+        fmap = FunctionMapAKF(self.ef, output_analyzer)
         self.function_map = fmap.get_function_map()
 
 
@@ -89,6 +89,7 @@ class SegmentParser(object):
             if segmentation_class.is_start_segmented():
                 # get the unique identifier for this class
                 segment_tag = segmentation_class.get_segment_tag()
+
                 self.trigger_mapped_function(segment_tag, segmentation_class, ocromore_data)
 
         # add and return result

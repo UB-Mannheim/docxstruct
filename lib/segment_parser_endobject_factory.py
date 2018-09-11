@@ -32,6 +32,7 @@ class EndobjectFactory(object):
     def set_current_main_list(self, segment_tag):
         if segment_tag not in self.my_object.keys():
             self.my_object[segment_tag] = []              # create the main list (all subsequent entries are stored here)
+
         self.current_main_list = self.my_object[segment_tag]  # create a short link on the main list
 
     def add_to_my_obj(self, key, value, object_number=0, only_filled=False):

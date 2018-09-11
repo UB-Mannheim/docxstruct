@@ -47,6 +47,7 @@ class OutputAnalysis(object):
             value_json = results.export_as_json_at_key(key)
             lines_json = value_json.split('\n')
             final_text_lines = []
+
             # add dividers to the lines
             final_text_lines.append(key + "------------------------------------------------")
             final_text_lines.extend(lines_json)
@@ -58,8 +59,6 @@ class OutputAnalysis(object):
             # print to file finally (append style)
             dh.write_array_to_root_simple("parsed_output", key,
                                           final_text_lines, self.analysis_root, append_mode=True)
-
-
 
     def log_segmentation_simple(self, ocromore_data, separator='¦¦'):
         lines = ocromore_data['lines']

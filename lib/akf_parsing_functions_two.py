@@ -106,12 +106,11 @@ class AkfParsingFunctionsTwo(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
-        final_entries =  []
+        final_entries = []
         current_ref_index = -1
         for text_index, text in enumerate(content_texts):
             match_dm = regex.match(r"^DM.*", text)
             if match_dm is not None:
-                print("sads")
                 final_entries.append(text)
                 # get last entry as ref
                 current_ref_index += 1
@@ -138,8 +137,8 @@ class AkfParsingFunctionsTwo(object):
             amount = dh.strip_if_not_none(match_entry.group("amount"), "")
             add_info = dh.strip_if_not_none(match_entry.group("add_info"), "")
 
-            self.ef.add_to_my_obj("amount", amount, object_number=element_counter, only_filled=only_add_if_value)
-            self.ef.add_to_my_obj("additional_info", add_info, object_number=element_counter, only_filled=only_add_if_value)
+            self.ef.add_to_my_obj("amount", amount, object_number=element_counter, only_filled= only_add_if_value)
+            self.ef.add_to_my_obj("additional_info", add_info, object_number=element_counter, only_filled= only_add_if_value)
             element_counter += 1
 
         return True
