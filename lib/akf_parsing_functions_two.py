@@ -178,3 +178,33 @@ class AkfParsingFunctionsTwo(object):
 
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        lines_split = origpost_red.split(';')
+        only_add_if_value = True
+        for line in lines_split:
+            # testline
+            # line = "Société Sidérurgique de Participations et d’ Approvisionnement en Charbons, par abréviation (Sidechar), Paris (ca.60,2 %)."
+
+            match_parenth = regex.findall(r"(\(.*?\))", line)
+            found_parenth = None
+            organization = None
+            location = None
+            # find additional info in  each line and subtract it
+            if match_parenth:
+                found_parenth = match_parenth[-1].strip("., ") # find the last parenthesis grounp
+                line = line.replace(found_parenth, "")
+
+            split_line = line.split(',')
+            len_split_line = len(split_line)
+            if len_split_line == 1:
+                organization = line.strip("., ")
+            else:
+                organization = line.replace(split_line[-1], "").strip("., ")
+                location = split_line[-1].strip("., ")  # town
+
+            self.ef.add_to_my_obj("organization", organization, object_number=element_counter,only_filled=only_add_if_value)
+            self.ef.add_to_my_obj("location", location, object_number=element_counter,only_filled=only_add_if_value)
+            self.ef.add_to_my_obj("additional_info", found_parenth, object_number=element_counter,only_filled=only_add_if_value)
+            element_counter += 1
+
+        return True
