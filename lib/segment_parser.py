@@ -34,7 +34,12 @@ class FunctionMapAKF(object):
             "Zahlstellen": self.akf_two.parse_zahlstellen,
             "Grundkapital": self.akf_two.parse_grundkapital,
             "OrdnungsNrAktien": self.akf_two.parse_ordnungsnrdaktien,
-            "Großaktionär": self.akf_two.parse_grossaktionaer
+            "Großaktionär": self.akf_two.parse_grossaktionaer,
+            "Geschäftsjahr": self.akf_two.parse_geschaeftsjahr,
+            "StimmrechtAktien": self.akf_two.parse_stimmrechtaktien,
+            "Börsennotiz": self.akf_two.parse_boersennotiz,
+            "Stückelung": self.akf_two.parse_stueckelung,
+            "Aktienkurse": self.akf_two.parse_aktienkurse
         }
 
     def get_function_map(self):
