@@ -1,7 +1,3 @@
-# TODO's
-# TODO-(jk): ocromore_data -> hocr_data -> data?
-# Utils folder which is redundant to python-ocr as an extra repository
-
 # custom imports
 from akf_corelib.configuration_handler import ConfigurationHandler
 from akf_corelib.database_handler import DatabaseHandler
@@ -80,10 +76,8 @@ for key in hocr_files:
         if ctr_test >= 500:
             break
 
-        ## clear the current result in segment_parser cache to parse the next one
+        # clear the current result in segment_parser cache to parse the next one
         segment_parser.clear_result(output_analyzer)
-
-
 
     # output analysis: print diff info for this year (accumulated over all tables/year)
     output_analyzer.log_accumulated_unsegmentated(accumulated_diff_info, ocromore_data)

@@ -28,7 +28,6 @@ class EndobjectFactory(object):
         self.current_main_list = None
         self.pp = pprint.PrettyPrinter(indent=5)
 
-
     def set_current_main_list(self, segment_tag):
         if segment_tag not in self.my_object.keys():
             self.my_object[segment_tag] = []              # create the main list (all subsequent entries are stored here)

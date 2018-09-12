@@ -153,6 +153,22 @@ class AkfParsingFunctionsTwo(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
+        only_add_if_value = True
+        # example values - each line of content_texts list
+        # '589300 (St.-Akt.)'
+        # '589300.'
+        for entry in content_texts:
+            match_number = regex.match(r"\d*", entry)
+            match_parenth = regex.search(r"\(.*\)", entry)
+
+            if match_number is not None:
+                number = match_number.group(0)
+                self.ef.add_to_my_obj("ord_number", number, object_number=element_counter, only_filled=only_add_if_value)
+            if match_parenth is not None:
+                parenth = match_parenth.group(0)
+                self.ef.add_to_my_obj("additional_info", parenth, object_number=element_counter, only_filled=only_add_if_value)
+            if match_number is not None or match_parenth is not None:
+                element_counter += 1
 
     def parse_grossaktionaer(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
