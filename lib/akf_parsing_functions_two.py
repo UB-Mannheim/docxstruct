@@ -228,6 +228,28 @@ class AkfParsingFunctionsTwo(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
+        # add extra splitting elements to each 'je' or 'Je'
+        origpost_red_se = regex.sub(r"(Je |je )", r"~~~\1", origpost_red)
+
+        split_text = origpost_red_se.split('~~~')
+        # origpost_red = regex.sub(r"(\d\.)", r"\1~~~~", origpost_red)
+        only_add_if_value = True
+
+        for entry in split_text:
+            if entry == "":
+                continue
+            match_sb = regex.search(r"Stimmrechtsbeschränkung:.*", entry)
+            sbe = None
+            if match_sb is not None:
+                sbe = match_sb.group()
+                entry = entry.replace(sbe, "")
+
+            self.ef.add_to_my_obj("entry", entry, object_number=element_counter ,only_filled=only_add_if_value)
+            self.ef.add_to_my_obj("Stimmrechtsbeschränkung", sbe, object_number=element_counter ,only_filled=only_add_if_value)
+            element_counter += 1
+
+        return True
+
     def parse_boersennotiz(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
         element_counter = 0
