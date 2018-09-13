@@ -255,9 +255,32 @@ class AkfParsingFunctionsTwo(object):
         element_counter = 0
         origpost, origpost_red, element_counter, content_texts = \
             cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
-
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # find last parenthesis and filter
+        match_parenth = regex.findall(r"(\(.*?\))", origpost_red)
+        found_parenth = None
+        origpost_used = origpost_red
+        # find additional info in  each line and subtract it
+        if match_parenth:
+            found_parenth = match_parenth[-1].strip("., ")  # find the last parenthesis grounp
+            origpost_used = origpost_red.replace(found_parenth, "") # update the orignpost used
+
+        # log all location elements
+        only_add_if_value = True
+        split_post = regex.split('u\.|und|,', origpost_used)
+        for entry in split_post:
+            entry_stripped = entry.strip("., ")
+            if entry_stripped == None or entry_stripped == "":
+                continue
+            self.ef.add_to_my_obj("location", entry_stripped, object_number=element_counter, only_filled= only_add_if_value)
+            element_counter += 1
+        # log additional info in last parenthesis
+        self.ef.add_to_my_obj("additional_info", found_parenth, object_number=element_counter, only_filled=only_add_if_value)
+
+        return True
+
 
     def parse_stueckelung(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
