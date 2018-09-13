@@ -291,6 +291,46 @@ class AkfParsingFunctionsTwo(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
+
+
+        # find last parenthesis and filter
+        match_parenth = regex.findall(r"(\(.*?\))", origpost_red)
+        found_parenth = None
+        origpost_used = origpost_red
+        # find additional info in  each line and subtract it
+        if match_parenth:
+            found_parenth = match_parenth[-1].strip("., ")  # find the last parenthesis grounp
+            origpost_used = origpost_red.replace(found_parenth, "") # update the orignpost used
+
+
+        final_lines = []
+        only_add_if_value = True
+
+        for text_index, text in enumerate(content_texts):
+            if text.strip() == "":
+                continue
+            match_akt = regex.search(r"\.\s?\-\s?Akt", text)
+            match_saemtlsakt = regex.search(r"[Ss]ämtliche [Ss]tammaktien", text)
+            if match_saemtlsakt is not None:
+                self.ef.add_to_my_obj("additional_info", text, object_number=element_counter, only_filled=only_add_if_value)
+                element_counter += 1
+                continue
+            if match_akt is not None:
+                final_lines.append(text)
+            else:
+                if len(final_lines) == 0:
+                    final_lines.append(text)
+                    continue
+                final_lines[-1] = final_lines[-1] + text
+
+        for line in final_lines:
+            self.ef.add_to_my_obj("entry", line, object_number=element_counter, only_filled=only_add_if_value)
+            element_counter += 1
+
+        return True
+
+
+
     def parse_aktienkurse(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
         element_counter = 0
