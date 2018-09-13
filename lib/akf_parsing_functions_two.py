@@ -2,6 +2,7 @@ from akf_corelib.conditional_print import ConditionalPrint
 from akf_corelib.configuration_handler import ConfigurationHandler
 from .data_helper import DataHelper as dh
 from .akf_parsing_functions_common import AKFCommonParsingFunctions as cf
+from akf_corelib.regex_util import RegexUtil as regu
 
 import regex
 
@@ -281,7 +282,6 @@ class AkfParsingFunctionsTwo(object):
 
         return True
 
-
     def parse_stueckelung(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
         element_counter = 0
@@ -302,7 +302,6 @@ class AkfParsingFunctionsTwo(object):
             found_parenth = match_parenth[-1].strip("., ")  # find the last parenthesis grounp
             origpost_used = origpost_red.replace(found_parenth, "") # update the orignpost used
 
-
         final_lines = []
         only_add_if_value = True
 
@@ -310,7 +309,15 @@ class AkfParsingFunctionsTwo(object):
             if text.strip() == "":
                 continue
             match_akt = regex.search(r"\.\s?\-\s?Akt", text)
-            match_saemtlsakt = regex.search(r"[Ss]ämtliche [Ss]tammaktien", text)
+            match_saemtlsakt, err_saemtlsakt = regu.fuzzy_search(r"([Ss]ämtliche [Ss]tammaktien.*|[Ss]ämtliche [Aa]ktien.*)", text, err_number=1)
+
+            if match_saemtlsakt is not None and match_akt is not None:
+                saemtl_res = match_saemtlsakt.group()
+                self.ef.add_to_my_obj("additional_info", saemtl_res, object_number=element_counter, only_filled=only_add_if_value)
+                reduced_text = text.replace(saemtl_res,"")
+                final_lines.append(reduced_text)
+                element_counter += 1
+                continue
             if match_saemtlsakt is not None:
                 self.ef.add_to_my_obj("additional_info", text, object_number=element_counter, only_filled=only_add_if_value)
                 element_counter += 1
@@ -331,11 +338,3 @@ class AkfParsingFunctionsTwo(object):
 
 
 
-    def parse_aktienkurse(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
-        # get basic data
-        element_counter = 0
-        origpost, origpost_red, element_counter, content_texts = \
-            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
-
-        # logme
-        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)

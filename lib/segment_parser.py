@@ -2,6 +2,7 @@ from akf_corelib.conditional_print import ConditionalPrint
 from akf_corelib.configuration_handler import ConfigurationHandler
 from .akf_parsing_functions_one import AkfParsingFunctionsOne
 from .akf_parsing_functions_two import AkfParsingFunctionsTwo
+from .akf_parsing_functions_tables_one import AkfParsingFunctionsTablesOne
 
 from .data_helper import DataHelper
 from .segment_parser_endobject_factory import EndobjectFactory
@@ -19,6 +20,7 @@ class FunctionMapAKF(object):
         self.ef = endobject_factory
         self.akf_one = AkfParsingFunctionsOne(endobject_factory, output_analyzer)
         self.akf_two = AkfParsingFunctionsTwo(endobject_factory, output_analyzer)
+        self.akf_tables_one = AkfParsingFunctionsTablesOne(endobject_factory, output_analyzer)
 
         # for the keys use the keys from 'akf_segment_holder' or similar
 
@@ -39,7 +41,7 @@ class FunctionMapAKF(object):
             "StimmrechtAktien": self.akf_two.parse_stimmrechtaktien,
             "Börsennotiz": self.akf_two.parse_boersennotiz,
             "Stückelung": self.akf_two.parse_stueckelung,
-            "Aktienkurse": self.akf_two.parse_aktienkurse
+            "Aktienkurse": self.akf_tables_one.parse_aktienkurse
         }
 
     def get_function_map(self):
