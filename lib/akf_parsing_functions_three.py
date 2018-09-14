@@ -29,3 +29,44 @@ class AkfParsingFunctionsThree(object):
 
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+
+
+    def parse_beratende_mitglieder(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+
+    def parse_sekretaere(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+
+
+    def parse_geschaeftsleitung(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+    def parse_generaldirektion(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)

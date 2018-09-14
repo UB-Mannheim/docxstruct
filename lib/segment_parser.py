@@ -46,14 +46,14 @@ class FunctionMapAKF(object):
             "Börsennotiz": self.akf_two.parse_boersennotiz,
             "Stückelung": self.akf_two.parse_stueckelung,
             "Aktienkurse": self.akf_tables_one.parse_aktienkurse,
-            "Dividenden": self.akf_three.parse_something,
-            "DividendenAufXYaktien": self.akf_three.parse_something,
-            "BeratendeMitglieder": self.akf_three.parse_something,
-            "Sekretäre": self.akf_three.parse_something,
-            "Geschäftsleitung": self.akf_three.parse_something,
-            "Generaldirektion": self.akf_three.parse_something,
-            "Direktionskomitee": self.akf_three.parse_something,
-            "Vizegeneraldirektoren": self.akf_three.parse_something,
+            "Dividenden": self.akf_tables_one.parse_dividenden, # is table
+            "DividendenAufXYaktien": self.akf_tables_one.parse_dividenden_auf_xyaktien, # is table
+            "BeratendeMitglieder": self.akf_three.parse_beratende_mitglieder,           # not in first 500 files 1956??
+            "Sekretäre": self.akf_three.parse_sekretaere,                               # not in first 500 files 1956??
+            "Geschäftsleitung": self.akf_three.parse_geschaeftsleitung,                 # not in first 500 files 1956??
+            "Generaldirektion": self.akf_three.parse_generaldirektion,                  # not in first 500 files 1956??
+            "Direktionskomitee": self.akf_three.parse_something,                        # not in first 500 files 1956??
+            "Vizegeneraldirektoren": self.akf_three.parse_something,                    # not in first 500 files 1956??
             "Fernschreiber": self.akf_three.parse_something,
             "Filialen": self.akf_three.parse_something,
             "Auslandsvertretungen": self.akf_three.parse_something,
