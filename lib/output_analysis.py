@@ -93,6 +93,8 @@ class OutputAnalysis(object):
         final_text_lines.append("")
         final_text_lines.append("")
 
+        segment_tag = segment_tag.replace("/", "_")  # fix to prevent folder hop in filename
+
         # print to file finally (append style)
         dh.write_array_to_root_simple("segmentation_segments", segment_tag,
                                       final_text_lines, self.analysis_root, append_mode=True)

@@ -2,6 +2,8 @@ from akf_corelib.conditional_print import ConditionalPrint
 from akf_corelib.configuration_handler import ConfigurationHandler
 from .akf_parsing_functions_one import AkfParsingFunctionsOne
 from .akf_parsing_functions_two import AkfParsingFunctionsTwo
+from .akf_parsing_functions_three import AkfParsingFunctionsThree
+
 from .akf_parsing_functions_tables_one import AkfParsingFunctionsTablesOne
 
 from .data_helper import DataHelper
@@ -20,6 +22,8 @@ class FunctionMapAKF(object):
         self.ef = endobject_factory
         self.akf_one = AkfParsingFunctionsOne(endobject_factory, output_analyzer)
         self.akf_two = AkfParsingFunctionsTwo(endobject_factory, output_analyzer)
+        self.akf_three = AkfParsingFunctionsThree(endobject_factory, output_analyzer)
+
         self.akf_tables_one = AkfParsingFunctionsTablesOne(endobject_factory, output_analyzer)
 
         # for the keys use the keys from 'akf_segment_holder' or similar
@@ -41,7 +45,42 @@ class FunctionMapAKF(object):
             "StimmrechtAktien": self.akf_two.parse_stimmrechtaktien,
             "Börsennotiz": self.akf_two.parse_boersennotiz,
             "Stückelung": self.akf_two.parse_stueckelung,
-            "Aktienkurse": self.akf_tables_one.parse_aktienkurse
+            "Aktienkurse": self.akf_tables_one.parse_aktienkurse,
+            "Dividenden": self.akf_three.parse_something,
+            "DividendenAufXYaktien": self.akf_three.parse_something,
+            "BeratendeMitglieder": self.akf_three.parse_something,
+            "Sekretäre": self.akf_three.parse_something,
+            "Geschäftsleitung": self.akf_three.parse_something,
+            "Generaldirektion": self.akf_three.parse_something,
+            "Direktionskomitee": self.akf_three.parse_something,
+            "Vizegeneraldirektoren": self.akf_three.parse_something,
+            "Fernschreiber": self.akf_three.parse_something,
+            "Filialen": self.akf_three.parse_something,
+            "Auslandsvertretungen": self.akf_three.parse_something,
+            "KommanditeUndBank": self.akf_three.parse_something,
+            "Niederlassungen": self.akf_three.parse_something,
+            "Erzeugnisse": self.akf_three.parse_something,
+            "Haupterzeugnisse": self.akf_three.parse_something,
+            "Spezialitäten": self.akf_three.parse_something,
+            "Anlagen": self.akf_three.parse_something,
+            "Zweigniederlassungen": self.akf_three.parse_something,
+            "Werke/Betriebsstätten": self.akf_three.parse_something,
+            "Betriebsanlagen": self.akf_three.parse_something,
+            "Beteiligungsgesellschaften": self.akf_three.parse_something,
+            "Beteiligungen": self.akf_three.parse_something,
+            "Tochtergesellschaften": self.akf_three.parse_something,
+            "Wertpapier-Kenn-Nr": self.akf_three.parse_something,
+            "RechteVorzugsaktien": self.akf_three.parse_something,
+            "Aktionäre": self.akf_three.parse_something,
+            "Anleihen": self.akf_three.parse_something,
+            "KursVonZuteilungsrechten": self.akf_three.parse_something,
+            "Emissionsbetrag": self.akf_three.parse_something,
+            "AusDenKonsolidiertenBilanzen": self.akf_three.parse_something,
+            "AusDenBilanzen": self.akf_three.parse_something,
+            "Konsolid.Gewinn-u.Verlustrechnungen": self.akf_three.parse_something,
+            "AusGewinnVerlustrechnungen": self.akf_three.parse_something,
+            "Bezugsrechte": self.akf_three.parse_something,
+            "ZurGeschäftslage": self.akf_three.parse_something
         }
 
     def get_function_map(self):
