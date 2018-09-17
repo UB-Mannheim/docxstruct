@@ -125,7 +125,7 @@ class DataHelper(object):
             final_string += line_text+"\n"
 
         final_string = final_string.strip()
-        return final_string, final_string.replace("\n"," ")
+        return final_string, final_string.replace("\n", " ")
 
     @staticmethod
     def strip_if_not_none(text,strip_pattern):
