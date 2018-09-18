@@ -235,9 +235,11 @@ class SegmentHolder(object):
 
         def __init__(self):
             super().__init__("Filialen")
+            self.disable()  # this segment is disabled, because it's not really a common segmentation in 1956,
+            # maybe activate later
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-            match_start, errors = regu.fuzzy_search(r"^Filialen\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"^Filialen\s?:", line_text,)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
@@ -789,7 +791,6 @@ class SegmentHolder(object):
         # example recognition:
         # Zur Geschäftslage: \n Guter Absatz aller im Bereich der Ilseder
 
-
         def __init__(self):
             super().__init__("ZurGeschäftslage")
 
@@ -806,7 +807,6 @@ class SegmentHolder(object):
     class SegmentAusDenBilanzen(Segment):
         # example recognition:
         # Aus den Bilanzen \n 31.12.1954 31.12.1955 \n (in 1 000 DM)
-
 
         def __init__(self):
             super().__init__("AusDenBilanzen")

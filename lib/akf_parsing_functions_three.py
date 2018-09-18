@@ -109,3 +109,13 @@ class AkfParsingFunctionsThree(object):
                     self.cpr.printw("unexpected case during parsing of fernschreiber")
 
         return True
+
+
+    def parse_filialen(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # this is not active at the moment # todo use this maybe somewhen later
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        print("asd")
