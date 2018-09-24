@@ -117,5 +117,47 @@ class AkfParsingFunctionsThree(object):
         element_counter = 0
         origpost, origpost_red, element_counter, content_texts = \
             cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
-        print("asd")
+
+    def parse_auslandsvertretungen(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # this is not active at the moment
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        only_add_if_value = True
+        split_post = regex.split(',|und', origpost_red)
+        for entry in split_post:
+            entry_stripped = entry.strip(".,; ")
+            self.ef.add_to_my_obj("location", entry_stripped, object_number=element_counter,
+                                  only_filled=only_add_if_value)
+            element_counter += 1
+
+
+    def parse_kommandite_und_bank(self, real_start_tag, content_texts, content_lines, feature_lines,
+                                   segmentation_class):
+        # this is not active at the moment
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+    def parse_niederlassungen(self, real_start_tag, content_texts, content_lines, feature_lines,
+                                   segmentation_class):
+        # this is not active at the moment
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)

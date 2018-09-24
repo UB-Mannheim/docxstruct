@@ -56,9 +56,9 @@ class FunctionMapAKF(object):
             "Vizegeneraldirektoren": self.akf_three.parse_something,                    # not in first 500 files 1956??
             "Fernschreiber": self.akf_three.parse_fernschreiber,
             "Filialen": self.akf_three.parse_filialen,                                  # not a category in 1956 -> #todo maybe use later
-            "Auslandsvertretungen": self.akf_three.parse_something,
-            "KommanditeUndBank": self.akf_three.parse_something,
-            "Niederlassungen": self.akf_three.parse_something,
+            "Auslandsvertretungen": self.akf_three.parse_auslandsvertretungen,          # not a category in 1956 -> #todo maybe use later
+            "KommanditeUndBank": self.akf_three.parse_kommandite_und_bank,              # not a category in 1956 -> #todo maybe use later
+            "Niederlassungen": self.akf_three.parse_niederlassungen,
             "Erzeugnisse": self.akf_three.parse_something,
             "Haupterzeugnisse": self.akf_three.parse_something,
             "Spezialitäten": self.akf_three.parse_something,
