@@ -8,7 +8,7 @@ class AKFCommonParsingFunctions(object):
     """
 
     @staticmethod
-    def parse_general_and_keys(content_texts, join_separated_lines=False, current_key_initial_value=None):
+    def parse_general_and_keys(content_texts, join_separated_lines=False, current_key_initial_value=None, abc_sections=False):
         """
         Separates an array of texts into categories.
         Categories are found by leading tag followed by ':'
@@ -17,6 +17,7 @@ class AKFCommonParsingFunctions(object):
         :param join_separated_lines: lines which have trailing '-'
                 are joined (usually not needed use 'join_separated_lines' instead)
         :param current_key_initial_value: used key initial value (for "General info" key)
+        :param abc_sections: 'a) section1' 'b) section2' use this as additional splitting
         :return: a dictionary with general_content as well as the seperated keytag content
         """
         final_items = {}
@@ -33,7 +34,24 @@ class AKFCommonParsingFunctions(object):
             if text_index < len_content_texts-1:
                 next_text = content_texts[text_index+1].strip()
 
-            if ":" in text:
+
+
+            abc_found = False
+            if abc_sections:
+                starts_with_abc = regex.search("^\w\s?\)", text)
+                if starts_with_abc:
+                    current_key = starts_with_abc[0]
+
+                    # if there is a multikey give it an additional counter
+                    key_count = list(final_items.keys()).count(current_key)
+
+                    if key_count >= 1:
+                        current_key = current_key + "_" + str(key_count + 1)
+                    # remove current key from text
+                    text = text.replace(current_key, "").strip()
+                    abc_found = True
+
+            if ":" in text and abc_found is False:
                 # find out if there is a new category
                 current_key = text.split(":")[0]
                 # if there is a multikey give it an additional counter
@@ -44,6 +62,8 @@ class AKFCommonParsingFunctions(object):
 
                 # remove current key from text
                 text = text.replace(current_key, "").replace(":", "")
+
+
 
             text = text.strip()
 

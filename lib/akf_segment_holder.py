@@ -301,8 +301,10 @@ class SegmentHolder(object):
         def __init__(self):
             super().__init__("Niederlassungen")
 
+
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-            match_start, errors = regu.fuzzy_search(r"^Niederlassungen\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"(^Niederlassungen\s?:)"
+                                                    , line_text, err_number=1)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)

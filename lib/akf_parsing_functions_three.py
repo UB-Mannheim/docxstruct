@@ -161,3 +161,48 @@ class AkfParsingFunctionsThree(object):
 
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # prefilter entries
+        filtered_content_texts = []
+        for entry in content_texts:
+            if "Handelsgerichtlich" in entry:
+                print("asd")
+
+            if "nd Geschäftsstellen" in entry:
+
+                entry_new = regex.sub("nd\s?Geschäftsstellen\s?:","",entry).strip()
+                if entry_new == "":
+                    continue
+                entry = entry_new
+
+            filtered_content_texts.append(entry)
+
+        # add in generalized form, there is not much structure over years
+        only_add_if_value = True
+        my_keys = cf.parse_general_and_keys(filtered_content_texts,
+                                            join_separated_lines=True, current_key_initial_value="general_info",
+                                            abc_sections=True)
+        for key in my_keys:
+            value = my_keys[key]
+            self.ef.add_to_my_obj(key, value, object_number=element_counter,
+                                  only_filled=only_add_if_value)
+            element_counter += 1
+
+        # parse the entries fill end-array
+        """
+        only_add_if_value = True
+
+        for entry_f in filtered_content_texts:
+            if ";" in entry_f:
+                print("entry")
+
+
+            else:
+                split_entry = regex.split(',|und|u\.', entry_f)
+                for entry_fs in split_entry:
+                    self.ef.add_to_my_obj("location", entry_fs, object_number=element_counter,
+                                          only_filled=only_add_if_value)
+                    element_counter += 1
+        """
+
+        return True
