@@ -7,7 +7,7 @@ from akf_corelib.regex_util import RegexUtil as regu
 import regex
 
 
-class AkfParsingFunctionsThree(object):
+class AkfParsingFunctionsJK(object):
 
     def __init__(self, endobject_factory, output_analyzer):
         config_handler = ConfigurationHandler(first_init=False)
@@ -21,7 +21,7 @@ class AkfParsingFunctionsThree(object):
         self.ef = endobject_factory
         self.output_analyzer = output_analyzer
 
-    def parse_something(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+    def xparse_something(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
         element_counter = 0
         origpost, origpost_red, element_counter, content_texts = \
@@ -31,47 +31,7 @@ class AkfParsingFunctionsThree(object):
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
 
-
-    def parse_beratende_mitglieder(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
-        # get basic data
-        element_counter = 0
-        origpost, origpost_red, element_counter, content_texts = \
-            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
-
-        # logme
-        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
-
-
-    def parse_sekretaere(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
-        # get basic data
-        element_counter = 0
-        origpost, origpost_red, element_counter, content_texts = \
-            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
-
-        # logme
-        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
-
-
-
-    def parse_geschaeftsleitung(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
-        # get basic data
-        element_counter = 0
-        origpost, origpost_red, element_counter, content_texts = \
-            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
-
-        # logme
-        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
-
-    def parse_generaldirektion(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
-        # get basic data
-        element_counter = 0
-        origpost, origpost_red, element_counter, content_texts = \
-            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
-
-        # logme
-        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
-
-    def parse_fernschreiber(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+    def xparse_fernschreiber(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
         element_counter = 0
         origpost, origpost_red, element_counter, content_texts = \
@@ -110,18 +70,7 @@ class AkfParsingFunctionsThree(object):
 
         return True
 
-
-    def parse_filialen(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
-        # this is not active at the moment # todo use this maybe somewhen later
-        # get basic data
-        element_counter = 0
-        origpost, origpost_red, element_counter, content_texts = \
-            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
-        # logme
-        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
-
-
-    def parse_auslandsvertretungen(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+    def xparse_auslandsvertretungen(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # this is not active at the moment
         # get basic data
         element_counter = 0
@@ -139,10 +88,7 @@ class AkfParsingFunctionsThree(object):
                                   only_filled=only_add_if_value)
             element_counter += 1
 
-
-    def parse_kommandite_und_bank(self, real_start_tag, content_texts, content_lines, feature_lines,
-                                   segmentation_class):
-        # this is not active at the moment
+    def parse_geschaeftslage(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
         element_counter = 0
         origpost, origpost_red, element_counter, content_texts = \
@@ -151,13 +97,10 @@ class AkfParsingFunctionsThree(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
-    def parse_niederlassungen(self, real_start_tag, content_texts, content_lines, feature_lines,
-                                   segmentation_class):
-        # this is not active at the moment
-        # get basic data
-        element_counter = 0
-        origpost, origpost_red, element_counter, content_texts = \
-            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+        # init
+        only_add_if_string = True
+        geschaeftslage = origpost_red.replace("- ", "")
 
-        # logme
-        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+        #parsing
+        self.ef.add_to_my_obj("business situation", geschaeftslage, object_number=element_counter,
+                              only_filled=only_add_if_string)

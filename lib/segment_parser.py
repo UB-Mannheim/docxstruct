@@ -3,6 +3,7 @@ from akf_corelib.configuration_handler import ConfigurationHandler
 from .akf_parsing_functions_one import AkfParsingFunctionsOne
 from .akf_parsing_functions_two import AkfParsingFunctionsTwo
 from .akf_parsing_functions_three import AkfParsingFunctionsThree
+from .akf_parsing_functions_jk import AkfParsingFunctionsJK
 
 from .akf_parsing_functions_tables_one import AkfParsingFunctionsTablesOne
 
@@ -23,6 +24,7 @@ class FunctionMapAKF(object):
         self.akf_one = AkfParsingFunctionsOne(endobject_factory, output_analyzer)
         self.akf_two = AkfParsingFunctionsTwo(endobject_factory, output_analyzer)
         self.akf_three = AkfParsingFunctionsThree(endobject_factory, output_analyzer)
+        self.akf_jk = AkfParsingFunctionsJK(endobject_factory, output_analyzer)
 
         self.akf_tables_one = AkfParsingFunctionsTablesOne(endobject_factory, output_analyzer)
 
@@ -80,7 +82,7 @@ class FunctionMapAKF(object):
             "Konsolid.Gewinn-u.Verlustrechnungen": self.akf_three.parse_something,
             "AusGewinnVerlustrechnungen": self.akf_three.parse_something,
             "Bezugsrechte": self.akf_three.parse_something,
-            "ZurGeschäftslage": self.akf_three.parse_something
+            "ZurGeschäftslage": self.akf_jk.parse_geschaeftslage
         }
 
     def get_function_map(self):
