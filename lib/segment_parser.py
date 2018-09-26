@@ -60,8 +60,8 @@ class FunctionMapAKF(object):
             "KommanditeUndBank": self.akf_three.parse_kommandite_und_bank,              # not a category in 1956 -> #todo maybe use later
             "Niederlassungen": self.akf_three.parse_niederlassungen,
             "Erzeugnisse": self.akf_three.parse_erzeugnisse,
-            "Haupterzeugnisse": self.akf_three.parse_something,
-            "Spezialitäten": self.akf_three.parse_something,
+            "Haupterzeugnisse": self.akf_three.parse_haupterzeugnisse,
+            "Spezialitäten": self.akf_three.parse_spezialitaeten,
             "Anlagen": self.akf_three.parse_something,
             "Zweigniederlassungen": self.akf_three.parse_something,
             "Werke/Betriebsstätten": self.akf_three.parse_something,
