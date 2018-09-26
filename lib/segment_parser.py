@@ -62,7 +62,7 @@ class FunctionMapAKF(object):
             "Erzeugnisse": self.akf_three.parse_erzeugnisse,
             "Haupterzeugnisse": self.akf_three.parse_haupterzeugnisse,
             "Spezialitäten": self.akf_three.parse_spezialitaeten,
-            "Anlagen": self.akf_three.parse_something,
+            "Anlagen": self.akf_three.parse_anlagen,
             "Zweigniederlassungen": self.akf_three.parse_something,
             "Werke/Betriebsstätten": self.akf_three.parse_something,
             "Betriebsanlagen": self.akf_three.parse_something,
