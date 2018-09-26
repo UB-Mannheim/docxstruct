@@ -165,9 +165,6 @@ class AkfParsingFunctionsThree(object):
         # prefilter entries
         filtered_content_texts = []
         for entry in content_texts:
-            if "Handelsgerichtlich" in entry:
-                print("asd")
-
             if "nd Geschäftsstellen" in entry:
 
                 entry_new = regex.sub("nd\s?Geschäftsstellen\s?:","",entry).strip()
@@ -204,5 +201,32 @@ class AkfParsingFunctionsThree(object):
                                           only_filled=only_add_if_value)
                     element_counter += 1
         """
+
+        return True
+
+    def parse_erzeugnisse(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # this is not active at the moment
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # get categories
+        my_keys = cf.parse_general_and_keys(content_texts,
+                                            join_separated_lines=True, current_key_initial_value="general_info",
+                                            abc_sections=True)
+        only_add_if_value = True
+
+        for key in my_keys:
+            value = my_keys[key].strip()
+            # value_split = regex.split(r",|;", value) # don't split not really structured through that
+            if value == "":
+                continue
+            self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=only_add_if_value)
+            element_counter += 1
+
 
         return True

@@ -84,7 +84,6 @@ class AKFCommonParsingFunctions(object):
                         final_items[current_key] += text
                         continue
 
-
             add_space = " "
             # remove space added on last line
             if text_index >= len_content_texts-1:

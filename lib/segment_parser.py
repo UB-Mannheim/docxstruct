@@ -59,7 +59,7 @@ class FunctionMapAKF(object):
             "Auslandsvertretungen": self.akf_three.parse_auslandsvertretungen,          # not a category in 1956 -> #todo maybe use later
             "KommanditeUndBank": self.akf_three.parse_kommandite_und_bank,              # not a category in 1956 -> #todo maybe use later
             "Niederlassungen": self.akf_three.parse_niederlassungen,
-            "Erzeugnisse": self.akf_three.parse_something,
+            "Erzeugnisse": self.akf_three.parse_erzeugnisse,
             "Haupterzeugnisse": self.akf_three.parse_something,
             "Spezialitäten": self.akf_three.parse_something,
             "Anlagen": self.akf_three.parse_something,
