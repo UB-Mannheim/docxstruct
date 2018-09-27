@@ -389,3 +389,17 @@ class AkfParsingFunctionsThree(object):
             element_counter += 1
 
         return True
+
+
+    def parse_beteiligungsgesellschaften(self, real_start_tag, content_texts, content_lines,
+                                   feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+
+        return True

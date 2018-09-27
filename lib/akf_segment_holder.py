@@ -401,8 +401,16 @@ class SegmentHolder(object):
                 prev_text = prev_line['text']
             combi_text = prev_text + line_text
 
-            match_start, errors = regu.fuzzy_search(r"(?:^|inländische\s?)Beteiligung.+gesellschaft.+:", combi_text)
+            # this doesn't lead to wished results even stops beteiligungen from working
+            #match_start, errors = regu.fuzzy_search(r"(?:^|inländische\s?)Beteiligung.+gesellschaft.+:",
+            #                                        combi_text,
+            #                                        err_number=1)
 
+
+            match_start, errors = regu.fuzzy_search(r"Beteiligungsgesellschaften",
+                                                    combi_text,
+                                                    err_number=1)
+            return
             if match_start is not None:
 
                 self.do_match_work(True, match_start, line_index-1, errors)
@@ -422,7 +430,7 @@ class SegmentHolder(object):
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
             # reduced error number to prevent confusion with "Beteiligung:"
-            match_sitz, errors = regu.fuzzy_search(r"(((?:Namhafte|Wesentliche|Maßgebliche)\s?Beteiligung(en)?)|Beteiligungen)\s?:", line_text, err_number=1)
+            match_sitz, errors = regu.fuzzy_search(r"(((?:Namhafte|Wesentliche|Maßgebliche)\s?Beteiligung(en)?)|\s?Beteiligungen)\s?:", line_text, err_number=1)
             if match_sitz is not None:
                 self.do_match_work(True, match_sitz, line_index, errors)
                 return True
