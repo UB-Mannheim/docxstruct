@@ -65,7 +65,7 @@ class FunctionMapAKF(object):
             "Anlagen": self.akf_three.parse_anlagen,
             "Zweigniederlassungen": self.akf_three.parse_zweigniederlassungen,
             "Werke/Betriebsstätten": self.akf_three.parse_werke_betriebsstaetten,
-            "Betriebsanlagen": self.akf_three.parse_something,
+            "Betriebsanlagen": self.akf_three.parse_betriebsanlagen,
             "Beteiligungsgesellschaften": self.akf_three.parse_something,
             "Beteiligungen": self.akf_three.parse_something,
             "Tochtergesellschaften": self.akf_three.parse_something,
