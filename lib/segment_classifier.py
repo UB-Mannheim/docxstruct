@@ -38,7 +38,8 @@ class SegmentClassifier(object):
             else:
                 combined_line = current_text
             # pass parameters to matching functions
-            all_file_segments.match_my_segments(current_line, current_text, current_index, current_features, prev_line, combined_line)
+            all_file_segments.match_my_segments(current_line, current_text, current_index, current_features, 
+                                                prev_line, combined_line)
             prev_line = current_line
             prev_text = current_text
 
@@ -47,8 +48,43 @@ class SegmentClassifier(object):
         else:
             all_file_segments.correct_overlaps_index_field(only_start_tags=True)
 
+        self.adapt_stop_index_in_last_segment(all_file_segments)
+
         ocromore_data['segmentation'] = all_file_segments
         return ocromore_data
+
+
+    def adapt_stop_index_in_last_segment(self, all_file_segments):
+        """
+        Sets the stop_index for the last recognized segment, which
+        is a special case and is usually not filled beforehand, because
+        there is no next start index
+        :param all_file_segments: holder object for segment classes and other info
+        :return: None
+        """
+
+        # search for last segment
+        saved_start_index = -1
+        saved_last_segment = None
+        for segment in all_file_segments.my_classes:
+            # only count segmented segments
+            if segment.start_was_segmented is False:
+                continue
+
+            if segment.start_line_index >= saved_start_index:
+                saved_start_index = segment.start_line_index
+                saved_last_segment = segment
+
+        if saved_last_segment is None:
+            return
+
+        # adapt the last stop index of last segment
+        saved_last_segment.stop_line_index = all_file_segments.number_of_lines-1
+        saved_last_segment.stop_was_segmented = True # todo think about if this is necessary?
+
+
+
+
 
     def adapt_non_explicit_indices(self, all_file_segments):
 
@@ -204,8 +240,6 @@ class AllSegments(object):
             if inspect.isclass(value):
                 my_instance = value()
                 self.my_classes.append(my_instance)
-
-
 
     # overall function for iterating over all matches
     def match_my_segments(self, line, line_text, line_index, features, prev_line, combined_line):
