@@ -137,6 +137,27 @@ class DataHelper(object):
             else:
                 return text.strip()
 
+    @staticmethod
+    def join_joined_lines(joined_texts, add_spaces=True):
+        """
+        Takes the output from 'join_separated_lines' and joins the lines to one
+        string
+        :param joined_texts: array of texts
+        :param add_spaces: add a space between joined texts
+        :return: joined string
+        """
+        return_text = ""
+
+        for text in joined_texts:
+            if add_spaces is True:
+                return_text += " "+text
+            else:
+                return_text += text
+
+        return_text = return_text.strip()
+
+        return return_text
+
 
     @staticmethod
     def join_separated_lines(content_texts):

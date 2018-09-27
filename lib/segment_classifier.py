@@ -33,10 +33,11 @@ class SegmentClassifier(object):
             # create a combined lined object with optimized (removed) separation
             combined_line = None
             if prev_line is not None:
-                combined_line = dh.join_separated_lines([prev_text, current_text])
+                combined_lines = dh.join_separated_lines([prev_text, current_text])
+                combined_line = dh.join_joined_lines(combined_lines)
             else:
-                combined_line = current_line
-
+                combined_line = current_text
+            # pass parameters to matching functions
             all_file_segments.match_my_segments(current_line, current_text, current_index, current_features, prev_line, combined_line)
             prev_line = current_line
             prev_text = current_text

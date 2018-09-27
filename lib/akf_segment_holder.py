@@ -239,7 +239,7 @@ class SegmentHolder(object):
             # maybe activate later
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
-            match_start, errors = regu.fuzzy_search(r"^Filialen\s?:", line_text,)
+            match_start, errors = regu.fuzzy_search(r"^Filialen\s?:", line_text)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
@@ -267,11 +267,8 @@ class SegmentHolder(object):
             super().__init__("KommanditeUndBank")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
-            if prev_line is None or False:
-                return
-            prev_text = prev_line['text']
-            combined_text = prev_text + line_text
-            match_start, errors = regu.fuzzy_search(r"^Kommandite.+und.+Bank.+:", combined_text)
+
+            match_start, errors = regu.fuzzy_search(r"^Kommandite.+und.+Bank.+:", combined_texts)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
@@ -396,11 +393,6 @@ class SegmentHolder(object):
             super().__init__("Beteiligungsgesellschaften")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
-            prev_text = ""
-            if prev_line is not None:
-                prev_text = prev_line['text']
-            combi_text = prev_text + line_text
-
             # this doesn't lead to wished results even stops beteiligungen from working
             #match_start, errors = regu.fuzzy_search(r"(?:^|inländische\s?)Beteiligung.+gesellschaft.+:",
             #                                        combi_text,
@@ -408,7 +400,7 @@ class SegmentHolder(object):
 
 
             match_start, errors = regu.fuzzy_search(r"Beteiligungsgesellschaften",
-                                                    combi_text,
+                                                    combined_texts,
                                                     err_number=1)
             return
             if match_start is not None:
@@ -445,7 +437,6 @@ class SegmentHolder(object):
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
             match_start, errors = regu.fuzzy_search(r"^Haupterzeugnisse\s?:", line_text)
-
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
@@ -486,7 +477,6 @@ class SegmentHolder(object):
 
         def __init__(self):
             super().__init__("Geschäftsjahr")
-
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
             match_start, errors = regu.fuzzy_search(r"^Geschäftsjahr\s?:", line_text)
@@ -608,11 +598,8 @@ class SegmentHolder(object):
             super().__init__("RechteVorzugsaktien")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
-            if prev_line is None or False:
-                return
-            prev_text = prev_line['text']
-            combined_text = prev_text + line_text
-            match_start, errors = regu.fuzzy_search(r"Rechte.+Vorzugs.+(?:a|A)ktien.+:", combined_text)
+
+            match_start, errors = regu.fuzzy_search(r"Rechte.+Vorzugs.+(?:a|A)ktien.+:", combined_texts)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
@@ -774,11 +761,8 @@ class SegmentHolder(object):
             super().__init__("Konsolid.Gewinn-u.Verlustrechnungen")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
-            if prev_line is None or False:
-                return
-            prev_text = prev_line['text']
-            combined_text = prev_text + line_text
-            match_start, errors = regu.fuzzy_search(r"Aus.+konsolidiert.+(?:G|g)ewinn.+(?:V|v)erlustrechnungen", combined_text)
+            match_start, errors = regu.fuzzy_search(r"Aus.+konsolidiert.+(?:G|g)ewinn.+(?:V|v)erlustrechnungen",
+                                                    combined_texts)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
