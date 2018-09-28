@@ -167,26 +167,50 @@ class AKFCommonParsingFunctions(object):
         return final_entries
 
     @staticmethod
-    def parse_kapital_line(rec_tag, text):
+    def parse_kapital_line(rec_tag, text, detailed_parsing=True):
         """
         Parses a common 'Kapital' line - like in 'Beteiligungen'
         examples for 'text' are whereas 'rec_tag' is usually 'Kapital:':
         "Kapital: DM 240 000.- (25 %)."
         "Kapital: DM 500 000.- (71,8 %)"
+        "Kapital: sfrs. 30 000 000.- (25 %)."
 
-        :param rec_tag:
-        :param text:
-        :return:
+        :param rec_tag: the tag associated with topic in the referred text
+        :param text: text which contains the content and
+        :param detailed_parsing: create a more detailed parsed object
+        :return: simple_text_result, complex_result_object (comes with detailed parsing)
         """
 
         text_reduced = text.replace(rec_tag, "").strip()
-        #todo more detailed parsing
-        return text_reduced
+
+        # if not activated detailed parsing just return simple solution
+        if not detailed_parsing:
+            return text_reduced, None
+
+        # continue with detailed parsing here
+        match_currency = regex.search(r"^[a-zA-Z\.]+", text_reduced)
+        match_numbers = regex.search(r"[\d\s\.\-]+", text_reduced)
+        match_parenthesis = regex.search(r"\(.+\)", text_reduced)
+
+        return_object = {}
+        if match_currency:
+            res_currency = match_currency.group().strip()
+            return_object['currency'] = res_currency
+        if match_numbers:
+            res_numbers = match_numbers.group().strip()
+            return_object['amount'] = res_numbers
+
+        if match_parenthesis:
+            res_parenthesis = match_parenthesis.group().strip()
+            return_object['add_info'] = res_parenthesis
+
+        # return a simple and more sophisticated parsing
+        return text_reduced, return_object
 
     @staticmethod
-    def parse_dividenden_line(rec_tag,text):
+    def parse_dividenden_line(rec_tag, text, detailed_parsing=True):
         text_reduced = text.replace(rec_tag, "").strip()
-        #todo more detailed parsing 
+        #todo more detailed parsing
         return text_reduced
 
 
