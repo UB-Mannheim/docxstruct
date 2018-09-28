@@ -1,5 +1,6 @@
 import regex
 from .data_helper import DataHelper as dh
+from akf_corelib.regex_util import RegexUtil as regu
 
 class AKFCommonParsingFunctions(object):
     """
@@ -164,6 +165,30 @@ class AKFCommonParsingFunctions(object):
 
             final_entries.append((name, city, title, rest_info))
         return final_entries
+
+    @staticmethod
+    def parse_kapital_line(rec_tag, text):
+        """
+        Parses a common 'Kapital' line - like in 'Beteiligungen'
+        examples for 'text' are whereas 'rec_tag' is usually 'Kapital:':
+        "Kapital: DM 240 000.- (25 %)."
+        "Kapital: DM 500 000.- (71,8 %)"
+
+        :param rec_tag:
+        :param text:
+        :return:
+        """
+
+        text_reduced = text.replace(rec_tag, "").strip()
+        #todo more detailed parsing
+        return text_reduced
+
+    @staticmethod
+    def parse_dividenden_line(rec_tag,text):
+        text_reduced = text.replace(rec_tag, "").strip()
+        #todo more detailed parsing 
+        return text_reduced
+
 
     @staticmethod
     def add_check_element(topclass, content_texts, real_start_tag, segmentation_class, element_counter):

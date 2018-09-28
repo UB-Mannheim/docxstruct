@@ -66,8 +66,8 @@ class FunctionMapAKF(object):
             "Zweigniederlassungen": self.akf_three.parse_zweigniederlassungen,
             "Werke/Betriebsstätten": self.akf_three.parse_werke_betriebsstaetten,
             "Betriebsanlagen": self.akf_three.parse_betriebsanlagen,
-            "Beteiligungsgesellschaften": self.akf_three.parse_something,
-            "Beteiligungen": self.akf_three.parse_something,
+            "Beteiligungsgesellschaften": self.akf_three.parse_beteiligungsgesellschaften,                # not a category in 1956 -> #todo maybe use later
+            "Beteiligungen": self.akf_three.parse_beteiligungen,
             "Tochtergesellschaften": self.akf_three.parse_something,
             "Wertpapier-Kenn-Nr": self.akf_three.parse_something,
             "RechteVorzugsaktien": self.akf_three.parse_something,
@@ -78,7 +78,7 @@ class FunctionMapAKF(object):
             "AusDenKonsolidiertenBilanzen": self.akf_three.parse_something,
             "AusDenBilanzen": self.akf_three.parse_something,
             "Konsolid.Gewinn-u.Verlustrechnungen": self.akf_three.parse_something,
-            "AusGewinnVerlustrechnungen": self.akf_three.parse_something,
+            "AusGewinnVerlustrechnungen": self.akf_three.parse_something, # @jk last element works now
             "Bezugsrechte": self.akf_three.parse_something,
             "ZurGeschäftslage": self.akf_three.parse_something
         }
