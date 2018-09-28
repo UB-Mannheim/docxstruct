@@ -1,7 +1,7 @@
 from akf_corelib.conditional_print import ConditionalPrint
 from akf_corelib.configuration_handler import ConfigurationHandler
 from lib.akf_segment_holder import SegmentHolder
-
+from lib.data_helper import DataHelper as dh
 import inspect
 
 class SegmentClassifier(object):
@@ -25,21 +25,66 @@ class SegmentClassifier(object):
         all_file_segments = AllSegments(len(lines), self.cpr, self.config)
 
         prev_line = None
+        prev_text = None
         for current_line_index, current_line in enumerate(lines):
             current_features = feats[current_line_index]
             current_text = current_line['text']
             current_index = current_line['line_index']
-
-            all_file_segments.match_my_segments(current_line, current_text, current_index, current_features, prev_line)
+            # create a combined lined object with optimized (removed) separation
+            combined_line = None
+            if prev_line is not None:
+                combined_lines = dh.join_separated_lines([prev_text, current_text])
+                combined_line = dh.join_joined_lines(combined_lines)
+            else:
+                combined_line = current_text
+            # pass parameters to matching functions
+            all_file_segments.match_my_segments(current_line, current_text, current_index, current_features, 
+                                                prev_line, combined_line)
             prev_line = current_line
+            prev_text = current_text
 
         if self.config.MATCH_UNTIL_NEXT_START_THEN_STOP_CONDITION:
             self.adapt_non_explicit_indices(all_file_segments)
         else:
             all_file_segments.correct_overlaps_index_field(only_start_tags=True)
 
+        self.adapt_stop_index_in_last_segment(all_file_segments)
+
         ocromore_data['segmentation'] = all_file_segments
         return ocromore_data
+
+
+    def adapt_stop_index_in_last_segment(self, all_file_segments):
+        """
+        Sets the stop_index for the last recognized segment, which
+        is a special case and is usually not filled beforehand, because
+        there is no next start index
+        :param all_file_segments: holder object for segment classes and other info
+        :return: None
+        """
+
+        # search for last segment
+        saved_start_index = -1
+        saved_last_segment = None
+        for segment in all_file_segments.my_classes:
+            # only count segmented segments
+            if segment.start_was_segmented is False:
+                continue
+
+            if segment.start_line_index >= saved_start_index:
+                saved_start_index = segment.start_line_index
+                saved_last_segment = segment
+
+        if saved_last_segment is None:
+            return
+
+        # adapt the last stop index of last segment
+        saved_last_segment.stop_line_index = all_file_segments.number_of_lines-1
+        saved_last_segment.stop_was_segmented = True # todo think about if this is necessary?
+
+
+
+
 
     def adapt_non_explicit_indices(self, all_file_segments):
 
@@ -177,8 +222,8 @@ class AllSegments(object):
         start_line_index = segmentation_class.start_line_index
         stop_line_index = segmentation_class.stop_line_index
         index_field_len = len(self.index_field)
-        if segment_tag is "Verwaltung":
-            print("aqd")
+        # if segment_tag is "Verwaltung":
+        #    print("aqd")
 
         for index in range(start_line_index+1, index_field_len):
 
@@ -196,10 +241,8 @@ class AllSegments(object):
                 my_instance = value()
                 self.my_classes.append(my_instance)
 
-
-
     # overall function for iterating over all matches
-    def match_my_segments(self, line, line_text, line_index, features, prev_line):
+    def match_my_segments(self, line, line_text, line_index, features, prev_line, combined_line):
 
         # 'only'-tagged class usage
         using_only_classes = False
@@ -225,7 +268,7 @@ class AllSegments(object):
                 start_error_number_before_match = segment_class.get_start_error_number()
                 if not segment_class.is_start_segmented() or segment_class.get_start_error_number() >= 1:
                     start_updated = segment_class.match_start_condition(line, line_text, line_index, features,
-                                                                        self.number_of_lines, prev_line)
+                                                                        self.number_of_lines, prev_line, combined_line)
                     start_error_number_after_match = segment_class.get_start_error_number()
                     if start_error_number_before_match <= start_error_number_after_match:
                         # only update if the recognized number is lower
@@ -234,7 +277,7 @@ class AllSegments(object):
                 stop_error_number_before_match = segment_class.get_stop_error_number()
                 if not segment_class.is_stop_segmented() or segment_class.get_stop_error_number() >= 1:
                     stop_updated = segment_class.match_stop_condition(line, line_text, line_index, features,
-                                                                      self.number_of_lines, prev_line)
+                                                                      self.number_of_lines, prev_line, combined_line)
                     stop_error_number_after_match = segment_class.get_stop_error_number()
                     if stop_error_number_before_match <= stop_error_number_after_match:
                         # only update if the recognized number is lower
@@ -244,10 +287,10 @@ class AllSegments(object):
                 # just hit the first match and stop matching then -> standard  mode
                 if not segment_class.is_start_segmented():
                     start_updated = segment_class.match_start_condition(line, line_text, line_index, features,
-                                                                        self.number_of_lines, prev_line)
+                                                                        self.number_of_lines, prev_line, combined_line)
                 if not segment_class.is_stop_segmented():
                     stop_updated = segment_class.match_stop_condition(line, line_text, line_index, features,
-                                                                      self.number_of_lines, prev_line)
+                                                                      self.number_of_lines, prev_line, combined_line)
 
             if start_updated or stop_updated:
                 # there was a change -> update the indices fields

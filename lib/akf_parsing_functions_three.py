@@ -161,3 +161,320 @@ class AkfParsingFunctionsThree(object):
 
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # prefilter entries
+        filtered_content_texts = []
+        for entry in content_texts:
+            if "nd Geschäftsstellen" in entry:
+
+                entry_new = regex.sub("nd\s?Geschäftsstellen\s?:","",entry).strip()
+                if entry_new == "":
+                    continue
+                entry = entry_new
+
+            filtered_content_texts.append(entry)
+
+        # add in generalized form, there is not much structure over years
+        only_add_if_value = True
+        my_keys = cf.parse_general_and_keys(filtered_content_texts,
+                                            join_separated_lines=True, current_key_initial_value="general_info",
+                                            abc_sections=True)
+        for key in my_keys:
+            value = my_keys[key]
+            self.ef.add_to_my_obj(key, value, object_number=element_counter,
+                                  only_filled=only_add_if_value)
+            element_counter += 1
+
+        # parse the entries fill end-array
+        """
+        only_add_if_value = True
+
+        for entry_f in filtered_content_texts:
+            if ";" in entry_f:
+                print("entry")
+
+
+            else:
+                split_entry = regex.split(',|und|u\.', entry_f)
+                for entry_fs in split_entry:
+                    self.ef.add_to_my_obj("location", entry_fs, object_number=element_counter,
+                                          only_filled=only_add_if_value)
+                    element_counter += 1
+        """
+
+        return True
+
+    def parse_erzeugnisse(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # get categories
+        my_keys = cf.parse_general_and_keys(content_texts,
+                                            join_separated_lines=True, current_key_initial_value="general_info",
+                                            abc_sections=True)
+        only_add_if_value = True
+        # parse each value to the result if filled
+        for key in my_keys:
+            value = my_keys[key].strip()
+            # value_split = regex.split(r",|;", value) # don't split not really structured through that
+            if value == "":
+                continue
+            self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=only_add_if_value)
+            element_counter += 1
+
+
+        return True
+
+    def parse_haupterzeugnisse(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # get categories
+        my_keys = cf.parse_general_and_keys(content_texts,
+                                            join_separated_lines=True, current_key_initial_value="general_info",
+                                            abc_sections=True)
+        only_add_if_value = True
+        # parse each value to the result if filled
+        for key in my_keys:
+            value = my_keys[key].strip()
+            value_split = regex.split(r",|;|und", value) # don't split not really structured through that
+            entry_counter = 0
+            for entry in value_split:
+                entry = entry.strip()
+                if entry == "":
+                    continue
+                self.ef.add_to_my_obj(key+"_"+str(entry_counter), entry,
+                                      object_number=element_counter, only_filled=only_add_if_value)
+                element_counter += 1
+                entry_counter += 1
+
+        return True
+
+    def parse_spezialitaeten(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # get categories
+        my_keys = cf.parse_general_and_keys(content_texts,
+                                            join_separated_lines=True, current_key_initial_value="general_info",
+                                            abc_sections=True)
+        only_add_if_value = True
+        # parse each value to the result if filled
+        for key in my_keys:
+            value = my_keys[key].strip()
+            # value_split = regex.split(r",|;", value) # don't split not really structured through that
+            if value == "":
+                continue
+            self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=only_add_if_value)
+            element_counter += 1
+
+        return True
+
+
+    def parse_anlagen(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # get categories
+        my_keys = cf.parse_general_and_keys(content_texts,
+                                            join_separated_lines=True, current_key_initial_value="general_info",
+                                            abc_sections=True)
+        only_add_if_value = True
+        # parse each value to the result if filled
+        for key in my_keys:
+            value = my_keys[key].strip()
+            # value_split = regex.split(r",|;", value) # don't split not really structured through that
+            if value == "":
+                continue
+            self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=only_add_if_value)
+            element_counter += 1
+
+        return True
+
+    def parse_zweigniederlassungen(self, real_start_tag, content_texts, content_lines,
+                                   feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # get categories
+        my_keys = cf.parse_general_and_keys(content_texts,
+                                            join_separated_lines=True, current_key_initial_value="general_info",
+                                            abc_sections=True)
+        only_add_if_value = True
+        # parse each value to the result if filled
+        for key in my_keys:
+            value = my_keys[key].strip()
+            # value_split = regex.split(r",|;", value) # don't split not really structured through that
+            if value == "":
+                continue
+            self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=only_add_if_value)
+            element_counter += 1
+
+        return True
+
+
+    def parse_werke_betriebsstaetten(self, real_start_tag, content_texts, content_lines,
+                                   feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # get categories
+        my_keys = cf.parse_general_and_keys(content_texts,
+                                            join_separated_lines=True, current_key_initial_value="general_info",
+                                            abc_sections=True)
+        only_add_if_value = True
+        # parse each value to the result if filled
+        for key in my_keys:
+            value = my_keys[key].strip()
+            # value_split = regex.split(r",|;", value) # don't split not really structured through that
+            if value == "":
+                continue
+            self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=only_add_if_value)
+            element_counter += 1
+
+        return True
+
+    def parse_betriebsanlagen(self, real_start_tag, content_texts, content_lines,
+                                   feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # get categories
+        my_keys = cf.parse_general_and_keys(content_texts,
+                                            join_separated_lines=True, current_key_initial_value="general_info",
+                                            abc_sections=True)
+        only_add_if_value = True
+        # parse each value to the result if filled
+        for key in my_keys:
+            value = my_keys[key].strip()
+            # value_split = regex.split(r",|;", value) # don't split not really structured through that
+            if value == "":
+                continue
+            self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=only_add_if_value)
+            element_counter += 1
+
+        return True
+
+
+    def parse_beteiligungsgesellschaften(self, real_start_tag, content_texts, content_lines,
+                                   feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        return False
+
+    def parse_beteiligungen(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # create a writable results array
+        results = []
+        current_object = {}
+        for text_index, text in enumerate(content_texts):
+            text_stripped = text.strip()
+            if text_stripped == "":
+                continue
+
+            match_kapital, err_kapital = regu.fuzzy_search(r"^Kapital\s?:", text_stripped, err_number=1)
+            if match_kapital:
+                my_result = match_kapital.group()
+                if 'kapital' not in current_object.keys():
+
+                    current_object['kapital'] = cf.parse_kapital_line(my_result, text_stripped)
+                else:
+                    current_object = {}
+                    current_object['kapital'] = cf.parse_kapital_line(my_result, text_stripped)
+                    results.append(current_object)
+
+                    # current_object['kapital'] += " " + text_stripped
+                    # current_object['kapital'] = current_object['kapital'].strip()
+                continue
+
+            match_dividenden, err_divid = regu.fuzzy_search(r"^Dividenden\s?(:|ab)",
+                                                            text_stripped, err_number=1)
+            if match_dividenden:
+                my_result = match_dividenden.group()
+                if 'dividenden' not in current_object.keys():
+                    current_object['dividenden'] = cf.parse_dividenden_line(my_result, text_stripped)
+                else:
+                    current_object = {}
+                    current_object['dividenden'] = cf.parse_dividenden_line(my_result, text_stripped)
+                    results.append(current_object)
+
+                    # current_object['dividenden'] += " " + text_stripped
+                    # current_object['dividenden'] = current_object['dividenden'].strip()
+                continue
+            word_info = content_lines[text_index]['words']
+            if len(word_info) <= 2:
+                if 'text' not in current_object.keys():
+                    current_object['text'] = text_stripped
+                else:
+                    current_object['text'] += " " + text_stripped
+                    current_object['text'] = current_object['text'].strip()
+                continue
+
+            # if other cases don't match add text to new object
+            current_object = {}
+            current_object['text'] = text_stripped
+            results.append(current_object)
+
+        only_add_if_value = True
+
+        # log results to output
+        for entry in results:
+            change = False
+            for key in entry.keys():
+                value = entry[key]
+                self.ef.add_to_my_obj(key, value,
+                                      object_number=element_counter, only_filled=only_add_if_value)
+                change = True
+            if change:
+                element_counter += 1
+
+        return False
+

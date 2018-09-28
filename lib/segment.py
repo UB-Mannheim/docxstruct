@@ -64,14 +64,14 @@ class Segment(object):
             self.set_stop_error_number(match_errors)
 
     @abc.abstractmethod
-    def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line):
-        return # 0  # return number 0 for indication undefined, don't return this in overwritten conditions
+    def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
+        return  # 0  # return number 0 for indication undefined, don't return this in overwritten conditions
 
     @abc.abstractmethod
-    def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line):
+    def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
         # by default don't assign any stop condition, leave at initial value
         # self.stop_line_index = self.start_line_index
-        return # 0  # return number 0 for indication undefined, don't return this in overwritten conditions
+        return  # 0  # return number 0 for indication undefined, don't return this in overwritten conditions
 
     def start_or_stop_segmented(self):
         if self.start_was_segmented or self.stop_was_segmented:

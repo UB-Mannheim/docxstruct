@@ -1,5 +1,6 @@
 import regex
 from .data_helper import DataHelper as dh
+from akf_corelib.regex_util import RegexUtil as regu
 
 class AKFCommonParsingFunctions(object):
     """
@@ -8,7 +9,7 @@ class AKFCommonParsingFunctions(object):
     """
 
     @staticmethod
-    def parse_general_and_keys(content_texts, join_separated_lines=False, current_key_initial_value=None):
+    def parse_general_and_keys(content_texts, join_separated_lines=False, current_key_initial_value=None, abc_sections=False):
         """
         Separates an array of texts into categories.
         Categories are found by leading tag followed by ':'
@@ -17,6 +18,7 @@ class AKFCommonParsingFunctions(object):
         :param join_separated_lines: lines which have trailing '-'
                 are joined (usually not needed use 'join_separated_lines' instead)
         :param current_key_initial_value: used key initial value (for "General info" key)
+        :param abc_sections: 'a) section1' 'b) section2' use this as additional splitting
         :return: a dictionary with general_content as well as the seperated keytag content
         """
         final_items = {}
@@ -33,7 +35,24 @@ class AKFCommonParsingFunctions(object):
             if text_index < len_content_texts-1:
                 next_text = content_texts[text_index+1].strip()
 
-            if ":" in text:
+
+
+            abc_found = False
+            if abc_sections:
+                starts_with_abc = regex.search("^\w\s?\)", text)
+                if starts_with_abc:
+                    current_key = starts_with_abc[0]
+
+                    # if there is a multikey give it an additional counter
+                    key_count = list(final_items.keys()).count(current_key)
+
+                    if key_count >= 1:
+                        current_key = current_key + "_" + str(key_count + 1)
+                    # remove current key from text
+                    text = text.replace(current_key, "").strip()
+                    abc_found = True
+
+            if ":" in text and abc_found is False:
                 # find out if there is a new category
                 current_key = text.split(":")[0]
                 # if there is a multikey give it an additional counter
@@ -44,6 +63,8 @@ class AKFCommonParsingFunctions(object):
 
                 # remove current key from text
                 text = text.replace(current_key, "").replace(":", "")
+
+
 
             text = text.strip()
 
@@ -64,7 +85,6 @@ class AKFCommonParsingFunctions(object):
                         final_items[current_key] += text
                         continue
 
-
             add_space = " "
             # remove space added on last line
             if text_index >= len_content_texts-1:
@@ -75,78 +95,7 @@ class AKFCommonParsingFunctions(object):
 
         return final_items
 
-    @staticmethod
-    def join_separated_lines(content_texts):
-        """
-        Joins dash separated lines in the text list (reduces the number of entries, if
-        there are such lines)
-        :param content_texts: text list to join
-        :return: text array where all dash separated lines are joined
-        """
 
-        # final array with joined texts
-        joined_texts = []
-        # intermediate array for storing tagged lines (normal line:0 or separator_line:1)
-        NORMAL_LINE = 0
-        SEPARATOR_LINE = 1
-        LAST_LINE = 2
-
-        tagged_texts = []
-
-        len_content_texts = len(content_texts)
-
-        # iterate the given texts
-        for text_index, text in enumerate(content_texts):
-            if text is None:
-                continue
-            # if there is one, get the follow up text
-            next_text = None
-            if text_index < len_content_texts - 1:
-                next_text = content_texts[text_index + 1].strip()
-
-            # detect line with separator
-            if len(text) >= 2 and "-" in text[-1]:
-                if next_text is not None and len(next_text) >= 1:
-                    # if the next starting letter is uppercase don't do the joining (assuming it's a '-'
-                    # separated Name like "Jan-Phillipp")
-                    if not next_text[0].isupper():
-                        # fetch the next text in current and remove separator
-                        text = text[0:len(text) - 1]
-                    # store in tagged texts
-                    tagged_texts.append((text, SEPARATOR_LINE))
-                    continue
-
-            if text_index >= len_content_texts:
-                tagged_texts.append((text, LAST_LINE))
-                break
-
-            # append to tagged texts
-            tagged_texts.append((text, NORMAL_LINE))
-
-        # join the tagged texts
-
-        for current_index, ttext_info in enumerate(tagged_texts):
-            if ttext_info == None:
-                continue # line was already joined
-
-            current_ttext, current_id = ttext_info
-            if current_id == NORMAL_LINE:
-                joined_texts.append(current_ttext)
-            elif current_id == SEPARATOR_LINE:
-                # check all follow up lines
-                for follow_up_index in range(current_index+1, len(tagged_texts)):
-                    follow_ttext, follow_id = tagged_texts[follow_up_index]
-                    current_ttext = current_ttext + follow_ttext
-                    tagged_texts[follow_up_index] = None
-                    if follow_id == NORMAL_LINE or follow_id == LAST_LINE:
-                        #update my new array
-                        joined_texts.append(current_ttext)
-                        break # done escape the inner loop
-                    elif follow_id == SEPARATOR_LINE:
-                        continue # continue  inner loop
-
-        # return the modified list
-        return joined_texts
 
     @staticmethod
     def parse_id_location(origpost_red):
@@ -218,6 +167,30 @@ class AKFCommonParsingFunctions(object):
         return final_entries
 
     @staticmethod
+    def parse_kapital_line(rec_tag, text):
+        """
+        Parses a common 'Kapital' line - like in 'Beteiligungen'
+        examples for 'text' are whereas 'rec_tag' is usually 'Kapital:':
+        "Kapital: DM 240 000.- (25 %)."
+        "Kapital: DM 500 000.- (71,8 %)"
+
+        :param rec_tag:
+        :param text:
+        :return:
+        """
+
+        text_reduced = text.replace(rec_tag, "").strip()
+        #todo more detailed parsing
+        return text_reduced
+
+    @staticmethod
+    def parse_dividenden_line(rec_tag,text):
+        text_reduced = text.replace(rec_tag, "").strip()
+        #todo more detailed parsing 
+        return text_reduced
+
+
+    @staticmethod
     def add_check_element(topclass, content_texts, real_start_tag, segmentation_class, element_counter):
 
         if topclass.config.ADD_INFO_ENTRY_TO_OUTPUT:
@@ -227,7 +200,7 @@ class AKFCommonParsingFunctions(object):
             topclass.ef.add_to_my_obj("type", segmentation_class.segment_tag, object_number=element_counter)
             element_counter += 1
 
-        joined_texts = AKFCommonParsingFunctions.join_separated_lines(content_texts)  # join dash separated texts
+        joined_texts = dh.join_separated_lines(content_texts)  # join dash separated texts
         origpost, origpost_red = dh.create_stringified_linearray(joined_texts)   # final reduced array for further processing
 
         return origpost, origpost_red, element_counter, joined_texts

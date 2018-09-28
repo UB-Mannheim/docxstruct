@@ -136,3 +136,98 @@ class DataHelper(object):
                 return text.strip(strip_pattern)
             else:
                 return text.strip()
+
+    @staticmethod
+    def join_joined_lines(joined_texts, add_spaces=True):
+        """
+        Takes the output from 'join_separated_lines' and joins the lines to one
+        string
+        :param joined_texts: array of texts
+        :param add_spaces: add a space between joined texts
+        :return: joined string
+        """
+        return_text = ""
+
+        for text in joined_texts:
+            if add_spaces is True:
+                return_text += " "+text
+            else:
+                return_text += text
+
+        return_text = return_text.strip()
+
+        return return_text
+
+
+    @staticmethod
+    def join_separated_lines(content_texts):
+        """
+        Joins dash separated lines in the text list (reduces the number of entries, if
+        there are such lines)
+        :param content_texts: text list to join
+        :return: text array where all dash separated lines are joined
+        """
+
+        # final array with joined texts
+        joined_texts = []
+        # intermediate array for storing tagged lines (normal line:0 or separator_line:1)
+        NORMAL_LINE = 0
+        SEPARATOR_LINE = 1
+        LAST_LINE = 2
+
+        tagged_texts = []
+
+        len_content_texts = len(content_texts)
+
+        # iterate the given texts
+        for text_index, text in enumerate(content_texts):
+            if text is None:
+                continue
+            # if there is one, get the follow up text
+            next_text = None
+            if text_index < len_content_texts - 1:
+                next_text = content_texts[text_index + 1].strip()
+
+            # detect line with separator
+            if len(text) >= 2 and "-" in text[-1]:
+                if next_text is not None and len(next_text) >= 1:
+                    # if the next starting letter is uppercase don't do the joining (assuming it's a '-'
+                    # separated Name like "Jan-Phillipp")
+                    if not next_text[0].isupper():
+                        # fetch the next text in current and remove separator
+                        text = text[0:len(text) - 1]
+                    # store in tagged texts
+                    tagged_texts.append((text, SEPARATOR_LINE))
+                    continue
+
+            if text_index >= len_content_texts:
+                tagged_texts.append((text, LAST_LINE))
+                break
+
+            # append to tagged texts
+            tagged_texts.append((text, NORMAL_LINE))
+
+        # join the tagged texts
+
+        for current_index, ttext_info in enumerate(tagged_texts):
+            if ttext_info == None:
+                continue # line was already joined
+
+            current_ttext, current_id = ttext_info
+            if current_id == NORMAL_LINE:
+                joined_texts.append(current_ttext)
+            elif current_id == SEPARATOR_LINE:
+                # check all follow up lines
+                for follow_up_index in range(current_index+1, len(tagged_texts)):
+                    follow_ttext, follow_id = tagged_texts[follow_up_index]
+                    current_ttext = current_ttext + follow_ttext
+                    tagged_texts[follow_up_index] = None
+                    if follow_id == NORMAL_LINE or follow_id == LAST_LINE:
+                        #update my new array
+                        joined_texts.append(current_ttext)
+                        break # done escape the inner loop
+                    elif follow_id == SEPARATOR_LINE:
+                        continue # continue  inner loop
+
+        # return the modified list
+        return joined_texts
