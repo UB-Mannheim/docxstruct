@@ -77,11 +77,11 @@ class FunctionMapAKF(object):
             "Anleihen": self.akf_three.parse_something,
             "KursVonZuteilungsrechten": self.akf_three.parse_something,
             "Emissionsbetrag": self.akf_three.parse_something,
-            "AusDenKonsolidiertenBilanzen": self.akf_three.parse_something,
-            "AusDenBilanzen": self.akf_three.parse_something,
-            "Konsolid.Gewinn-u.Verlustrechnungen": self.akf_three.parse_something,
-            "AusGewinnVerlustrechnungen": self.akf_three.parse_something,
-            "Bezugsrechte": self.akf_three.parse_something,
+            "AusDenKonsolidiertenBilanzen": self.akf_jk.parse_bilanzen,
+            "AusDenBilanzen": self.akf_jk.parse_bilanzen,
+            "Konsolid.Gewinn-u.Verlustrechnungen": self.akf_jk.parse_gewinn_und_verlust,
+            "AusGewinnVerlustrechnungen": self.akf_jk.parse_gewinn_und_verlust,
+            "Bezugsrechte": self.akf_jk.parse_bezugsrechte,
             "ZurGeschäftslage": self.akf_jk.parse_geschaeftslage
         }
 

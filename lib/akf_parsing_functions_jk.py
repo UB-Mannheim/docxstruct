@@ -88,6 +88,101 @@ class AkfParsingFunctionsJK(object):
                                   only_filled=only_add_if_value)
             element_counter += 1
 
+    def parse_bilanzen(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # init
+        only_add_if_string = True
+        geschaeftslage = origpost_red.replace("- ", "")
+
+        #parsing
+        table_start = False
+        table_dict = {}
+        for entry, features in zip(content_lines,feature_lines):
+            # read the number of coloumns the currency of the attributes
+            if table_start is False:
+                if features.counter_special_chars > 3 and features.counter_numbers > 10:
+                    years = entry['text'].split(" ")
+                    for idx, year in enumerate(years):
+                        # Count the coloumns 0,1,2,...
+                        table_dict[idx] = {'year':year}
+                elif table_dict is not None:
+                    for idx in table_dict.keys():
+                        table_dict[idx]["currency"] = entry['text']
+                        table_start = True
+                colname = ""
+            elif table_start and entry['text'] != "":
+                if features.counter_numbers < 2:
+                    colname = entry['text']+" "
+                    continue
+                colname += ''.join([i for i in entry['text'] if not i.isdigit()]).strip()
+                numbers = ''.join([i for i in entry['text'] if i.isdigit() or i == " "]).strip().split(" ")
+                # Check if line is date
+                if features.counter_alphabetical < 2 and features.counter_special_chars > 3 and features.counter_numbers > 10:
+                    continue
+
+                count_years = len(years)-1
+                count_numbers = 0
+                number = ""
+                for grpidx, numbergrp in enumerate(reversed(numbers)):
+                    # Check and clean artifacts
+                    count_numbers += len(numbergrp)
+                    if len(numbergrp) > 3 and grpidx > 0:
+                        if numbergrp[3:] == list(reversed(numbers))[grpidx-1][:len(numbergrp[3:])]:
+                            numbergrp = numbergrp[:3]
+                    if len(numbergrp) == 3 and grpidx != len(numbers) and count_numbers < (features.counter_numbers/2):
+                        number = (numbergrp+" "+number).strip()
+                        continue
+                    else:
+                        count_numbers = 0
+                        table_dict[count_years][colname] = (numbergrp+" "+number).strip()
+                        number = ""
+                        count_years -= 1
+
+                colname = ""
+
+        self.ef.add_to_my_obj("balances", table_dict, object_number=element_counter,only_filled=only_add_if_string)
+
+    def parse_gewinn_und_verlust(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # init
+        only_add_if_string = True
+        geschaeftslage = origpost_red.replace("- ", "")
+
+        #parsing
+        self.ef.add_to_my_obj("business situation", geschaeftslage, object_number=element_counter,
+                              only_filled=only_add_if_string)
+
+    def parse_bezugsrechte(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # init
+        only_add_if_string = True
+        geschaeftslage = origpost_red.replace("- ", "")
+
+        #parsing
+        self.ef.add_to_my_obj("business situation", geschaeftslage, object_number=element_counter,
+                              only_filled=only_add_if_string)
+
     def parse_geschaeftslage(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
         element_counter = 0
