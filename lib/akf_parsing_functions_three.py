@@ -414,55 +414,9 @@ class AkfParsingFunctionsThree(object):
         only_add_if_value = True  # only add entries to result if they contain values
         complex_parsing = True  # parses some lines in more detailed way
         
-        # create a writable results array
-        results = []
-        current_object = {}
-        for text_index, text in enumerate(content_texts):
-            text_stripped = text.strip()
-            if text_stripped == "":
-                continue
 
-            match_kapital, err_kapital = regu.fuzzy_search(r"^Kapital\s?:", text_stripped, err_number=1)
-            if match_kapital:
-                my_result = match_kapital.group()
-                if 'kapital' in current_object.keys():
-                    # refresh current object if already in keys
-                    current_object = {}
-
-                simple, complex = cf.parse_kapital_line(my_result, text_stripped,
-                                                        detailed_parsing=complex_parsing)
-                current_object['kapital'] = complex
-
-                results.append(current_object)
-                continue
-
-            match_dividenden, err_divid = regu.fuzzy_search(r"^Dividenden\s?(:|ab)",
-                                                            text_stripped, err_number=1)
-            if match_dividenden:
-                my_result = match_dividenden.group()
-                if 'dividenden'  in current_object.keys():
-                    # refresh current object if already in keys
-                    current_object = {}
-
-                current_object['dividenden'] = cf.parse_dividenden_line(my_result, text_stripped,
-                                                        detailed_parsing=complex_parsing)
-                results.append(current_object)
-                continue
-            word_info = content_lines[text_index]['words']
-            if len(word_info) <= 2:
-                if 'text' not in current_object.keys():
-                    current_object['text'] = text_stripped
-                else:
-                    current_object['text'] += " " + text_stripped
-                    current_object['text'] = current_object['text'].strip()
-                continue
-
-            # if other cases don't match add text to new object
-            current_object = {}
-            current_object['text'] = text_stripped
-            results.append(current_object)
-
-
+        results = cf.match_common_block(content_texts, content_lines, complex_parsing, ['dividenden','kapital',
+                                                                                        'parenthesis'])
         # log results to output
         for entry in results:
             change = False

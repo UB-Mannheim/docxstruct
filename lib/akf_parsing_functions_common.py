@@ -2,6 +2,7 @@ import regex
 from .data_helper import DataHelper as dh
 from akf_corelib.regex_util import RegexUtil as regu
 
+
 class AKFCommonParsingFunctions(object):
     """
     This is a holder object for commonly ocuring parsing
@@ -209,9 +210,42 @@ class AKFCommonParsingFunctions(object):
 
     @staticmethod
     def parse_dividenden_line(rec_tag, text, detailed_parsing=True):
+        """
+        Parses a common 'Dividenden' line - like in 'Beteiligungen'
+        examples for 'text' are whereas 'rec_tag' is usually 'Dividenden ab':
+        "Dividenden ab 1949/50: 0, 0, 0, 0,0%"
+        "Dividenden ab 1950: 4, 4, 4, 4, 4%."
+        "Dividenden ab 1950: 0, 0, 3, 3, 4%"
+
+        :param rec_tag: the tag associated with topic in the referred text
+        :param text: text which contains the content and
+        :param detailed_parsing: create a more detailed parsed object
+        :return: simple_text_result, complex_result_object (comes with detailed parsing)
+        """
+
         text_reduced = text.replace(rec_tag, "").strip()
-        #todo more detailed parsing
-        return text_reduced
+
+        # if not activated detailed parsing just return simple solution
+        if not detailed_parsing:
+            return text_reduced, None
+
+        return_object = {}
+        text_red_split = regex.split(r':|,', text_reduced)
+
+        for text_index, text_entry in enumerate(text_red_split):
+            if text_index == 0:
+                return_object['year'] = text_entry.strip(",. ")
+            else:
+                if 'percentages' not in return_object.keys():
+                    return_object['percentages'] = []
+
+                stripped_text = text_entry.strip(",.% ")
+                if stripped_text == "":
+                    continue
+                return_object['percentages'].append(stripped_text)
+
+
+        return text_reduced, return_object
 
 
     @staticmethod
@@ -228,3 +262,96 @@ class AKFCommonParsingFunctions(object):
         origpost, origpost_red = dh.create_stringified_linearray(joined_texts)   # final reduced array for further processing
 
         return origpost, origpost_red, element_counter, joined_texts
+
+
+    @staticmethod
+    def match_common_block(content_texts, content_lines, complex_parsing, additional_categories):
+
+        # check the additional categories field which additional categories can be found
+        dict_used_categories = {}
+        for entry in additional_categories:
+            entry_low = entry.lower()
+            dict_used_categories[entry_low] = True
+
+
+        # create a writable results array
+        results = []
+        current_object = {}
+        category_hit = False
+        for text_index, text in enumerate(content_texts):
+            text_stripped = text.strip()
+            if text_stripped == "":
+                continue
+            if dict_used_categories['kapital'] is True:
+                match_kapital, err_kapital = regu.fuzzy_search(r"^Kapital\s?:", text_stripped, err_number=1)
+                if match_kapital:
+                    my_result = match_kapital.group()
+                    if 'kapital' in current_object.keys():
+                        # refresh current object if already in keys
+                        current_object = {}
+                        # append old object
+                        results.append(current_object)
+
+                    simple, complex = AKFCommonParsingFunctions.parse_kapital_line(my_result, text_stripped,
+                                                            detailed_parsing=complex_parsing)
+                    current_object['kapital'] = complex if complex_parsing else simple  # conditionally set val
+                    category_hit = True  # indicate that an additional subcategory was already found in current object
+
+                    continue
+            if dict_used_categories['dividenden'] is True:
+
+                match_dividenden, err_divid = regu.fuzzy_search(r"^Dividenden\s?(:|ab)",
+                                                                text_stripped, err_number=1)
+                if match_dividenden:
+                    my_result = match_dividenden.group()
+                    if 'dividenden' in current_object.keys():
+                        # refresh current object if already in keys
+                        current_object = {}
+                        # append old object
+                        results.append(current_object)
+                    simple, complex = AKFCommonParsingFunctions.parse_dividenden_line(my_result, text_stripped,
+                                                                            detailed_parsing=complex_parsing)
+                    current_object['dividenden'] =  complex if complex_parsing else simple  # conditionally set val
+                    category_hit = True  # indicate that an additional subcategory was already found in current object
+
+                    continue
+            if dict_used_categories['parenthesis'] is True:
+
+                match_parenth = regex.search(r"^\(\.*\)",text_stripped)
+
+                if match_parenth:
+                    my_result = match_parenth.group()
+                    if 'parenthesis' in current_object.keys():
+
+                        # refresh current object if already in keys
+                        current_object = {}
+                        # append old object
+                        results.append(current_object)
+
+                    current_object['add_info'] = my_result
+                    category_hit = True  # indicate that an additional subcategory was already found in current object
+                    continue
+
+            word_info = content_lines[text_index]['words']
+
+            # if shorter line (wordcount) (skip this if a text and a category was already found 'category hit')
+            if not category_hit and len(word_info) <= 2:
+                if 'text' not in current_object.keys():
+                    current_object['text'] = text_stripped
+                else:
+                    current_object['text'] += " " + text_stripped
+                    current_object['text'] = current_object['text'].strip()
+                continue
+
+            # if other cases don't match add text to new object
+            current_object = {}
+            current_object['text'] = text_stripped
+            category_hit = False  # indicate that there has been no category assigned yet
+            results.append(current_object)
+
+        # check if object was not appended sh
+        #if results is None:
+        #    print("asd")
+        #    return 5
+
+        return results
