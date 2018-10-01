@@ -110,7 +110,6 @@ class AkfParsingFunctionsThree(object):
 
         return True
 
-
     def parse_filialen(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # this is not active at the moment # todo use this maybe somewhen later
         # get basic data
@@ -412,6 +411,9 @@ class AkfParsingFunctionsThree(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
+        only_add_if_value = True  # only add entries to result if they contain values
+        complex_parsing = True  # parses some lines in more detailed way
+        
         # create a writable results array
         results = []
         current_object = {}
@@ -423,31 +425,28 @@ class AkfParsingFunctionsThree(object):
             match_kapital, err_kapital = regu.fuzzy_search(r"^Kapital\s?:", text_stripped, err_number=1)
             if match_kapital:
                 my_result = match_kapital.group()
-                if 'kapital' not in current_object.keys():
-
-                    current_object['kapital'] = cf.parse_kapital_line(my_result, text_stripped)
-                else:
+                if 'kapital' in current_object.keys():
+                    # refresh current object if already in keys
                     current_object = {}
-                    current_object['kapital'] = cf.parse_kapital_line(my_result, text_stripped)
-                    results.append(current_object)
 
-                    # current_object['kapital'] += " " + text_stripped
-                    # current_object['kapital'] = current_object['kapital'].strip()
+                simple, complex = cf.parse_kapital_line(my_result, text_stripped,
+                                                        detailed_parsing=complex_parsing)
+                current_object['kapital'] = complex
+
+                results.append(current_object)
                 continue
 
             match_dividenden, err_divid = regu.fuzzy_search(r"^Dividenden\s?(:|ab)",
                                                             text_stripped, err_number=1)
             if match_dividenden:
                 my_result = match_dividenden.group()
-                if 'dividenden' not in current_object.keys():
-                    current_object['dividenden'] = cf.parse_dividenden_line(my_result, text_stripped)
-                else:
+                if 'dividenden'  in current_object.keys():
+                    # refresh current object if already in keys
                     current_object = {}
-                    current_object['dividenden'] = cf.parse_dividenden_line(my_result, text_stripped)
-                    results.append(current_object)
 
-                    # current_object['dividenden'] += " " + text_stripped
-                    # current_object['dividenden'] = current_object['dividenden'].strip()
+                current_object['dividenden'] = cf.parse_dividenden_line(my_result, text_stripped,
+                                                        detailed_parsing=complex_parsing)
+                results.append(current_object)
                 continue
             word_info = content_lines[text_index]['words']
             if len(word_info) <= 2:
@@ -463,7 +462,6 @@ class AkfParsingFunctionsThree(object):
             current_object['text'] = text_stripped
             results.append(current_object)
 
-        only_add_if_value = True
 
         # log results to output
         for entry in results:
