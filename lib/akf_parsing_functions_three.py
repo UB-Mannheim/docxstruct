@@ -413,7 +413,6 @@ class AkfParsingFunctionsThree(object):
 
         only_add_if_value = True  # only add entries to result if they contain values
         complex_parsing = True  # parses some lines in more detailed way
-        
 
         results = cf.match_common_block(content_texts, content_lines, complex_parsing, ['dividenden','kapital',
                                                                                         'parenthesis'])
@@ -428,5 +427,14 @@ class AkfParsingFunctionsThree(object):
             if change:
                 element_counter += 1
 
-        return False
+        return True
+
+    def parse_beteiligungen(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 

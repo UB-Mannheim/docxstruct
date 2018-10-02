@@ -55,6 +55,8 @@ for key in hocr_files:
 
         # fetch basic data for current file
         ocromore_data = dh.fetch_ocromore_data(file, additional_info=additional_info)
+        output_analyzer.set_current_data(ocromore_data)         # prepare output analyzer
+
         cpr.print("Checking file:", ocromore_data['file_info'].path)
 
         # extract features from basic data
@@ -66,7 +68,6 @@ for key in hocr_files:
         # output file synthesis
         segment_parser.write_result_to_output(True, ocromore_data)
         # todo
-
         # output analysis steps
         output_analyzer.log_segmentation_simple(ocromore_data)  # log the recognized segmentation
         output_analyzer.log_parsed_output(ocromore_data)        # log the parsed segments into tag-based files

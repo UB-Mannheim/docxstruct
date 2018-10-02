@@ -29,6 +29,10 @@ class OutputAnalysis(object):
         # more simple for verification, arbitrary chars then : then some other chars
         self.regex_simple_segtest = re.compile(r"(?P<TAG>^.+):.*")
         self.known_ucs = KnownUncategories()
+        self.ocromore_data = None
+
+    def set_current_data(self, data):
+        self.ocromore_data = data
 
     def clear_output_folder(self):
         """
@@ -41,7 +45,7 @@ class OutputAnalysis(object):
         if self.config.LOG_PARSED_SEGMENTED_OUTPUT is False:
             return
         results = ocromore_data['results']
-
+        file_info = ocromore_data['file_info'].name
         # iterate the recognized tags
         for key in results.my_object:
             value_json = results.export_as_json_at_key(key)
@@ -49,7 +53,7 @@ class OutputAnalysis(object):
             final_text_lines = []
 
             # add dividers to the lines
-            final_text_lines.append(key + "------------------------------------------------")
+            final_text_lines.append(key +": "+file_info+"------------------------------------------------")
             final_text_lines.extend(lines_json)
             final_text_lines.append("")
             final_text_lines.append("")
@@ -86,9 +90,10 @@ class OutputAnalysis(object):
         """
 
         final_text_lines = []
+        file_name = self.ocromore_data['file_info'].name
 
         # add dividers to the lines
-        final_text_lines.append(real_segment_tag+"------------------------------------------------")
+        final_text_lines.append(real_segment_tag+":"+file_name+"------------------------------------------------")
         final_text_lines.extend(text_lines)
         final_text_lines.append("")
         final_text_lines.append("")
