@@ -68,7 +68,7 @@ class FunctionMapAKF(object):
             "Betriebsanlagen": self.akf_three.parse_betriebsanlagen,
             "Beteiligungsgesellschaften": self.akf_three.parse_beteiligungsgesellschaften,                # not a category in 1956 -> #todo maybe use later
             "Beteiligungen": self.akf_three.parse_beteiligungen,
-            "Tochtergesellschaften": self.akf_three.parse_something,
+            "Tochtergesellschaften": self.akf_three.parse_tochtergesellschaften,
             "Wertpapier-Kenn-Nr": self.akf_three.parse_something,
             "RechteVorzugsaktien": self.akf_three.parse_something,
             "Aktionäre": self.akf_three.parse_something,

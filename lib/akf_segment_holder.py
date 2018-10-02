@@ -16,7 +16,6 @@ class SegmentHolder(object):
     usage in segment_classifier.
     """
 
-
     class SegmentSitz(Segment):
         # example recognition line:
         # Sitz: (20a) Peine, Gerhardstr. 10.

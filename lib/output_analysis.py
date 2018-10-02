@@ -53,7 +53,7 @@ class OutputAnalysis(object):
             final_text_lines = []
 
             # add dividers to the lines
-            final_text_lines.append(key +": "+file_info+"------------------------------------------------")
+            final_text_lines.append(key + ": " + file_info + "------------------------------------------------")
             final_text_lines.extend(lines_json)
             final_text_lines.append("")
             final_text_lines.append("")
@@ -93,7 +93,7 @@ class OutputAnalysis(object):
         file_name = self.ocromore_data['file_info'].name
 
         # add dividers to the lines
-        final_text_lines.append(real_segment_tag+":"+file_name+"------------------------------------------------")
+        final_text_lines.append(real_segment_tag + ": " + file_name + "------------------------------------------------")
         final_text_lines.extend(text_lines)
         final_text_lines.append("")
         final_text_lines.append("")
@@ -143,9 +143,7 @@ class OutputAnalysis(object):
         for tag in same_keys:
             accumulated_diff_info.add_info_at(tag, table_name, False, False, True)
 
-
         return accumulated_diff_info
-
 
     def acc_diff_data_to_array(self, accumulated_diff_info, separator='¦¦', shorten_tablenames=True):
         """
@@ -172,7 +170,6 @@ class OutputAnalysis(object):
                     is_uc = self.known_ucs.check_uncategories(info_tag)
                     if is_uc:
                         continue
-
 
                 counter_str = str(info_obj.counter)
                 table_all_str = ""
@@ -264,7 +261,6 @@ class OutputAnalysis(object):
             if key_main not in test_seg.keys():
                  additional_keys = append_multi(additional_keys, key_main, value_main)
 
-
         return (missing_keys, additional_keys, same_keys)
 
     def create_dict_main_segmentation(self, ocromore_data):
@@ -330,7 +326,6 @@ class OutputAnalysis(object):
 
         return segmentation_dict
 
-
     class AccumulatedInfo(object):
 
         class InfoObj(object):
@@ -351,7 +346,6 @@ class OutputAnalysis(object):
             self.missing_tags = {}
             self.additional_tags = {}
             self.same_tags = {}
-
 
         def add_info_at(self, tag, tablename, missing, additional, same):
             """
@@ -375,8 +369,6 @@ class OutputAnalysis(object):
                     info_obj.add_tag_from_table(tag, tablename)
                     ref_obj[tag] = info_obj
                 return ref_obj
-
-
 
             if missing is True:
                 updated_ref = update_ref_dict(tag, tablename, self.missing_tags)
