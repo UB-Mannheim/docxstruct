@@ -510,3 +510,54 @@ class AkfParsingFunctionsThree(object):
 
         else:
             self.ef.add_to_my_obj("info", origpost_red, object_number=element_counter, only_filled=only_add_if_value)
+
+        return True
+
+    def parse_anleihen(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        only_add_if_value = True
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        entries_adapted = {}
+        current_entry = ""
+        current_key = "general"
+
+        # detect if there are lines with only year and no other info (indicator for multiple entries)
+        multi_entries = False
+        for text_index, text in enumerate(content_texts):
+            text = text.strip()
+            if text == "":
+                continue
+            match_only_year = regex.search("^([\d\-\/]+)$", text)  # use this as splitter ?
+            if match_only_year and text_index != len(content_texts)-1:
+                multi_entries = True
+                #current_entry = (current_entry + " " + text).strip()
+                current_key = text.strip()
+                #entries_adapted.append(current_entry)
+
+                # if text_index == len(content_texts) - 1:
+                #    continue  # jump last index cause not relevant
+
+            else:
+                if current_key not in entries_adapted.keys():
+                    entries_adapted[current_key] = text.strip()
+                else:
+                    entries_adapted[current_key] = (entries_adapted[current_key] + " " + text).strip()
+
+        #if current_entry != "":
+        #    entries_adapted[current_key] = current_entry
+
+        for key in entries_adapted:
+            value = entries_adapted[key]
+            value_parsed = cf.parse_anleihe(value)
+            self.ef.add_to_my_obj(key, value_parsed, object_number=element_counter, only_filled=only_add_if_value)
+            element_counter += 1
+
+
+        return True

@@ -659,6 +659,12 @@ class SegmentHolder(object):
             match_start, errors = regu.fuzzy_search(r"Anleihe(?:n?)\s?:", line_text)
 
             if match_start is not None:
+                text = match_start.group().strip()
+                if "Anteile" in text:
+                    return False
+                if text[-1] != ":":
+                    return False
+
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 

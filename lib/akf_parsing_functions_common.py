@@ -355,3 +355,7 @@ class AKFCommonParsingFunctions(object):
         #    return 5
 
         return results
+
+    def parse_anleihe(self, input_text):
+        print("asd")
+        return input_text

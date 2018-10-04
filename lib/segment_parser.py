@@ -72,7 +72,7 @@ class FunctionMapAKF(object):
             "Wertpapier-Kenn-Nr": self.akf_three.parse_wertpapier_kenn_nr,              # not a category in 1956 -> #todo maybe use later
             "RechteVorzugsaktien": self.akf_three.parse_rechte_und_vorzugsaktien,
             "Aktionäre": self.akf_three.parse_aktionaere,
-            "Anleihen": self.akf_three.parse_something,
+            "Anleihen": self.akf_three.parse_anleihen,
             "KursVonZuteilungsrechten": self.akf_three.parse_something,
             "Emissionsbetrag": self.akf_three.parse_something,
             "AusDenKonsolidiertenBilanzen": self.akf_three.parse_something,
