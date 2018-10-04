@@ -615,9 +615,16 @@ class SegmentHolder(object):
             super().__init__("Aktionäre")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
-            match_start, errors = regu.fuzzy_search(r"^Aktionäre\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"^(Aktionärvertreter|Aktionäre)\s?:", line_text)
+
+            # this is a possible false positive for above regex
+            #match_wrong, errors = regu.fuzzy_search(r"^Aktionären", line_text, err_number=1)
 
             if match_start is not None:
+                match_text = match_start.group()
+                if "Aktionären" in match_text:
+                    return
+
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 

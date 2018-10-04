@@ -487,3 +487,26 @@ class AkfParsingFunctionsThree(object):
             element_counter += 1
 
         return True
+
+    def parse_aktionaere(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        only_add_if_value = True
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+        if "Aktionärvertreter" in real_start_tag:
+
+            persons_list = cf.parse_persons(origpost_red)
+            for (name, city, title, rest_info) in persons_list:
+                self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_value)
+                self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_value)
+                self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_value)
+                self.ef.add_to_my_obj("add_info", rest_info, object_number=element_counter, only_filled=only_add_if_value)
+                element_counter += 1
+
+        else:
+            self.ef.add_to_my_obj("info", origpost_red, object_number=element_counter, only_filled=only_add_if_value)
