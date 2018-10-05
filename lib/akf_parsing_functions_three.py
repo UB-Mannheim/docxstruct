@@ -525,7 +525,6 @@ class AkfParsingFunctionsThree(object):
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
         entries_adapted = {}
-        current_entry = ""
         current_key = "general"
 
         # detect if there are lines with only year and no other info (indicator for multiple entries)
@@ -562,3 +561,43 @@ class AkfParsingFunctionsThree(object):
 
 
         return True
+
+
+    def parse_kurse_v_zuteilungsrechten(self, real_start_tag, content_texts,
+                                        content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        only_add_if_value = True
+        # examples
+        # Düsseldorf am 10.Okt. 1955: 175,5 %.
+        # am 10. Okt. 1955 in Berlin NGS: 31,5%.
+
+        #  Inh.-Akt. 6.10.1955 NGS: 249 DM /n Nam.-Akt. 10.10.1955 NGS: 239 DM.
+        #  68,18 % Einz.: NGS am 10.10.1955: \n 20 DM (Berlin)
+        #  Berlin am 10.10.1955 NGS: \n Nam.-St.-Akt.Lit.A : 12 DM \n Berlin am 10.10.1955 NGS: \n Nam.-St.-Akt.Lit.B: 7 DM
+        #  sometimes it has a block of dividenden (check on if segmentation was ok here)
+        final_entries = {}
+        current_key = 1  # numeric key for simplicity at first
+        for text_index, text in enumerate(content_texts):
+            current_feats = feature_lines[text_index]
+            word_count = current_feats.counter_words
+            if word_count > 3:
+                current_key += 1
+
+            if current_key not in final_entries.keys():
+                final_entries[current_key] = text
+            else:
+                final_entries[current_key] = final_entries[current_key] + text
+
+                print("asd")
+
+
+
+
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+

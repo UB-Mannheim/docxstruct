@@ -73,7 +73,7 @@ class FunctionMapAKF(object):
             "RechteVorzugsaktien": self.akf_three.parse_rechte_und_vorzugsaktien,
             "Aktionäre": self.akf_three.parse_aktionaere,
             "Anleihen": self.akf_three.parse_anleihen,
-            "KursVonZuteilungsrechten": self.akf_three.parse_something,
+            "KursVonZuteilungsrechten": self.akf_three.parse_kurse_v_zuteilungsrechten,
             "Emissionsbetrag": self.akf_three.parse_something,
             "AusDenKonsolidiertenBilanzen": self.akf_three.parse_something,
             "AusDenBilanzen": self.akf_three.parse_something,
