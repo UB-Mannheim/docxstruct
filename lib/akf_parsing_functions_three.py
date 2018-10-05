@@ -553,9 +553,10 @@ class AkfParsingFunctionsThree(object):
         #if current_entry != "":
         #    entries_adapted[current_key] = current_entry
 
+
         for key in entries_adapted:
             value = entries_adapted[key]
-            value_parsed = cf.parse_anleihe(value)
+            value_parsed_simple, value_parsed = cf.parse_anleihe(value)
             self.ef.add_to_my_obj(key, value_parsed, object_number=element_counter, only_filled=only_add_if_value)
             element_counter += 1
 

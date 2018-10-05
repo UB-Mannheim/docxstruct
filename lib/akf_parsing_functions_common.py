@@ -356,6 +356,40 @@ class AKFCommonParsingFunctions(object):
 
         return results
 
-    def parse_anleihe(self, input_text):
-        print("asd")
-        return input_text
+    @staticmethod
+    def parse_anleihe(input_text, complex_parsing=True):
+        """
+        Parse line for anleihe in complex or simple mode
+        simple mode just returns the line at the moment
+        :param input_text: input_text
+        :param complex_parsing: if true complex solution is created
+        :return: simple parsed, complex parsed object
+        """
+        # Example
+        # Restverpflichtung 1 5 % Franken-Anleihe von 1927
+
+        if complex_parsing is False:
+            # possible to add some simple parsing here
+            return input_text, None
+
+        match_percentag = regex.search("[\d\,\.\-\/]*\s?%", input_text)
+        match_vonyer = regex.search("von\s\d*", input_text)
+        percentage = match_percentag.group() if match_percentag else ""
+        year = match_vonyer.group() if match_vonyer else ""
+
+        rest = input_text.replace(percentage, "").replace(year, "").strip()
+        match_lead_words = regex.search("^[a-zA-ZäÄüÜöÖß\-]*", rest)
+        add_info_start = match_lead_words.group() if match_lead_words else ""
+        rest_2 = rest.replace(add_info_start, "").strip()
+        match_lead_num = regex.search("^[\d\,\.\-\/]*", rest_2)
+        lead_num = match_lead_num.group() if match_lead_num else ""
+        rest_3 = rest_2.replace(lead_num, "").strip()
+
+        return_object = {}
+        return_object['percentage'] = percentage
+        return_object['year'] = year
+        return_object['amount'] = lead_num
+        return_object['name'] = rest_3
+        return_object['add_info'] = add_info_start
+
+        return input_text, return_object
