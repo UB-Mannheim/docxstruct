@@ -579,25 +579,40 @@ class AkfParsingFunctionsThree(object):
         #  68,18 % Einz.: NGS am 10.10.1955: \n 20 DM (Berlin)
         #  Berlin am 10.10.1955 NGS: \n Nam.-St.-Akt.Lit.A : 12 DM \n Berlin am 10.10.1955 NGS: \n Nam.-St.-Akt.Lit.B: 7 DM
         #  sometimes it has a block of dividenden (check on if segmentation was ok here)
-        final_entries = {}
-        current_key = 1  # numeric key for simplicity at first
-        for text_index, text in enumerate(content_texts):
-            current_feats = feature_lines[text_index]
-            word_count = current_feats.counter_words
-            if word_count > 3:
-                current_key += 1
-
-            if current_key not in final_entries.keys():
-                final_entries[current_key] = text
-            else:
-                final_entries[current_key] = final_entries[current_key] + text
-
-                print("asd")
-
-
-
-
 
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # create segments for results
+        final_entries = {}
+        current_key = 1  # numeric key for simplicity at first
+        append_ctr = 0
+        for text_index, text in enumerate(content_texts):
+            text_stripped = text.strip()
+            if text_stripped == "":
+                continue
+            current_feats = feature_lines[text_index]
+            word_count = current_feats.counter_words
+            if append_ctr >= 1 and word_count > 3:
+                current_key += 1
+
+            if current_key not in final_entries.keys():
+                final_entries[current_key] = text_stripped
+            else:
+                final_entries[current_key] = final_entries[current_key] + text_stripped
+
+            append_ctr += 1
+
+        # add results to final json
+        for key in final_entries:
+            value = final_entries[key]
+            value_parsed_simple, value_parsed = cf.parse_kurs_von_zuteilungsrechten(value)
+            for key_parsed in value_parsed:
+                value_of_key = value_parsed[key_parsed]
+                self.ef.add_to_my_obj(key_parsed, value_of_key, object_number=element_counter, only_filled=only_add_if_value)
+            element_counter += 1
+
+
+
+
 

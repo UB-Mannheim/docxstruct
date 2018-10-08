@@ -393,3 +393,36 @@ class AKFCommonParsingFunctions(object):
         return_object['add_info'] = add_info_start
 
         return input_text, return_object
+
+    @staticmethod
+    def parse_kurs_von_zuteilungsrechten(input_text, complex_parsing=True):
+        """
+        Parse line for kurs von zahlungsrechten in complex or simple mode
+        simple mode just returns the line at the moment
+        :param input_text: input_text
+        :param complex_parsing: if true complex solution is created
+        :return: simple parsed, complex parsed object
+        """
+        # Example
+        #  Inh.-Akt. 6.10.1955 NGS: 249 DM /n Nam.-Akt. 10.10.1955 NGS: 239 DM.
+        #  68,18 % Einz.: NGS am 10.10.1955: \n 20 DM (Berlin)
+        #  Berlin am 10.10.1955 NGS: \n Nam.-St.-Akt.Lit.A : 12 DM \n Berlin am 10.10.1955 NGS: \n Nam.-St.-Akt.Lit.B: 7 DM
+
+        if complex_parsing is False:
+            # possible to add some simple parsing here
+            return input_text, None
+
+        current_text = input_text
+        match_percentag = regex.search("(NGS\s?:\s?|:\s?)[\d\,\.\-\/]*\s?%?", current_text)
+        match_year = regex.search("am.*\d\d\d\d", current_text)
+        percentage = match_percentag.group() if match_percentag else ""
+        year = match_year.group() if match_year else ""
+        current_text = current_text.replace(percentage,"").replace(year,"").strip()
+
+        return_object = {}
+        return_object['percentage'] = percentage.strip(',. ')
+        return_object['year'] = year.strip(',. ')
+        return_object['city_and_rest'] = current_text.strip(',. ')
+
+        # complex parsing here
+        return input_text, return_object
