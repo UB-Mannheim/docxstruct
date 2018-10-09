@@ -656,7 +656,7 @@ class SegmentHolder(object):
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
             # matches ss or ß (group is not capturing)
-            match_start, errors = regu.fuzzy_search(r"Anleihe(?:n?)\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"(Anleihe(?:n?)\s?:|^Anleihe$|^Anleihen$)", line_text)
 
             if match_start is not None:
                 text = match_start.group().strip()
@@ -726,6 +726,7 @@ class SegmentHolder(object):
 
         def __init__(self):
             super().__init__("Emissionsbetrag")
+            super().disable() # this is disabled cause it's considered part of anleihen
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
             match_start, errors = regu.fuzzy_search \

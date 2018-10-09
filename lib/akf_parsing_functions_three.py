@@ -529,11 +529,29 @@ class AkfParsingFunctionsThree(object):
 
         # detect if there are lines with only year and no other info (indicator for multiple entries)
         multi_entries = False
+        next_key = None
         for text_index, text in enumerate(content_texts):
             text = text.strip()
             if text == "":
                 continue
+            if next_key is not None:
+                current_key = next_key
+                next_key = None
+
             match_only_year = regex.search("^([\d\-\/]+)$", text)  # use this as splitter ?
+            match_emissionsbetrag, err_number = regu.fuzzy_search("^Emissionsbetrag\s?:", text, err_number=1)
+            match_double_dot = regex.search("^.*[^1]+:[^1]*", text)
+            if match_emissionsbetrag:
+                result_emissionsbetrag = match_emissionsbetrag.group()
+                text = text.replace(result_emissionsbetrag, "").strip()
+                current_key = "Emissionsbetrag"  # use  a normed key for later recognition
+                if "Umtauschrecht" in text: # special case (2 keys in same line)
+                    next_key = "Umtauschrecht"
+            if not match_emissionsbetrag and match_double_dot:
+                result_double_dot = match_double_dot.group()
+                if "1:1" not in text:
+                    text = text.replace(result_double_dot, "").strip()
+                    current_key = result_double_dot
             if match_only_year and text_index != len(content_texts)-1:
                 multi_entries = True
                 #current_entry = (current_entry + " " + text).strip()
@@ -555,13 +573,18 @@ class AkfParsingFunctionsThree(object):
 
         for key in entries_adapted:
             value = entries_adapted[key]
-            value_parsed_simple, value_parsed = cf.parse_anleihe(value)
+            if key == "general":
+                value_parsed_simple, value_parsed = cf.parse_anleihe(value)
+            elif key == "Emissionsbetrag":
+                value_parsed_simple, value_parsed = cf.parse_emissionsbetrag(value)
+            else:
+                value_parsed = value
+
             self.ef.add_to_my_obj(key, value_parsed, object_number=element_counter, only_filled=only_add_if_value)
             element_counter += 1
 
 
         return True
-
 
     def parse_kurse_v_zuteilungsrechten(self, real_start_tag, content_texts,
                                         content_lines, feature_lines, segmentation_class):
@@ -614,5 +637,18 @@ class AkfParsingFunctionsThree(object):
 
 
 
+    def parse_emissionsbetrag(self, real_start_tag, content_texts,
+                                        content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        only_add_if_value = True
+        # examples
+        #
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
 
