@@ -414,7 +414,7 @@ class AKFCommonParsingFunctions(object):
         match_currency = regex.search("^(.*?)\s", current_text)  # match until first space
         currency = match_currency.group() if match_currency else ""
         current_text = current_text.replace(currency, "")
-        match_amount = regex.search("[\d\s\-\.\,]+", current_text) # does this get first occurence
+        match_amount = regex.search("[\d\s\-\.\,]+", current_text)  # does this get first occurence
 
         amount = match_amount.group() if match_amount else ""
         current_text = current_text.replace(amount, "")
@@ -453,7 +453,7 @@ class AKFCommonParsingFunctions(object):
         match_year = regex.search("am.*\d\d\d\d", current_text)
         percentage = match_percentag.group() if match_percentag else ""
         year = match_year.group() if match_year else ""
-        current_text = current_text.replace(percentage,"").replace(year,"").strip()
+        current_text = current_text.replace(percentage, "").replace(year, "").strip()
 
         return_object = {}
         return_object['percentage'] = percentage.strip(',. ')
@@ -462,3 +462,4 @@ class AKFCommonParsingFunctions(object):
 
         # complex parsing here
         return input_text, return_object
+

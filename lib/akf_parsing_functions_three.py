@@ -652,3 +652,50 @@ class AkfParsingFunctionsThree(object):
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
 
+    def parse_geschaeftslage(self, real_start_tag, content_texts,
+                                        content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        only_add_if_value = True
+        # examples
+        # Produktion und Versand haben in der
+        # Umsatz 1953/54: DM 13,241 Müill.
+        current_key = "general"
+        final_texts = {}
+        for text_index, text in enumerate(content_texts):
+            match_umsatz = regex.search(r"(Umsatz\s?[\d\-\/]+\s?[:\=]|Umsatz\s?[:\=])", text)
+
+            if match_umsatz:
+                umsatz_result = match_umsatz.group()
+                text_split = text.split(umsatz_result)
+                if len(text_split) == 1:
+                    text = text.replace(umsatz_result, "").strip()
+                else:
+                    text_first = text_split[0]
+                    text_second = text_split[1]
+                    if current_key not in final_texts.keys():
+                        final_texts[current_key] = text_first
+                    else:
+                        final_texts[current_key] += " " + text_first
+                    text = text_second
+                current_key = umsatz_result
+
+            if current_key not in final_texts.keys():
+                final_texts[current_key] = text
+            else:
+                final_texts[current_key] += " " + text
+
+        for key in final_texts:
+            value = final_texts[key]
+            if "Umsatz" in key:
+                # parse umsatz
+                self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=only_add_if_value)
+            else:
+                self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=only_add_if_value)
+            element_counter += 1
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)

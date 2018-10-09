@@ -75,12 +75,12 @@ class FunctionMapAKF(object):
             "Anleihen": self.akf_three.parse_anleihen,
             "KursVonZuteilungsrechten": self.akf_three.parse_kurse_v_zuteilungsrechten,
             "Emissionsbetrag": self.akf_three.parse_emissionsbetrag,
-            "AusDenKonsolidiertenBilanzen": self.akf_three.parse_something,
-            "AusDenBilanzen": self.akf_three.parse_something,
-            "Konsolid.Gewinn-u.Verlustrechnungen": self.akf_three.parse_something,
-            "AusGewinnVerlustrechnungen": self.akf_three.parse_something, # @jk last element works now
+            "AusDenKonsolidiertenBilanzen": self.akf_three.parse_something,                 # table
+            "AusDenBilanzen": self.akf_three.parse_something,                               # table
+            "Konsolid.Gewinn-u.Verlustrechnungen": self.akf_three.parse_something,          # table
+            "AusGewinnVerlustrechnungen": self.akf_three.parse_something,                   # @jk last element works now
             "Bezugsrechte": self.akf_three.parse_something,
-            "ZurGeschäftslage": self.akf_three.parse_something
+            "ZurGeschäftslage": self.akf_three.parse_geschaeftslage
         }
 
     def get_function_map(self):

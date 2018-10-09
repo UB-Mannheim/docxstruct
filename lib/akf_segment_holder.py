@@ -788,7 +788,6 @@ class SegmentHolder(object):
         # example recognition:
         # Bezugsrechte: \n 1955: i.V. 4:1 zu 130 %; Abschlag 20 %
 
-
         def __init__(self):
             super().__init__("Bezugsrechte")
 
