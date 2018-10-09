@@ -3,6 +3,8 @@ from akf_corelib.configuration_handler import ConfigurationHandler
 from .data_helper import DataHelper as dh
 from .akf_parsing_functions_common import AKFCommonParsingFunctions as cf
 from akf_corelib.regex_util import RegexUtil as regu
+import numpy as np
+from lib.akf_parsing_function_table import Table
 
 import regex
 
@@ -29,7 +31,6 @@ class AkfParsingFunctionsJK(object):
 
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
-
 
     def xparse_fernschreiber(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
@@ -100,102 +101,15 @@ class AkfParsingFunctionsJK(object):
         #return
         # init
         only_add_if_string = True
-        geschaeftslage = origpost_red.replace("- ", "")
+        #geschaeftslage = origpost_red.replace("- ", "")
 
         #parsing
-        table_start = False
-        table_dict = {}
-        table_param = {}
-        table_param["sep_line"] = None
+        table = Table()
+        table.analyse_structure(content_lines,feature_lines, template="datatable_money")
+        table.extract_content(content_lines, feature_lines, template="datatable_money")
         # Parsing the tables based on whitespace and number of numbers of each group
         # This should be the last option to parse (error-prone)
-        table_param["left_border"] = None
-        for entry, features in zip(content_lines,feature_lines):
-            # read the number of coloumns the currency of the attributes
-            if table_param["left_border"] is None:
-                table_param["left_border"] =  entry['hocr_coordinates'][0]
-            if entry["text"] == "":continue
-            if table_start is False:
-                if features.counter_special_chars > 3 and features.counter_numbers > 10:
-                    years = entry['text'].split(" ")
-                    if len(entry["words"]) == 2:
-                        table_param["sep_line"] = int((entry["words"][0]['hocr_coordinates'][2]+entry["words"][1]['hocr_coordinates'][0])/2)
-                    if len(years) == 1:
-                        mid = int(len(years[0])/2)
-                        years = [years[0][:mid],years[0][mid:]]
-                    for idx, year in enumerate(years):
-                        # Count the coloumns 0,1,2,...
-                        table_dict[idx] = {'year':year}
-                elif table_dict is not None:
-                    for idx in table_dict.keys():
-                        if "DM" in entry["text"].replace(" ","") and "1000" in  entry["text"].replace(" ",""):
-                            entry["text"] = "in 1000 DM"
-                        else:
-                            entry["text"] = entry["text"].replace("(","").replace(")","")
-                        table_dict[idx]["currency"] = entry['text']
-                        table_start = True
-                colname = ""
-            elif table_start:
-                if features.counter_numbers < 2:
-                    colname = ''.join([i for i in entry['text'] if i not in list("0123456789()")]).strip()+" "
-                    continue
-                colname += ''.join([i for i in entry['text'] if i not in list("0123456789()")]).strip()
-                colname = colname.replace("- ","")
-                if features.counter_special_chars > 3 and features.counter_numbers > 10 and entry['hocr_coordinates'][0]+15 > table_param["left_border"]:
-                    if len(entry["words"]) == 2:
-                        table_param["sep_line"] = int((entry["words"][0]['hocr_coordinates'][2]+entry["words"][1]['hocr_coordinates'][0])/2)
-                    colname = ""
-                    continue
-                numbers = ''.join([i for i in entry['text'] if i.isdigit() or i == " "]).strip().split(" ")
-                use_wbbox = True
-                for widx, wspace in enumerate(entry['words']):
-                    if table_param["sep_line"] is None:
-                        use_wbbox = False
-                        break
-                    if wspace['hocr_coordinates'][0] > table_param["sep_line"] and use_wbbox:
-                        break
-                    if not wspace['hocr_coordinates'][2] < table_param["sep_line"]:
-                        use_wbbox = False
-
-                if use_wbbox:
-                    table_dict[0][colname] = []
-                    table_dict[1][colname] = []
-                    for idx in range(0,widx):
-                        table_dict[0][colname].append(''.join([i for i in ''.join(entry['words'][idx]["text"]) if i.isdigit() or i == " "]))
-                    table_dict[0][colname]= " ".join(table_dict[0][colname]).strip()
-                    for idx in range(widx, len(entry["words"])):
-                        table_dict[1][colname].append(entry['words'][idx]["text"])
-                    table_dict[1][colname] = " ".join(table_dict[1][colname]).strip()
-
-                else:
-                    # Check if line is date
-                    if features.counter_alphabetical < 2 and features.counter_special_chars > 3 and features.counter_numbers > 10:
-                        continue
-
-                    count_years = len(years)-1
-                    count_numbers = 0
-                    number = ""
-                    for grpidx, numbergrp in enumerate(reversed(numbers)):
-                        # Check and clean artifacts
-                        count_numbers += len(numbergrp)
-                        if len(numbergrp) > 3 and grpidx > 0:
-                            if numbergrp[3:] == list(reversed(numbers))[grpidx-1][:len(numbergrp[3:])]:
-                                numbergrp = numbergrp[:3]
-                        if len(numbergrp) == 3 and grpidx != len(numbers) and count_numbers < (features.counter_numbers/2):
-                            number = (numbergrp+" "+number).strip()
-                            continue
-                        else:
-                            count_numbers = 0
-                            table_dict[count_years][colname] = (numbergrp+" "+number).strip()
-                            number = ""
-                            count_years -= 1
-                            if count_years == 0:
-                                table_dict[count_years][colname] = " ".join(numbers[:len(numbers)-grpidx-1])
-                                break
-
-                colname = ""
-
-        self.ef.add_to_my_obj("balances", table_dict, object_number=element_counter,only_filled=only_add_if_string)
+        self.ef.add_to_my_obj("balances", table.content, object_number=element_counter,only_filled=only_add_if_string)
 
     def parse_gewinn_und_verlust(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
