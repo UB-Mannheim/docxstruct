@@ -692,7 +692,8 @@ class AkfParsingFunctionsThree(object):
             value = final_texts[key]
             if "Umsatz" in key:
                 # parse umsatz
-                self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=only_add_if_value)
+                umsatzp_simple, umsatzp = cf.parse_umsatz(value)
+                self.ef.add_to_my_obj(key, umsatzp, object_number=element_counter, only_filled=only_add_if_value)
             else:
                 self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=only_add_if_value)
             element_counter += 1

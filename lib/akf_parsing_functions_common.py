@@ -431,6 +431,42 @@ class AKFCommonParsingFunctions(object):
         return input_text, return_object
 
     @staticmethod
+    def parse_umsatz(input_text, complex_parsing=True):
+        """
+        Parse line for umsatz in complex or simple mode
+        simple mode just returns the line at the moment
+        :param input_text: input_text
+        :param complex_parsing: if true complex solution is created
+        :return: simple parsed, complex parsed object
+        """
+        # Example
+        # " DM 4,4 Mill."
+        # " DM 1,301 Mill."
+
+        if complex_parsing is False:
+            # possible to add some simple parsing here
+            return input_text, None
+
+        current_text = input_text.strip()
+        match_currency = regex.search("^(.*?)\s", current_text)  # match until first space
+        currency = match_currency.group() if match_currency else ""
+        current_text = current_text.replace(currency, "")
+        match_amount = regex.search("[\d\s\-\.\,]+", current_text)  # does this get first occurence
+
+        amount = match_amount.group() if match_amount else ""
+        current_text = current_text.replace(amount, "")
+
+        # current_text = current_text.replace(percentage,"").replace(year,"").strip()
+        return_object = {}
+        return_object['currency'] = currency.strip(',. ')
+        return_object['amount'] = amount.strip(',. ')
+        return_object['rest_info'] = current_text.strip(',. ')
+
+        # complex parsing here
+        return input_text, return_object
+
+
+    @staticmethod
     def parse_kurs_von_zuteilungsrechten(input_text, complex_parsing=True):
         """
         Parse line for kurs von zahlungsrechten in complex or simple mode
