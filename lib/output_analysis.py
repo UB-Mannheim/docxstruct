@@ -64,6 +64,36 @@ class OutputAnalysis(object):
             dh.write_array_to_root_simple("parsed_output", key,
                                           final_text_lines, self.analysis_root, append_mode=True)
 
+    def log_segmentation_diff_for_categories(self, ocromore_data):
+        if self.config.LOG_PARSED_TO_ORIG_DIFF_PER_CATEGORY is False:
+            return
+
+        results = ocromore_data['results']
+        file_info = ocromore_data['file_info'].name
+
+        # iterate the recognized tags
+        for key in results.my_object:
+            rest_text, original_text = results.diff_parsed_to_orig_at_key(key)
+
+
+            final_text_lines = []
+
+            # add dividers to the lines
+            final_text_lines.append(key + ": " + file_info + "------------------------------------------------")
+            final_text_lines.append("Rest:" + rest_text)
+            final_text_lines.append("Original:"+ original_text)
+            final_text_lines.append("")
+            final_text_lines.append("")
+
+            key = key.replace("/", "_")  # fix to prevent folder hop in filename
+
+            # print to file finally (append style)
+            dh.write_array_to_root_simple("parsed_to_orig_difference", key,
+                                          final_text_lines, self.analysis_root, append_mode=True)
+
+
+
+
     def log_segmentation_simple(self, ocromore_data, separator='¦¦'):
         lines = ocromore_data['lines']
         index_field = ocromore_data['segmentation'].index_field
