@@ -69,12 +69,17 @@ class EndobjectFactory(object):
         my_obj_json = json.dumps(self.my_object, indent=5, ensure_ascii=False)
         return my_obj_json
 
-    def export_as_json_at_key(self, key):
+    def export_as_json_at_key(self, key, remove_first_object=False):
 
         if key not in self.my_object.keys():
             return None
 
-        my_obj_json = json.dumps(self.my_object[key], indent=5, ensure_ascii=False)
+        my_obj = self.my_object[key]
+        if remove_first_object:
+            if len(my_obj) >= 1:
+                my_obj = my_obj[1:]  # remove the first object which usally contains generic info
+
+        my_obj_json = json.dumps(my_obj, indent=5, ensure_ascii=False)
         return my_obj_json
 
     def diff_parsed_to_orig_at_key(self, key):

@@ -74,6 +74,9 @@ class OutputAnalysis(object):
         # iterate the recognized tags
         for key in results.my_object:
             rest_text, original_text = results.diff_parsed_to_orig_at_key(key)
+            value_json = None
+            if self.config.LOG_SEGMENTED_TO_ORIG_ADD_OUTPUT_JSON:
+                value_json = results.export_as_json_at_key(key, remove_first_object=True)
 
 
             final_text_lines = []
@@ -81,7 +84,11 @@ class OutputAnalysis(object):
             # add dividers to the lines
             final_text_lines.append(key + ": " + file_info + "------------------------------------------------")
             final_text_lines.append("Rest:" + rest_text)
-            final_text_lines.append("Original:"+ original_text)
+            final_text_lines.append("Original:" + original_text)
+
+            if value_json != None:
+                final_text_lines.append("Parsed-Json:" + value_json)
+
             final_text_lines.append("")
             final_text_lines.append("")
 
