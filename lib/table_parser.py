@@ -23,6 +23,7 @@ class Table(object):
         self.content = {}
         self.structure ={"eval":[],
                          "date":[],
+                         "next_section":[],
                          "btype":[],
                          "lborder":[],
                          "separator":[],
@@ -32,13 +33,14 @@ class Table(object):
         self.info = Tableinfo()
 
     def analyse_structure(self, content_lines, feature_lines, template="datatable"):
-        reg_assets = regex.compile(r"(?:" + "kaptial|Passiva" + "){e<=" + str(2) + "}")
+        reg_assets_stop = regex.compile(r"(?:" + "kaptial|Passiva" + "){e<=" + str(2) + "}")
         if template in ["datatable", "datatable_money"]:
             for content, features in zip(content_lines, feature_lines):
                 self.structure["separator"].append(-1)
                 self.structure["gapsize"].append(-1)
                 self.structure["gapidx"].append(-1)
                 self.structure["date"].append(False)
+                self.structure["next_section"].append(False)
                 self.structure["rborder"].append(content["words"][len(content["words"]) - 1]['hocr_coordinates'][2])
                 self.structure["lborder"].append(content["words"][0]['hocr_coordinates'][0])
                 if isinstance(features, bool):
@@ -50,7 +52,7 @@ class Table(object):
                 else:
                     self.structure["eval"].append(False)
                 if self.info.assets:
-                    if reg_assets.search(content["text"]) is not None:
+                    if reg_assets_stop.search(content["text"]) is not None:
                         self.info.assets = False
                         self.structure["btype"].append("Passiva")
                     else:
@@ -64,14 +66,20 @@ class Table(object):
                             xgaps = np.append(np.zeros(features.counter_words - widx)[0],
                                               features.x_gaps[features.counter_words - widx:])
                             maxgap = int(np.argmax(xgaps))
-                            self.structure["separator"][-1] = int((content["words"][maxgap + 1]['hocr_coordinates'][0] +
-                                               content["words"][maxgap]['hocr_coordinates'][2]) / 2)
+                            self.structure["separator"][-1] = int(((content["words"][maxgap + 1]['hocr_coordinates'][3]-
+                                content["words"][maxgap + 1]['hocr_coordinates'][1]) +
+                                content["words"][maxgap]['hocr_coordinates'][2]))
                             self.structure["gapsize"][-1] = int(xgaps[maxgap])
                             self.structure["gapidx"][-1] = maxgap
-                            if features.counter_special_chars > 3 and features.counter_alphabetical < 4:
-                                self.structure["date"][-1] = True
+                            if self.info.start is True:
+                                self.info.start = False
+                                self.structure["next_section"][-1] = True
+                                # if the line contains min. 5 number and less than 3 alphabetical or "Aktiva/Passiva"
+                        if self._vali_date(features, content):
+                            self.structure["date"][-1] = True
+                            self.info.start = True
                         break
-                    if widx == len(features.counters_alphabetical_ratios)-1 and widx >= 1 and wordratio < 0.5:
+                    elif widx == len(features.counters_alphabetical_ratios)-1 and widx >= 1 and wordratio < 0.5:
                         if widx > 1 and widx+1 < features.counter_words:
                             xgaps = np.append(np.zeros(features.counter_words - widx-1)[0],
                                           features.x_gaps[features.counter_words - widx-1:])
@@ -82,14 +90,35 @@ class Table(object):
                                                                content["words"][maxgap]['hocr_coordinates'][2]) / 2)
                         self.structure["gapsize"][-1] = int(xgaps[maxgap])
                         self.structure["gapidx"][-1] = maxgap
-                        if features.counter_special_chars > 3 and features.counter_alphabetical < 4:
+                        # datefinder
+                        if self._vali_date(features, content):
                             self.structure["date"][-1] = True
+                            self.info.start = True
+                    elif self._vali_date(features, content):
+                        self.structure["date"][-1] = True
+                        self.info.start = True
+        self.info.start = False
         return
 
+    def _vali_date(self, features, content):
+        reg_col = regex.compile(r"\d\d[- /.]\d\d[- /.]\d\d\d\d|\d\d\d\d\/\d\d|\d\d\d\d")
+        reg_assets = regex.compile(r"(?:" + "Aktiva|Passiva" + "){e<=" + str(2) + "}")
+        if features.counter_numbers > 5 and \
+                (features.counter_alphabetical < 3 or reg_assets.search(content["text"]) is not None) and \
+                reg_col.search(content["text"]):
+            return True
+        return False
+
     def extract_content(self, content_lines, feature_lines, template="datatable"):
+        # get the colnames from date lines
+        self._find_colname(content_lines)
         for btype in set(self.structure["btype"]):
             self.content[btype] = {}
+            for col in range(0, len(self.info.col)):
+                self.content[btype][col] = {}
         for lidx, [entry, features] in enumerate(zip(content_lines, feature_lines)):
+            if entry["text"] == "":
+                continue
             self.info.lidx = lidx
             btype = self.structure["btype"][lidx]
             # read the number of columns the currency of the attributes
@@ -99,8 +128,6 @@ class Table(object):
                     offset = 1
                 self.info.lborder = min(self.structure["lborder"][lidx:lidx+offset])
                 self.info.rborder = max(self.structure["rborder"][lidx:lidx+offset])
-            if entry["text"] == "":
-                continue
             # If no date was found in the beginning..
             if self.info.start is False and self.structure["eval"][lidx] is True and any(self.structure["date"][:3]) is False:
                 self.info.separator = self.structure['separator'][lidx]
@@ -114,6 +141,8 @@ class Table(object):
                 # Get new separator value
                 if self.structure["date"][lidx] is True:
                     self.info.col = entry['text'].replace("+)","").strip().split(" ")
+                    if len(entry['words']) == 1:
+                        self.info.col = [self.info.col[:],self.info.col[:]]
                     if len(entry['words']) == 2:
                         self.info.separator = self.structure['separator'][lidx]
                     else:
@@ -121,11 +150,11 @@ class Table(object):
                             if self.structure['separator'][next] != -1:
                                 self.info.separator = self.structure['separator'][lidx]
                                 break
-                    for idx, year in enumerate(self.info.col):
+                    for idx, dates in enumerate(self.info.col):
                         # Count the coloumns 0,1,2,...
                         if template in ["datatable","datatable_money"]:
                             for btype in set(self.structure["btype"]):
-                                self.content[btype][idx] = {'year': year}
+                                self.content[btype][idx] = {'date': dates}
                             self.info.currency = True
                 elif self.info.currency:
                     #todo: fix for loop
@@ -155,6 +184,25 @@ class Table(object):
                 else:
                     self._extract_wordlevel(entry, features)
                 self.info.row = ""
+        return
+
+    def _find_colname(self, content_lines):
+        #reg_assets = regex.compile(r"(?:" + "Aktiva|Passiva" + "){e<=" + str(2) + "}")
+        reg_col = regex.compile(r"\d\d[- /.]\d\d[- /.]\d\d\d\d|\d\d\d\d\/\d\d|\d\d\d\d")
+        lines = np.argwhere(self.structure["date"])
+        if lines is None:
+            self.info.col = [0,1]
+            return
+        for line in lines:
+            self.info.col = content_lines[line[0]]['text'].replace("+)", "").strip().split(" ")
+            if len(self.info.col) == 2:
+               return
+        for line in lines:
+            result = reg_col.findall(content_lines[line[0]]['text'])
+            if result is not None:
+                self.info.col = result
+                return
+        self.info.col = [0,1]
         return
 
     def _extract_wwboxlevel(self, entry, features):
