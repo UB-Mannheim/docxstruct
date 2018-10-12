@@ -1,9 +1,11 @@
 import numpy as np
 import regex
+from akf_corelib.configuration_handler import ConfigurationHandler
 
 class Tableinfo(object):
+    """Helper dataclass - Information storage for tableparsing"""
 
-    def __init__(self):
+    def __init__(self, toolbbox=None, regexdict=None):
         self.start = False
         self.row = ""
         self.col = None
@@ -14,102 +16,124 @@ class Tableinfo(object):
         self.gapidx = -1
         self.separator = None
         self.rborder = None
-        self.assets = True
-        self.currency= False
+        self.balancetype = "Aktiva"
+        self.currency = False
+        self.toolbbox = toolbbox
+        self.config = ConfigurationHandler(first_init=False).get_config()
 
 class Table(object):
+    """This class helps to deal with tables
+    - Analyse structure
+    - Extract information"""
 
-    def __init__(self):
+    def __init__(self, toolbbox=None):
         self.content = {}
         self.structure ={"eval":[],
                          "date":[],
                          "next_section":[],
                          "btype":[],
+                         "order": [],
                          "lborder":[],
                          "separator":[],
                          "gapsize":[],
                          "gapidx":[],
                          "rborder":[]}
-        self.info = Tableinfo()
+        self.info = Tableinfo(toolbbox)
 
+    ###### ANALYSE ######
     def analyse_structure(self, content_lines, feature_lines, template="datatable"):
-        reg_assets_stop = regex.compile(r"(?:" + "kaptial|Passiva" + "){e<=" + str(2) + "}")
+        """Analyse the structure of table with the help from the template information and extract some necessary parameter"""
         if template in ["datatable", "datatable_money"]:
             for content, features in zip(content_lines, feature_lines):
-                self.structure["separator"].append(-1)
-                self.structure["gapsize"].append(-1)
-                self.structure["gapidx"].append(-1)
-                self.structure["date"].append(False)
-                self.structure["next_section"].append(False)
-                self.structure["rborder"].append(content["words"][len(content["words"]) - 1]['hocr_coordinates'][2])
-                self.structure["lborder"].append(content["words"][0]['hocr_coordinates'][0])
+                # Sets the default values to the structure list
+                self._set_defaults(content)
+                # Checks if any text was recognized
                 if isinstance(features, bool):
-                    self.structure["eval"].append(False)
-                    self.structure["btype"].append("Aktiva")
                     continue
-                if features.counter_words > 1 and features.counters_alphabetical_ratios[features.counter_words - 1] < 0.5:
-                    self.structure["eval"].append(True)
-                else:
-                    self.structure["eval"].append(False)
-                if self.info.assets:
-                    if reg_assets_stop.search(content["text"]) is not None:
-                        self.info.assets = False
-                        self.structure["btype"].append("Passiva")
-                    else:
-                        self.structure["btype"].append("Aktiva")
-                else:
-                    self.structure["btype"].append("Passiva")
-
-                for widx, wordratio in enumerate(reversed(features.counters_alphabetical_ratios)):
-                    if wordratio > 0.5:
-                        if widx >= 1:
-                            xgaps = np.append(np.zeros(features.counter_words - widx)[0],
-                                              features.x_gaps[features.counter_words - widx:])
-                            maxgap = int(np.argmax(xgaps))
-                            self.structure["separator"][-1] = int(((content["words"][maxgap + 1]['hocr_coordinates'][3]-
-                                content["words"][maxgap + 1]['hocr_coordinates'][1]) +
-                                content["words"][maxgap]['hocr_coordinates'][2]))
-                            self.structure["gapsize"][-1] = int(xgaps[maxgap])
-                            self.structure["gapidx"][-1] = maxgap
-                            if self.info.start is True:
-                                self.info.start = False
-                                self.structure["next_section"][-1] = True
-                                # if the line contains min. 5 number and less than 3 alphabetical or "Aktiva/Passiva"
-                        if self._vali_date(features, content):
-                            self.structure["date"][-1] = True
-                            self.info.start = True
-                        break
-                    elif widx == len(features.counters_alphabetical_ratios)-1 and widx >= 1 and wordratio < 0.5:
-                        if widx > 1 and widx+1 < features.counter_words:
-                            xgaps = np.append(np.zeros(features.counter_words - widx-1)[0],
-                                          features.x_gaps[features.counter_words - widx-1:])
-                        else:
-                            xgaps = [features.x_gaps[0]]
-                        maxgap = int(np.argmax(xgaps))
-                        self.structure["separator"][-1] = int((content["words"][maxgap+1]['hocr_coordinates'][0] +
-                                                               content["words"][maxgap]['hocr_coordinates'][2]) / 2)
-                        self.structure["gapsize"][-1] = int(xgaps[maxgap])
-                        self.structure["gapidx"][-1] = maxgap
-                        # datefinder
-                        if self._vali_date(features, content):
-                            self.structure["date"][-1] = True
-                            self.info.start = True
-                    elif self._vali_date(features, content):
-                        self.structure["date"][-1] = True
-                        self.info.start = True
+                # Checks if numbers in the line
+                self._check_eval(content,features)
+                # Checks the current balance type (asset or liabilities)
+                self._check_balancetype(content)
+                # Iterate over all words and search for valid separator values
+                self._find_separator(features, content)
         self.info.start = False
         return
 
-    def _vali_date(self, features, content):
+    def _set_defaults(self, content):
+        default_dict = {"eval": False,
+                        "date": False,
+                        "next_section": False,
+                        "btype": self.info.balancetype,
+                        "order": 0,
+                        "separator": -1,
+                        "gapsize": -1,
+                        "gapidx": -1}
+
+        for param, default in default_dict.items():
+            self.structure[param].append(default)
+        self.structure["rborder"].append(content["words"][len(content["words"]) - 1]['hocr_coordinates'][2])
+        self.structure["lborder"].append(content["words"][0]['hocr_coordinates'][0])
+        return
+
+    def _check_balancetype(self, content):
+        reg_assets_stop = regex.compile(r"(?:" + "kaptial|Passiva" + "){e<=" + str(2) + "}")
+        if not self.info.balancetype == "Aktiva" and reg_assets_stop.search(content["text"]) is not None:
+            self.info.balancetype = "Passiva"
+            self.structure["btype"][-1] = self.info.balancetype
+        return
+
+    def _check_eval(self, content, features):
+        if features.counters_alphabetical_ratios[features.counter_words - 1] < 0.5 or any([True for char in content["text"][:-2] if char.isdigit()]):
+            self.structure["eval"][-1] = True
+        return
+
+    def _vali_date(self, features, content:dict):
+        """Checks if the string contains a valid date"""
         reg_col = regex.compile(r"\d\d[- /.]\d\d[- /.]\d\d\d\d|\d\d\d\d\/\d\d|\d\d\d\d")
         reg_assets = regex.compile(r"(?:" + "Aktiva|Passiva" + "){e<=" + str(2) + "}")
         if features.counter_numbers > 5 and \
                 (features.counter_alphabetical < 3 or reg_assets.search(content["text"]) is not None) and \
                 reg_col.search(content["text"]):
-            return True
-        return False
+            self.structure["date"][-1] = True
+            self.info.start = True
+        return
 
-    def extract_content(self, content_lines, feature_lines, template="datatable"):
+    def _find_separator(self,features, content):
+        for widx, wordratio in enumerate(reversed(features.counters_alphabetical_ratios)):
+            if wordratio > 0.5:
+                if widx >= 1:
+                    xgaps = np.append(np.zeros(features.counter_words - widx)[0],
+                                      features.x_gaps[features.counter_words - widx:])
+                    maxgap = int(np.argmax(xgaps))
+                    self.structure["separator"][-1] = int(((content["words"][maxgap + 1]['hocr_coordinates'][3] -
+                                                            content["words"][maxgap + 1]['hocr_coordinates'][1]) +
+                                                           content["words"][maxgap]['hocr_coordinates'][2]))
+                    self.structure["gapsize"][-1] = int(xgaps[maxgap])
+                    self.structure["gapidx"][-1] = maxgap
+                    if self.info.start is True:
+                        self.info.start = False
+                        self.structure["next_section"][-1] = True
+                        # if the line contains min. 5 number and less than 3 alphabetical or "Aktiva/Passiva"
+                    self._vali_date(features, content)
+                return
+            elif widx == len(features.counters_alphabetical_ratios) - 1 and widx >= 1:
+                if widx > 1 and widx + 1 < features.counter_words:
+                    xgaps = np.append(np.zeros(features.counter_words - widx - 1)[0],
+                                      features.x_gaps[features.counter_words - widx - 1:])
+                else:
+                    xgaps = [features.x_gaps[0]]
+                maxgap = int(np.argmax(xgaps))
+                self.structure["separator"][-1] = int((content["words"][maxgap + 1]['hocr_coordinates'][0] +
+                                                       content["words"][maxgap]['hocr_coordinates'][2]) / 2)
+                self.structure["gapsize"][-1] = int(xgaps[maxgap])
+                self.structure["gapidx"][-1] = maxgap
+            self._vali_date(features, content)
+        return
+
+
+    ###### EXTRACT ######
+    def extract_content(self, content_lines:list, feature_lines:list, template="datatable"):
+        """Extracts the table information in a structured manner in a the 'content'-dict with the analyse information"""
         # get the colnames from date lines
         self._find_colname(content_lines)
         for btype in set(self.structure["btype"]):
@@ -179,7 +203,6 @@ class Table(object):
                     self.info.row = ""
                     continue
                 if (self.structure["separator"][lidx]-self.structure["gapsize"][lidx]/2) < self.info.separator < (self.structure["separator"][lidx]+self.structure["gapsize"][lidx]/2):
-                    #self.info.gapidx
                     self._extract_wwboxlevel(entry, features)
                 else:
                     self._extract_wordlevel(entry, features)
@@ -187,7 +210,7 @@ class Table(object):
         return
 
     def _find_colname(self, content_lines):
-        #reg_assets = regex.compile(r"(?:" + "Aktiva|Passiva" + "){e<=" + str(2) + "}")
+        """"Helper to find the column names"""
         reg_col = regex.compile(r"\d\d[- /.]\d\d[- /.]\d\d\d\d|\d\d\d\d\/\d\d|\d\d\d\d")
         lines = np.argwhere(self.structure["date"])
         if lines is None:
@@ -206,6 +229,7 @@ class Table(object):
         return
 
     def _extract_wwboxlevel(self, entry, features):
+        """"Helper to extract the line information by word bounding box information (default algorithm)"""
         self.content[self.structure["btype"][self.info.lidx]][0][self.info.row] = []
         self.content[self.structure["btype"][self.info.lidx]][1][self.info.row] = []
         for idx in range(0, self.structure["gapidx"][self.info.lidx]+1):
@@ -217,6 +241,7 @@ class Table(object):
         return
 
     def _extract_wordlevel(self, entry, features):
+        """"Helper to extract the line information on textlevel (fallback algortihm)"""
         numbers = ''.join([i for i in entry['text'] if i.isdigit() or i == " "]).strip().split(" ")
         # Check if line is date
         if features.counter_alphabetical < 2 and features.counter_special_chars > 3 and features.counter_numbers > 10:
@@ -243,3 +268,11 @@ class Table(object):
                     self.content[self.structure["btype"][self.info.lidx]][count_years][self.info.row] = " ".join(numbers[:len(numbers) - grpidx - 1])
                     return
         return
+
+    def _valid_text(self,toolbbox,bbox=[0, 0, 170, 60]):
+        toolbbox.load_image("/media/sf_ShareVB/many_years_firmprofiles/long/1957/0140_1957_hoppa-405844417-0050_0172bbox_30_40_400_500.jpg")
+        toolbbox.snip_bbox(bbox)
+        # toolbbox.store_bbox("/media/sf_ShareVB/many_years_firmprofiles/long/1957/")
+        toolbbox.ocr_snippet()
+        return
+
