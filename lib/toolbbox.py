@@ -22,7 +22,7 @@ class ToolBBOX(object):
         self.ocr_settings = {"lang":"akf3","psm":6,"oem":3}
 
 
-    def load_image(self, imgpath:str):
+    def load_image(self, imgpath):
         "Loads the image with PIL-Lib"
         try:
             self.imgpath = imgpath
@@ -78,11 +78,11 @@ class ToolBBOX(object):
     def set_ocr(self, lang=None,psm=None,oem=None):
         "Set the parameter from tesseracts"
         if lang is not None:
-            self.ocr_settings["lang"]=lang
+            self.ocr_settings["lang"] = lang
         if psm is not None:
-            self.ocr_settings["psm"]=psm
+            self.ocr_settings["psm"] = psm
         if oem is not None:
-            self.ocr_settings["oem"]=oem
+            self.ocr_settings["oem"] = oem
         return
 
     def ocr_snippet(self):
