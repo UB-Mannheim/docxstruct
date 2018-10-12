@@ -39,6 +39,7 @@ for key in hocr_files:
     #    continue
 
     accumulated_diff_info = output_analyzer.AccumulatedInfo()
+    accumulated_diff_info_categories = {}
     ocromore_data = None
     ctr_test = 0
 
@@ -71,17 +72,23 @@ for key in hocr_files:
         # output analysis steps
         output_analyzer.log_segmentation_simple(ocromore_data)  # log the recognized segmentation
         output_analyzer.log_parsed_output(ocromore_data)        # log the parsed segments into tag-based files
-        output_analyzer.log_segmentation_diff_for_categories(ocromore_data)  # log the segmentation
+        diff_info_categories = output_analyzer.log_segmentation_diff_for_categories(ocromore_data)  # log the segmentation
         diff_info = output_analyzer.log_unsegmentated(ocromore_data)
+        accumulated_diff_info_categories = \
+            output_analyzer.accumulate_diff_info_output_to_orig(ocromore_data, diff_info_categories, accumulated_diff_info_categories)
+
         accumulated_diff_info = output_analyzer.accumulate_diff_info(ocromore_data, diff_info, accumulated_diff_info)
-        ctr_test += 1
-        #if ctr_test >= 500:
+        #ctr_test += 1
+        #if ctr_test >= 30:
         #    break
 
         # clear the current result in segment_parser cache to parse the next one
         segment_parser.clear_result(output_analyzer)
 
-    # output analysis: print diff info for this year (accumulated over all tables/year)
+    # output analysis:
+    # print diff info for this year (accumulated over all tables/year)
     output_analyzer.log_accumulated_unsegmentated(accumulated_diff_info, ocromore_data)
+    # print the amount of chars which is left for each category after parsing  for this year
+    output_analyzer.log_accumulated_categories(accumulated_diff_info_categories, ocromore_data)
 
 
