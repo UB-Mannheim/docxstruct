@@ -14,16 +14,16 @@ class ToolBBOX(object):
         self.imgpath = None
         self.imgname = None
         self.ftype = None
-        self.opath = None
+        self.fname = None
         self.img = None
         self.shape = None
         self.snippet = None
         self.ocr = {"bbox":None,"text":None,"charconf":None}
-        self.ocr_settings = {"lang":"akf3","psm":6,"oem":3}
+        self.__ocr_settings = {"lang":"akf3","psm":6,"oem":3}
 
 
-    def load_image(self, imgpath):
-        "Loads the image with PIL-Lib"
+    def imread(self, imgpath):
+        """Loads the image with PIL-Lib"""
         try:
             self.imgpath = imgpath
             self.imgname = path.basename(imgpath)
@@ -38,24 +38,24 @@ class ToolBBOX(object):
             print(f"cannot open {self.imgpath}")
         except NameError:
             print(f"The image filetype {self.ftype} is not supported!")
-        return None
+        return True
 
-    def store_image(self, opath:str):
-        "Stores the image or the snippet"
+    def save_snippet(self, path:str):
+        """Saves the snippet"""
         try:
             if self.imgname is None:
                 raise NameError
             bboxstr = "_".join(str(bboxval) for bboxval in self.bbox)
-            self.opath = opath + self.imgname.split(".")[0] + "bbox_" + bboxstr +  "." + ".".join(self.imgname.split(".")[1:])
-            self.snippet.save(self.opath, self.snippet)
+            self.fname = path + self.imgname.split(".")[0] + "bbox_" + bboxstr +  "." + ".".join(self.imgname.split(".")[1:])
+            self.snippet.save(self.fname, self.snippet)
         except NameError:
             print("Please load an image first.")
         except:
-            print(f"{self.opath} could not be stored.")
-        return
+            print(f"{self.fname} could not be stored.")
+        return True
 
-    def snip_bbox(self, bbox:list):
-        "Snip the bboxarea out of the image"
+    def snip(self, bbox:list):
+        """Snip the bboxarea out of the image"""
         try:
             if self.img is None:
                 raise NameError
@@ -74,19 +74,25 @@ class ToolBBOX(object):
             print(f"The bbox shape doesnt match the image shape. {E}")
         except Exception as E:
             print(E)
+        return True
 
-    def set_ocr(self, lang=None,psm=None,oem=None):
-        "Set the parameter from tesseracts"
+    @property
+    def ocr_settings(self):
+        return self.__ocr_settings
+
+    @ocr_settings.setter
+    def ocr_settings(self, lang=None,psm=None,oem=None):
+        """Set the parameter from tesseracts"""
         if lang is not None:
-            self.ocr_settings["lang"] = lang
+            self.__ocr_settings["lang"] = lang
         if psm is not None:
-            self.ocr_settings["psm"] = psm
+            self.__ocr_settings["psm"] = psm
         if oem is not None:
-            self.ocr_settings["oem"] = oem
-        return
+            self.__ocr_settings["oem"] = oem
+        return True
 
-    def ocr_snippet(self):
-        "Performs tesseract on the snippet"
+    def snippet_to_text(self):
+        """Performs tesseract on the snippet"""
         try:
             if self.bbox is None:
                 raise ValueError
@@ -112,7 +118,7 @@ class ToolBBOX(object):
                     self.ocr["charconf"].append(conf)
         except ValueError:
             print("Please first set the bbox value with snip_bbox.")
-        return
+        return True
 
 
 
