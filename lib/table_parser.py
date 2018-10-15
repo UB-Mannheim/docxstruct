@@ -2,15 +2,23 @@ import numpy as np
 import regex
 from akf_corelib.configuration_handler import ConfigurationHandler
 
-class Tableinfo(object):
-    """Helper dataclass - Information storage for tableparsing"""
+class TableRegex(object):
+    """Compiled regex pattern for TP"""
+    def __init__(self):
+        self.assets_stop = regex.compile(r"(?:" + "kaptial|Passiva" + "){e<=" + str(2) + "}")
+        self.columnheader = regex.compile(r"\d\d[- /.]\d\d[- /.]\d\d\d\d|\d\d\d\d\/\d\d|\d\d\d\d")
+        self.balancetype = regex.compile(r"(?:" + "Aktiva|Passiva" + "){e<=" + str(2) + "}")
 
+class TableInfo(object):
+    """Helper dataclass - Information storage for TP"""
     def __init__(self, toolbbox=None, regexdict=None):
         self.start = False
         self.row = ""
         self.col = None
         self.lborder = None
+        self.fst_order = None
         self.maxgap = 0
+        self.nrow = None
         self.lidx = 0
         self.widx = 0
         self.gapidx = -1
@@ -19,6 +27,7 @@ class Tableinfo(object):
         self.balancetype = "Aktiva"
         self.currency = False
         self.toolbbox = toolbbox
+        self.regex = TableRegex()
         self.config = ConfigurationHandler(first_init=False).get_config()
 
 class Table(object):
@@ -38,20 +47,20 @@ class Table(object):
                          "gapsize":[],
                          "gapidx":[],
                          "rborder":[]}
-        self.info = Tableinfo(toolbbox)
+        self.info = TableInfo(toolbbox)
 
     ###### ANALYSE ######
     def analyse_structure(self, content_lines, feature_lines, template="datatable"):
         """Analyse the structure of table with the help from the template information and extract some necessary parameter"""
         if template in ["datatable", "datatable_money"]:
             for content, features in zip(content_lines, feature_lines):
-                # Sets the default values to the structure list
-                self._set_defaults(content)
+                # Append the default values to the structure list
+                self._append_defaults(content)
                 # Checks if any text was recognized
                 if isinstance(features, bool):
                     continue
-                # Checks if numbers in the line
-                self._check_eval(content,features)
+                # Checks if line is evaluable
+                self._check_evaluability(content,features)
                 # Checks the current balance type (asset or liabilities)
                 self._check_balancetype(content)
                 # Iterate over all words and search for valid separator values
@@ -59,7 +68,7 @@ class Table(object):
         self.info.start = False
         return
 
-    def _set_defaults(self, content):
+    def _append_defaults(self, content):
         default_dict = {"eval": False,
                         "date": False,
                         "next_section": False,
@@ -76,26 +85,14 @@ class Table(object):
         return
 
     def _check_balancetype(self, content):
-        reg_assets_stop = regex.compile(r"(?:" + "kaptial|Passiva" + "){e<=" + str(2) + "}")
-        if not self.info.balancetype == "Aktiva" and reg_assets_stop.search(content["text"]) is not None:
+        if self.info.balancetype == "Aktiva" and self.info.regex.assets_stop.search(content["text"]) is not None:
             self.info.balancetype = "Passiva"
             self.structure["btype"][-1] = self.info.balancetype
-        return
+        return self.info.balancetype
 
-    def _check_eval(self, content, features):
+    def _check_evaluability(self, content, features):
         if features.counters_alphabetical_ratios[features.counter_words - 1] < 0.5 or any([True for char in content["text"][:-2] if char.isdigit()]):
             self.structure["eval"][-1] = True
-        return
-
-    def _vali_date(self, features, content:dict):
-        """Checks if the string contains a valid date"""
-        reg_col = regex.compile(r"\d\d[- /.]\d\d[- /.]\d\d\d\d|\d\d\d\d\/\d\d|\d\d\d\d")
-        reg_assets = regex.compile(r"(?:" + "Aktiva|Passiva" + "){e<=" + str(2) + "}")
-        if features.counter_numbers > 5 and \
-                (features.counter_alphabetical < 3 or reg_assets.search(content["text"]) is not None) and \
-                reg_col.search(content["text"]):
-            self.structure["date"][-1] = True
-            self.info.start = True
         return
 
     def _find_separator(self,features, content):
@@ -123,36 +120,54 @@ class Table(object):
                 else:
                     xgaps = [features.x_gaps[0]]
                 maxgap = int(np.argmax(xgaps))
-                self.structure["separator"][-1] = int((content["words"][maxgap + 1]['hocr_coordinates'][0] +
-                                                       content["words"][maxgap]['hocr_coordinates'][2]) / 2)
+                self.structure["separator"][-1] = int(((content["words"][maxgap + 1]['hocr_coordinates'][3] -
+                                                            content["words"][maxgap + 1]['hocr_coordinates'][1]) +
+                                                           content["words"][maxgap]['hocr_coordinates'][2]))
                 self.structure["gapsize"][-1] = int(xgaps[maxgap])
                 self.structure["gapidx"][-1] = maxgap
             self._vali_date(features, content)
+        return
+
+    def _vali_date(self, features, content:dict):
+        """Checks if the string contains a valid date"""
+        if features.counter_numbers > 5 and \
+                (features.counter_alphabetical < 3 or self.info.regex.balancetype.search(content["text"]) is not None) and \
+                self.info.regex.columnheader.search(content["text"]):
+            self.structure["date"][-1] = True
+            self.info.start = True
         return
 
 
     ###### EXTRACT ######
     def extract_content(self, content_lines:list, feature_lines:list, template="datatable"):
         """Extracts the table information in a structured manner in a the 'content'-dict with the analyse information"""
-        # get the colnames from date lines
-        self._find_colname(content_lines)
-        for btype in set(self.structure["btype"]):
-            self.content[btype] = {}
-            for col in range(0, len(self.info.col)):
-                self.content[btype][col] = {}
+        self.info.nrow = len(feature_lines)
+        # get the col header from date lines
+        startidx = self._columnheader(content_lines)
+        self.info.start = True
+        next_date = list(np.nonzero(self.structure["date"][startidx:])[0])
+        if not next_date:
+            next_date = self.info.nrow
+        else:
+            next_date = next_date[0]+startidx
+        self.info.separator = int(np.median(self.structure["separator"][startidx:next_date]))
         for lidx, [entry, features] in enumerate(zip(content_lines, feature_lines)):
-            if entry["text"] == "":
-                continue
             self.info.lidx = lidx
-            btype = self.structure["btype"][lidx]
+            if entry["text"] == "" or lidx < startidx:
+                continue
             # read the number of columns the currency of the attributes
-            if self.info.start is True and self.info.lborder is None:
+            if self.info.lborder is None or self.structure["date"][lidx] and self.info.fst_order is not None:
+                idx = np.argmax(self.structure["next_section"][lidx:])
                 offset = 2
-                if self.structure["date"][lidx+1] is False:
+                if lidx+idx+2 > len(self.structure["date"]) or self.structure["date"][lidx+1] is True:
                     offset = 1
-                self.info.lborder = min(self.structure["lborder"][lidx:lidx+offset])
-                self.info.rborder = max(self.structure["rborder"][lidx:lidx+offset])
+                self.info.lborder = min(self.structure["lborder"][lidx+idx:lidx+idx+offset])
+                self.info.fst_order = self.info.lborder+int((entry["hocr_coordinates"][3]-entry["hocr_coordinates"][1])*0.25)
+                self.info.rborder = max(self.structure["rborder"][lidx+idx:lidx+idx+offset])
+            if self.info.fst_order is not None and self.info.fst_order < entry["words"][0]["hocr_coordinates"][0]:
+                self.structure["order"][lidx] = 2
             # If no date was found in the beginning..
+            """
             if self.info.start is False and self.structure["eval"][lidx] is True and any(self.structure["date"][:3]) is False:
                 self.info.separator = self.structure['separator'][lidx]
                 for btype in set(self.structure["btype"]):
@@ -160,6 +175,7 @@ class Table(object):
                         self.content[btype][col] = {}
                 self.info.col = [0,1]
                 self.info.start = True
+
             # Search for date and currency
             if self.info.start is False:
                 # Get new separator value
@@ -182,7 +198,7 @@ class Table(object):
                             self.info.currency = True
                 elif self.info.currency:
                     #todo: fix for loop
-                    for idx in [0,1]:
+                    for idx in range(0,len(self.info.col)):
                         if "DM" in entry["text"].replace(" ", "") and "1000" in entry["text"].replace(" ", ""):
                             entry["text"] = "in 1000 DM"
                         else:
@@ -191,7 +207,8 @@ class Table(object):
                                 self.content[btype][idx]["currency"] = entry['text']
                         self.info.start = True
                 self.info.row = ""
-            elif self.info.start is True:
+            """
+            if self.info.start is True:
                 if features.counter_numbers < 2:
                     self.info.row = ''.join(
                         [i for i in entry['text'] if i not in list("()")]).strip() + " "
@@ -202,33 +219,75 @@ class Table(object):
                     self.info.separator = self.structure["separator"][lidx]
                     self.info.row = ""
                     continue
-                if (self.structure["separator"][lidx]-self.structure["gapsize"][lidx]/2) < self.info.separator < (self.structure["separator"][lidx]+self.structure["gapsize"][lidx]/2):
-                    self._extract_wwboxlevel(entry, features)
-                else:
-                    self._extract_wordlevel(entry, features)
+                extractlevel = "bbox"
+                if not (self.structure["separator"][lidx]-self.structure["gapsize"][lidx]/2) < self.info.separator < (self.structure["separator"][lidx]+self.structure["gapsize"][lidx]/2):
+                    extractlevel = "text"
+                # Get the content in structured manner
+                self._extract_content(entry, features, extractlevel)
                 self.info.row = ""
         return
 
-    def _find_colname(self, content_lines):
-        """"Helper to find the column names"""
-        reg_col = regex.compile(r"\d\d[- /.]\d\d[- /.]\d\d\d\d|\d\d\d\d\/\d\d|\d\d\d\d")
-        lines = np.argwhere(self.structure["date"])
-        if lines is None:
+    def _columnheader(self, content_lines) -> int:
+        """"Helper to find the column headers"""
+        lines = np.nonzero(self.structure["date"])[0].tolist()
+        if not lines:
             self.info.col = [0,1]
-            return
+            self._additional_columninfo("")
+            separator_idx = np.argwhere(np.array(self.structure["separator"]) > -1)[0].tolist()
+            if separator_idx is not None and \
+                    separator_idx[0] < 5:
+                return separator_idx[0]
+            else:
+                return 3
         for line in lines:
-            self.info.col = content_lines[line[0]]['text'].replace("+)", "").strip().split(" ")
+            self.info.col = content_lines[line]['text'].replace("+)", "").strip().split(" ")
             if len(self.info.col) == 2:
-               return
-        for line in lines:
-            result = reg_col.findall(content_lines[line[0]]['text'])
-            if result is not None:
-                self.info.col = result
-                return
-        self.info.col = [0,1]
-        return
+               break
+        else:
+            for line in lines:
+                result = self.info.regex.columnheader.findall(content_lines[line]['text'])
+                if result is not None:
+                    self.info.col = result
+                    break
+            else:
+                self.info.col = [0,1]
+        #Todo check if only one column..
+        if len(lines) > 1:
+            for line in lines[1:]:
+                if line <= lines[0]+2:
+                    lines[0] = line
+        if lines[0] < 5:
+            nextitem = np.argwhere(self.structure["next_section"])[0].tolist()
+            if nextitem is not None and lines[0]+2 <= nextitem[0]:
+                self._additional_columninfo(content_lines[lines[0]+1]['text'])
+                return lines[0]+2
+            else:
+                self._additional_columninfo("")
+                return lines[0]+1
+        else:
+            self._additional_columninfo("")
+        return 0
 
-    def _extract_wwboxlevel(self, entry, features):
+    def _additional_columninfo(self, infotext):
+        infotext = infotext.replace("(", "").replace(")", "")
+        if "DM" in infotext.replace(" ", "") and "1000" in infotext.replace(" ", ""):
+            infotext = "in 1000 DM"
+        for btype in set(self.structure["btype"]):
+            self.content[btype] = {}
+            for col in range(0,len(self.info.col)):
+                self.content[btype][col] = {}
+                if self.info.col != [1, 0]:
+                    self.content[btype][col]["date"] = self.info.col[col]
+                self.content[btype][col]["currency"] = infotext
+
+    def _extract_content(self,entry, features, extractlevel) -> bool:
+        if extractlevel == "bbox":
+            result = self._extract_bboxlevel(entry,features)
+        else:
+            result = self._extract_textlevel(entry,features)
+        return result
+
+    def _extract_bboxlevel(self, entry, features)->bool:
         """"Helper to extract the line information by word bounding box information (default algorithm)"""
         self.content[self.structure["btype"][self.info.lidx]][0][self.info.row] = []
         self.content[self.structure["btype"][self.info.lidx]][1][self.info.row] = []
@@ -238,14 +297,14 @@ class Table(object):
         for idx in range(self.structure["gapidx"][self.info.lidx]+1, len(entry["words"])):
             self.content[self.structure["btype"][self.info.lidx]][1][self.info.row].append(entry['words'][idx]["text"])
         self.content[self.structure["btype"][self.info.lidx]][1][self.info.row] = " ".join(self.content[self.structure["btype"][self.info.lidx]][1][self.info.row]).strip()
-        return
+        return True
 
-    def _extract_wordlevel(self, entry, features):
+    def _extract_textlevel(self, entry, features)->bool:
         """"Helper to extract the line information on textlevel (fallback algortihm)"""
         numbers = ''.join([i for i in entry['text'] if i.isdigit() or i == " "]).strip().split(" ")
         # Check if line is date
         if features.counter_alphabetical < 2 and features.counter_special_chars > 3 and features.counter_numbers > 10:
-            return
+            return False
         count_years = len(self.info.col) - 1
         count_numbers = 0
         number = ""
@@ -266,13 +325,13 @@ class Table(object):
                 count_years -= 1
                 if count_years == 0:
                     self.content[self.structure["btype"][self.info.lidx]][count_years][self.info.row] = " ".join(numbers[:len(numbers) - grpidx - 1])
-                    return
-        return
+                    return True
+        return True
 
     def _valid_text(self,toolbbox,bbox=[0, 0, 170, 60]):
-        toolbbox.load_image("/media/sf_ShareVB/many_years_firmprofiles/long/1957/0140_1957_hoppa-405844417-0050_0172bbox_30_40_400_500.jpg")
-        toolbbox.snip_bbox(bbox)
+        toolbbox.imread("/media/sf_ShareVB/many_years_firmprofiles/long/1957/0140_1957_hoppa-405844417-0050_0172bbox_30_40_400_500.jpg")
+        toolbbox.snip(bbox)
         # toolbbox.store_bbox("/media/sf_ShareVB/many_years_firmprofiles/long/1957/")
-        toolbbox.ocr_snippet()
+        ocresult = toolbbox.snippet_to_text()
         return
 
