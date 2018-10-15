@@ -64,6 +64,49 @@ class OutputAnalysis(object):
             dh.write_array_to_root_simple("parsed_output", key,
                                           final_text_lines, self.analysis_root, append_mode=True)
 
+    def log_original_to_segment_diff(self, ocromore_data, separator='¦¦'):
+        if self.config.LOG_SEGMENTED_TO_ORIG_DIFF_PER_FILE is False:
+            return
+
+        # fetch the rest text from ocromore data
+        rest_texts = ocromore_data['analysis_to_orig']['original_rest']
+        rest_text = ""
+        for text in rest_text: rest_text+= text
+        # get the segmented data
+        # wwwww = self.eg.diff_seg_to_orig_at_key(ocromore_data)
+        segmented_texts = []
+        complete_text = "" # unused atm
+        for inst_class in ocromore_data['segmentation'].my_classes:
+            if not inst_class.is_start_segmented():
+                continue
+            start_line_index = inst_class.start_line_index
+            stop_line_index = inst_class.stop_line_index
+
+
+            for index in range(start_line_index,stop_line_index):
+                text = ocromore_data['lines'][index]['text']
+                segmented_texts.append(text)
+                complete_text += text
+
+        # sort segmented texts after length
+        segmented_texts.sort(key=lambda s: len(s))
+        segmented_texts.reverse()
+
+        for text_subtr in segmented_texts:
+            rest_text.replace(text_subtr,"")
+        file_info = ocromore_data['file_info'].name
+        db_name = ocromore_data['file_info'].dbname
+
+        info_to_write = []
+        info_to_write.append("File:"+file_info+"---------------")
+        info_to_write.extend(rest_text)
+        info_to_write.append("")
+        info_to_write.append("")
+
+        dh.write_array_to_root_simple("parsed_to_seg_difference/"+db_name+"/", "rests_"+db_name, info_to_write
+                                      , self.analysis_root, append_mode=True)
+        return # todo continue here
+
     def log_segmentation_diff_for_categories(self, ocromore_data):
         """
         Takes the current ocromore_data for a table and for each
@@ -87,13 +130,15 @@ class OutputAnalysis(object):
         diff_info['keys'] = {}
         # iterate the recognized tags
         for key in results.my_object:
+            if key is 'overall_info':
+                continue # skip special key which has different structure (in case it's enabled)
             rest_text, original_text = results.diff_parsed_to_orig_at_key(key)
             diff_info['keys'][key] = {}
             diff_info['keys'][key]['rest_text'] = rest_text
             diff_info['keys'][key]['original_text'] = original_text
 
             value_json = None
-            if self.config.LOG_SEGMENTED_TO_ORIG_ADD_OUTPUT_JSON:
+            if self.config.LOG_PARSED_TO_ORIG_ADD_OUTPUT_JSON:
                 value_json = results.export_as_json_at_key(key, remove_first_object=True)
 
             final_text_lines = []
@@ -130,6 +175,7 @@ class OutputAnalysis(object):
             final_text_lines.append(final_line_text)
 
         dh.write_array_to_root("segmentation_simple/", final_text_lines, ocromore_data, self.analysis_root)
+
 
     def log_segment_information(self, segment_tag, text_lines, real_segment_tag):
         """

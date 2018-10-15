@@ -72,6 +72,7 @@ for key in hocr_files:
         # output analysis steps
         output_analyzer.log_segmentation_simple(ocromore_data)  # log the recognized segmentation
         output_analyzer.log_parsed_output(ocromore_data)        # log the parsed segments into tag-based files
+        output_analyzer.log_original_to_segment_diff(ocromore_data)  # log the difference of segmented data to original data
         diff_info_categories = output_analyzer.log_segmentation_diff_for_categories(ocromore_data)  # log the segmentation
         diff_info = output_analyzer.log_unsegmentated(ocromore_data)
         accumulated_diff_info_categories = \

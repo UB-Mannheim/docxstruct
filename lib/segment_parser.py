@@ -127,6 +127,14 @@ class SegmentParser(object):
             all_texts = self.get_all_text(ocromore_data)
             self.ef.set_current_main_list("overall_info")
             self.ef.add_to_my_obj("fulltexts",all_texts)
+        # add a duplicate of the original text from which in the below analysis case the files get subtracted
+        if self.config.LOG_SEGMENTED_TO_ORIG_DIFF_PER_FILE:
+            if self.config.ADD_FULLTEXT_ENTRY:
+                ocromore_data['analysis_to_orig'] = {}
+                ocromore_data['analysis_to_orig']['original_rest'] = self.get_all_text(ocromore_data)
+            else:
+                self.cpr.printw("activated segment to orig diff, but no saving of origin activate ADD_FULLTEXT_ENTRY "
+                                "in config for this functionality")
 
         # start parsing for each successfully segmented area
         for segmentation_class in segmentation_classes:

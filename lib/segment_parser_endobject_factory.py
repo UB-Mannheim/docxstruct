@@ -82,6 +82,66 @@ class EndobjectFactory(object):
         my_obj_json = json.dumps(my_obj, indent=5, ensure_ascii=False)
         return my_obj_json
 
+    def diff_seg_to_orig_at_key(self, key):
+
+        def fetch_subentries_recursive(entry):
+            final_texts = []
+
+            for item in entry:
+                if isinstance(entry, list):
+                    value = item
+                else:
+                    # item is a key
+                    value = entry[item]
+                if isinstance(value, str):
+                    final_texts.append(value)
+                elif isinstance(value, int):
+                    final_texts.append(str(value))
+                elif isinstance(value, object):
+                    obj_size = len(value)
+                    if obj_size > 0:
+                        recursive_texts = fetch_subentries_recursive(value)
+                        final_texts.extend(recursive_texts)
+
+            return final_texts
+
+        if key not in self.my_object.keys():
+            return None
+
+        my_data = self.my_object[key]
+
+        # check if the orig-post property can exist warn if not
+        if not self.config.ADD_INFO_ENTRY_TO_OUTPUT:
+            self.cpr.printw("trying to fetch original data, original data is not added to results")
+            self.cpr.printw("toggle ADD_INFO_ENTRY_TO_OUTPUT in config to True")
+        if len(my_data) <= 0:
+            self.cpr.printw("no data to do returning")
+            return
+
+        return
+        # copy orig string
+        original_text = my_data[0]['origpost']
+        rest_text = original_text
+
+        # fetch parsed entries for diff
+        all_final_entries = []  # array of final entries
+        for index in range(1, len(my_data)):
+            entry = my_data[index]
+            final_entries = fetch_subentries_recursive(entry)
+            all_final_entries.extend(final_entries)
+
+        # order diff data after length
+        all_final_entries.sort(key=lambda x: len(x))
+        all_final_entries.reverse()
+
+        # subtract
+        for text in all_final_entries:
+            rest_text = rest_text.replace(text, "")
+
+            rest_text = rest_text.strip()
+
+        return rest_text, original_text
+
     def diff_parsed_to_orig_at_key(self, key):
 
         def fetch_subentries_recursive(entry):
