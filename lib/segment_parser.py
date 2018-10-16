@@ -131,7 +131,9 @@ class SegmentParser(object):
         if self.config.LOG_SEGMENTED_TO_ORIG_DIFF_PER_FILE:
             if self.config.ADD_FULLTEXT_ENTRY:
                 ocromore_data['analysis_to_orig'] = {}
-                ocromore_data['analysis_to_orig']['original_rest'] = self.get_all_text(ocromore_data)
+                original_rest, complete_text = self.get_all_text(ocromore_data)
+                ocromore_data['analysis_to_orig']['original_rest'] = original_rest
+                ocromore_data['analysis_to_orig']['original_length_initial'] = len(complete_text)
             else:
                 self.cpr.printw("activated segment to orig diff, but no saving of origin activate ADD_FULLTEXT_ENTRY "
                                 "in config for this functionality")
@@ -173,10 +175,13 @@ class SegmentParser(object):
         return real_start_tag, content_texts, content_lines, feature_lines
 
     def get_all_text(self, ocromore_data):
-        all_text = []
+        all_texts = []
+        complete_text = ""
         for line in ocromore_data['lines']:
-            all_text.append(line['text'])
-        return all_text
+            text = line['text']
+            all_texts.append(text)
+            complete_text += text
+        return all_texts, complete_text
 
 
     def write_result_to_output(self, as_json, ocromore_data):
