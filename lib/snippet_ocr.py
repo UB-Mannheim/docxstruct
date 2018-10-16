@@ -3,7 +3,7 @@ import numpy as np
 from PIL import Image
 from tesserocr import PyTessBaseAPI, RIL, iterate_level
 
-class ToolBBOX(object):
+class Snippet(object):
     """ This library works with bbox on the original image -
     - Snip the bbox out of the image
     - OCR the snippet with tesseract gives text and bbox per word and confidences per char
@@ -18,7 +18,7 @@ class ToolBBOX(object):
         self.img = None
         self.shape = None
         self.snippet = None
-        self.ocr = {"bbox":None,"text":None,"charconf":None}
+        self.result = None
         self.__ocr_settings = {"lang":"akf3","psm":6,"oem":3}
 
 
@@ -40,7 +40,7 @@ class ToolBBOX(object):
             print(f"The image filetype {self.ftype} is not supported!")
         return True
 
-    def save_snippet(self, path:str):
+    def save(self, path:str):
         """Saves the snippet"""
         try:
             if self.imgname is None:
@@ -54,7 +54,7 @@ class ToolBBOX(object):
             print(f"{self.fname} could not be stored.")
         return True
 
-    def snip(self, bbox:list):
+    def crop(self, bbox:list):
         """Snip the bboxarea out of the image"""
         try:
             if self.img is None:
@@ -89,9 +89,9 @@ class ToolBBOX(object):
             self.__ocr_settings["psm"] = psm
         if oem is not None:
             self.__ocr_settings["oem"] = oem
-        return True
+        return
 
-    def snippet_to_text(self):
+    def to_text(self):
         """Performs tesseract on the snippet"""
         try:
             if self.bbox is None:
@@ -101,25 +101,34 @@ class ToolBBOX(object):
                 api.Recognize()
                 ri = api.GetIterator()
                 conf = []
-                self.ocr["text"] = []
-                self.ocr["charconf"] = []
-                self.ocr["bbox"] = []
+                line = -1
+                self.result=[]
                 for r in iterate_level(ri, RIL.SYMBOL):
-                    if self.ocr["text"] == []:
-                        self.ocr["text"].append(r.GetUTF8Text(RIL.WORD))
-                        self.ocr["bbox"].append(r.BoundingBoxInternal(RIL.WORD))
-                    if self.ocr["text"][-1] != r.GetUTF8Text(RIL.WORD):
-                        self.ocr["text"].append(r.GetUTF8Text(RIL.WORD))
-                        self.ocr["bbox"].append(r.BoundingBoxInternal(RIL.WORD))
-                        self.ocr["charconf"].append(conf)
+                    if r.IsAtBeginningOf(RIL.TEXTLINE):
+                        line += 1
+                        self.result.append({"text":"","words":[],"charconf":[],"bbox":[]})
+                        self.result[line]["text"] = r.GetUTF8Text(RIL.TEXTLINE)
+                    if r.IsAtFinalElement(RIL.WORD,RIL.SYMBOL):
+                        self.result[line]["words"].append(r.GetUTF8Text(RIL.WORD))
+                        self.result[line]["bbox"].append(r.BoundingBoxInternal(RIL.WORD))
+                        self.result[line]["charconf"].append(conf)
                         conf = []
                     conf.append(r.Confidence(RIL.SYMBOL))
                 if conf != "":
-                    self.ocr["charconf"].append(conf)
+                    self.result[line]["charconf"].append(conf)
         except ValueError:
             print("Please first set the bbox value with snip_bbox.")
         return True
 
+    @property
+    def text(self):
+        if self.result:
+            text = ""
+            for line in self.result:
+                text += line["text"]
+            return text
+        else:
+            return None
 
 
 
