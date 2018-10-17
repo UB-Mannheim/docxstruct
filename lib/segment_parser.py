@@ -175,6 +175,12 @@ class SegmentParser(object):
         return real_start_tag, content_texts, content_lines, feature_lines
 
     def get_all_text(self, ocromore_data):
+        """
+        Gets all text lines in ocromore_data as
+        array and as joined string
+        :param ocromore_data: data from which the text is extracted
+        :return: texts list, complete text
+        """
         all_texts = []
         complete_text = ""
         for line in ocromore_data['lines']:
@@ -182,7 +188,6 @@ class SegmentParser(object):
             all_texts.append(text)
             complete_text += text
         return all_texts, complete_text
-
 
     def write_result_to_output(self, as_json, ocromore_data):
         if as_json is True:

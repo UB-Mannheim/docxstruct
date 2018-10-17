@@ -65,12 +65,19 @@ class OutputAnalysis(object):
                                           final_text_lines, self.analysis_root, append_mode=True)
 
     def log_original_to_segment_diff(self, ocromore_data, use_delimiters=True):
+        """
+        logs the difference of original to segmented texts to files
+        in 'orig_to_seg_difference'
+        :param ocromore_data: main data object which data is extracted from
+        :param use_delimiters: add delimeters between each line in original text before subtraction
+        :return: diff_info object which contains fileinfo and rest-text after subtraction
+        """
         if self.config.LOG_SEGMENTED_TO_ORIG_DIFF_PER_FILE is False:
             return
 
         diff_info = {}  # diff info object which is used for accumulated report
 
-        # fetch the rest text from ocromore data
+        # fetch the rest text from ocromore_data
         rest_texts = ocromore_data['analysis_to_orig']['original_rest']
         rest_text = ""
         for text in rest_texts:
@@ -80,10 +87,8 @@ class OutputAnalysis(object):
                 rest_text += "\n"  # delimiters are optional
 
         # get the segmented data
-        # wwwww = self.eg.diff_seg_to_orig_at_key(ocromore_data)
-
         segmented_texts = []
-        complete_text = ""  # unused atm
+        complete_text = ""
         for inst_class in ocromore_data['segmentation'].my_classes:
             if not inst_class.is_start_segmented():
                 continue
@@ -95,19 +100,15 @@ class OutputAnalysis(object):
                 segmented_texts.append(text)
                 complete_text += text
 
-        # rest texts 123
-        # segmented texts 100
         # sort segmented texts after length
         segmented_texts.sort(key=lambda s: len(s))
         segmented_texts.reverse()
 
+        # subtract each segmented text line from the original text
         for text_subtr in segmented_texts:
-            # texlen_before = len(rest_text)
             rest_text = rest_text.replace(text_subtr, "", 1)  # only replace once
-            # texlen_after = len(rest_text)
-            # if texlen_before == texlen_after:
-            #     print("asd")
 
+        # create data to log
         file_name = ocromore_data['file_info'].name
         db_path = ocromore_data['file_info'].dbpath
         db_name = ocromore_data['file_info'].dbname
@@ -247,12 +248,31 @@ class OutputAnalysis(object):
                                self.analysis_root, accumulated=True)
 
     def log_accumulated_categories(self, accumulated_diff_info, ocromore_data):
+        """
+        Logs the accumulated (over many files in a folder) information on
+        difference of original to parsed content to 'parsed_to_orig_difference' in analysis
+        :param accumulated_diff_info: contains content to log
+        :param ocromore_data: main data object
+        :return:
+        """
+
+        # create array to log
         acc_diff_array = self.acc_origindiff_data_to_array(accumulated_diff_info)
+        # log array to files
         dh.write_array_to_root("parsed_to_orig_difference/", acc_diff_array, ocromore_data, \
                                self.analysis_root, accumulated=True)
 
     def log_accumulated_orig_to_segment(self, accumulated_diff_info, ocromore_data):
+        """
+        Logs the accumulated (over many files in a folder) information on
+        difference of segmented to original content to 'orig_to_seg_difference' in analysis
+        :param accumulated_diff_info: contains content to log
+        :param ocromore_data: main data object
+        :return:
+        """
+        # create array to log
         acc_diff_array = self.acc_segmentdiff_data_to_array(accumulated_diff_info)
+        # log array to files
         dh.write_array_to_root("orig_to_seg_difference/", acc_diff_array, ocromore_data, \
                                self.analysis_root, accumulated=True)
 
@@ -279,7 +299,13 @@ class OutputAnalysis(object):
 
         return accumulated_diff_info
 
-    def accumulate_diff_info_output_to_orig(self, ocromore_data, diff_info, accumulated_diff_info):
+    def accumulate_diff_info_output_to_orig(self, diff_info, accumulated_diff_info):
+        """
+        accumulate diff info from parsed output to original difference
+        :param diff_info: diff info which gets accumulated
+        :param accumulated_diff_info: the diff info content get's added to this object
+        :return: accumulated diff info + diff info
+        """
 
         for key in diff_info['keys']:
             value = diff_info['keys'][key]
@@ -294,7 +320,13 @@ class OutputAnalysis(object):
         return accumulated_diff_info
     
     
-    def accumulate_diff_info_orig_to_segmentation(self, ocromore_data, diff_info, accumulated_diff_info):
+    def accumulate_diff_info_orig_to_segmentation(self, diff_info, accumulated_diff_info):
+        """
+        accumulate diff info from original to segmentation difference
+        :param diff_info: diff info which gets accumulated
+        :param accumulated_diff_info: the diff info content get's added to this object
+        :return: accumulated diff info + diff info
+        """
 
         file_name = diff_info['file_name']
         # db_name = diff_info['db_name'] # maybe use later
