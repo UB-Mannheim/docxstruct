@@ -156,11 +156,16 @@ class OutputAnalysis(object):
         # iterate the recognized tags
         for key in results.my_object:
             if key is 'overall_info':
-                continue # skip special key which has different structure (in case it's enabled)
+                continue  # skip special key which has different structure (in case it's enabled)
             rest_text, original_text = results.diff_parsed_to_orig_at_key(key)
             diff_info['keys'][key] = {}
             diff_info['keys'][key]['rest_text'] = rest_text
             diff_info['keys'][key]['original_text'] = original_text
+            # without special chars
+            rest_text_filtered_sc = dh.filter_special_chars(rest_text)
+            orig_text_filtered_sc = dh.filter_special_chars(original_text)
+            diff_info['keys'][key]['rest_text_filtered_sc'] = rest_text_filtered_sc
+            diff_info['keys'][key]['original_text_filtered_sc'] = orig_text_filtered_sc
 
             value_json = None
             if self.config.LOG_PARSED_TO_ORIG_ADD_OUTPUT_JSON:
@@ -171,7 +176,9 @@ class OutputAnalysis(object):
             # add dividers to the lines
             final_text_lines.append(key + ": " + file_info + "------------------------------------------------")
             final_text_lines.append("Rest:" + rest_text)
+            final_text_lines.append("Rest_filtered_sc:" + rest_text_filtered_sc)
             final_text_lines.append("Original:" + original_text)
+            final_text_lines.append("Original_filtered_sc:" + orig_text_filtered_sc)
 
             if value_json != None:
                 final_text_lines.append("Parsed-Json:" + value_json)
@@ -247,7 +254,7 @@ class OutputAnalysis(object):
         dh.write_array_to_root("diff_info/", acc_diff_array, ocromore_data, \
                                self.analysis_root, accumulated=True)
 
-    def log_accumulated_categories(self, accumulated_diff_info, ocromore_data):
+    def log_accumulated_orig_to_parsed_output(self, accumulated_diff_info, ocromore_data):
         """
         Logs the accumulated (over many files in a folder) information on
         difference of original to parsed content to 'parsed_to_orig_difference' in analysis
@@ -311,11 +318,19 @@ class OutputAnalysis(object):
             value = diff_info['keys'][key]
             rest_text = value['rest_text']
             original_text = value['original_text']
+            rest_text_filtered = value['rest_text_filtered_sc']
+            original_text_filtered = value['original_text_filtered_sc']
             if key not in accumulated_diff_info.keys():
-                accumulated_diff_info[key] = {'rest_chars': 0, 'original_chars': 0}
+                accumulated_diff_info[key] = {'rest_chars': 0,
+                                              'original_chars': 0,
+                                              "rest_chars_filtered": 0,
+                                              "original_chars_filtered": 0
+                                              }
 
             accumulated_diff_info[key]['rest_chars'] += len(rest_text)
             accumulated_diff_info[key]['original_chars'] += len(original_text)
+            accumulated_diff_info[key]['rest_chars_filtered'] += len(rest_text_filtered)
+            accumulated_diff_info[key]['original_chars_filtered'] += len(original_text_filtered)
 
         return accumulated_diff_info
     
@@ -387,11 +402,16 @@ class OutputAnalysis(object):
         for key in accumulated_diff_info:
             value = accumulated_diff_info[key]
             rest_chars = value['rest_chars']
+            rest_chars_filtered = value['rest_chars_filtered']
             orig_chars = value['original_chars']
+            orig_chars_filtered = value['original_chars_filtered']
 
             final_line_text = (
-                    '%-45s%-30s%-30s' % ("Key: " + key, "Rest-Chars:  " + str(rest_chars),
-                                         "Original-Chars:  " + str(orig_chars)))
+                    '%-38s%-30s%-30s%-30s%-30s' % ("Key: " + key,
+                                              "Rest-Chars:  " + str(rest_chars),
+                                              "Rest-Chars-filtered:" + str(rest_chars_filtered),
+                                              "Original-Chars:  " + str(orig_chars),
+                                              "Original-Chars-filtered:" + str(orig_chars_filtered)))
 
             final_lines.append(final_line_text)
 

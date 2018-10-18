@@ -106,8 +106,8 @@ class AKFCommonParsingFunctions(object):
         :param origpost_red:
         :return: tuple with numID, city, street, street_number, additional_info
         """
-        if "Zementfabrik" in origpost_red or "Rheinfelden" in origpost_red or "Bietigheim" in origpost_red:
-            print("asd")
+        #if "Zementfabrik" in origpost_red or "Rheinfelden" in origpost_red or "Bietigheim" in origpost_red:
+            #print("asd")
             # todo cases
             # (17b) Rheinfelden (Baden);
             # (22c) Zementfabrik bei Ober- kassel (Siegkr.)
@@ -263,7 +263,6 @@ class AKFCommonParsingFunctions(object):
 
     @staticmethod
     def add_check_element(topclass, content_texts, real_start_tag, segmentation_class, element_counter):
-
 
         joined_texts = dh.join_separated_lines(content_texts)  # join dash separated texts
         origpost, origpost_red = dh.create_stringified_linearray(joined_texts)   # final reduced array for further processing

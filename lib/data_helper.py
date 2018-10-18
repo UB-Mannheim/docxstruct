@@ -1,5 +1,6 @@
 from akf_corelib.filehandler import FileHandler as fh
 import io
+import re
 
 class DataHelper(object):
     """
@@ -211,7 +212,7 @@ class DataHelper(object):
 
         for current_index, ttext_info in enumerate(tagged_texts):
             if ttext_info == None:
-                continue # line was already joined
+                continue  # line was already joined
 
             current_ttext, current_id = ttext_info
             if current_id == NORMAL_LINE:
@@ -223,11 +224,27 @@ class DataHelper(object):
                     current_ttext = current_ttext + follow_ttext
                     tagged_texts[follow_up_index] = None
                     if follow_id == NORMAL_LINE or follow_id == LAST_LINE:
-                        #update my new array
+                        # update my new array
                         joined_texts.append(current_ttext)
-                        break # done escape the inner loop
+                        break  # done escape the inner loop
                     elif follow_id == SEPARATOR_LINE:
-                        continue # continue  inner loop
+                        continue  # continue  inner loop
 
         # return the modified list
         return joined_texts
+
+    @staticmethod
+    def filter_special_chars(text, remove_spaces=True):
+        """
+        Remove special characters from input text
+        :param text: input text
+        :param remove_spaces: if true also removes spaces
+        :return: filtered text
+        """
+
+        if remove_spaces:
+            text_filtered = re.sub('[^A-Za-z0-9]+', '', text)
+        else:
+            text_filtered = re.sub('[^A-Za-z0-9\s]+', '', text)
+
+        return text_filtered

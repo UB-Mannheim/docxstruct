@@ -94,7 +94,7 @@ for key in hocr_files:
     # print diff info for this year (accumulated over all tables/year)
     output_analyzer.log_accumulated_unsegmentated(accumulated_diff_info, ocromore_data)
     # print the amount of chars which is left for each category after parsing  for this year
-    output_analyzer.log_accumulated_categories(accumulated_diff_info_categories, ocromore_data)
+    output_analyzer.log_accumulated_orig_to_parsed_output(accumulated_diff_info_categories, ocromore_data)
     # print diff info for this year between original and segmentation
     output_analyzer.log_accumulated_orig_to_segment(accumulated_diff_info_orig_to_segment, ocromore_data)
 
