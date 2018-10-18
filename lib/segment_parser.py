@@ -131,7 +131,7 @@ class SegmentParser(object):
         if self.config.LOG_SEGMENTED_TO_ORIG_DIFF_PER_FILE:
             if self.config.ADD_FULLTEXT_ENTRY:
                 ocromore_data['analysis_to_orig'] = {}
-                original_rest, complete_text = self.get_all_text(ocromore_data)
+                original_rest, complete_text = self.get_all_text(ocromore_data, join_separated_lines=True)
                 ocromore_data['analysis_to_orig']['original_rest'] = original_rest
                 ocromore_data['analysis_to_orig']['original_length_initial'] = len(complete_text)
             else:
@@ -174,7 +174,7 @@ class SegmentParser(object):
 
         return real_start_tag, content_texts, content_lines, feature_lines
 
-    def get_all_text(self, ocromore_data):
+    def get_all_text(self, ocromore_data, join_separated_lines=False):
         """
         Gets all text lines in ocromore_data as
         array and as joined string
@@ -187,6 +187,13 @@ class SegmentParser(object):
             text = line['text']
             all_texts.append(text)
             complete_text += text
+
+        if join_separated_lines:
+            complete_text = ""
+            all_texts = dh.join_separated_lines(all_texts)
+            for text in all_texts:
+                complete_text += text
+
         return all_texts, complete_text
 
     def write_result_to_output(self, as_json, ocromore_data):

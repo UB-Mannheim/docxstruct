@@ -132,7 +132,7 @@ class OutputAnalysis(object):
 
         return diff_info
 
-    def log_segmentation_diff_for_categories(self, ocromore_data):
+    def log_segmentation_diff_orig_to_parsed_output(self, ocromore_data):
         """
         Takes the current ocromore_data for a table and for each
         occuring key logs the rest text and the difference

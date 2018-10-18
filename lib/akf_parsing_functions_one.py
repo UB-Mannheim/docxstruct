@@ -51,6 +51,8 @@ class AkfParsingFunctionsOne(object):
         # get relevant info
         num_id, city, street, street_number, additional_info = cf.parse_id_location(origpost_red)
 
+
+
         # add stuff to ef
         only_add_if_value = True
         self.ef.add_to_my_obj("numID", num_id, object_number=element_counter, only_filled=only_add_if_value)

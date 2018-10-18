@@ -106,6 +106,12 @@ class AKFCommonParsingFunctions(object):
         :param origpost_red:
         :return: tuple with numID, city, street, street_number, additional_info
         """
+        if "Zementfabrik" in origpost_red or "Rheinfelden" in origpost_red or "Bietigheim" in origpost_red:
+            print("asd")
+            # todo cases
+            # (17b) Rheinfelden (Baden);
+            # (22c) Zementfabrik bei Ober- kassel (Siegkr.)
+            # (14a) Bietigheim uWürtt (Württ.).
 
         # do first match
         match = regex.match(r"(?<NumID>\(.*?\))"                 # find starting number (non greedy to stop at first closing parenthesis)
@@ -117,19 +123,26 @@ class AKFCommonParsingFunctions(object):
 
         numID = dh.strip_if_not_none(match.group("NumID"), "")
         city = dh.strip_if_not_none(match.group("Location"), "")
-        rest = dh.strip_if_not_none(match.group("Rest").strip(), "")
+        rest = dh.strip_if_not_none(match.group("Rest"), ". ")
+
+        if rest.strip() == ")":
+            rest = ""
+            city += ")"
 
         # parse the rest if there is some
         if rest != "" and rest is not None:
             match_rest = regex.match(r"(?<Street>.*?)" # match all characters non-greedy 
-                                     r"(?<Number>[0-9]+[-\/]*[0-9]*)"
+                                     r"(?<Number>[0-9]+[-\/]*[0-9]*[abcdefgh]*)"
                                      r"(?<Rest>.*+)",
                                      rest)
             if match_rest is not None:
                 street = dh.strip_if_not_none(match_rest.group("Street"), "")
                 street_number = dh.strip_if_not_none(match_rest.group("Number"), ",\.")
-                additional_info = dh.strip_if_not_none(match_rest.group("Rest"), "")
+                additional_info = dh.strip_if_not_none(match_rest.group("Rest"), ")., ")
                 return numID, city, street, street_number, additional_info
+            else:
+                city_new = rest
+                return numID, city_new, None, None, None
 
         return numID, city, None, None, None
 
@@ -251,15 +264,15 @@ class AKFCommonParsingFunctions(object):
     @staticmethod
     def add_check_element(topclass, content_texts, real_start_tag, segmentation_class, element_counter):
 
-        if topclass.config.ADD_INFO_ENTRY_TO_OUTPUT:
-            origpost, origpost_red = dh.create_stringified_linearray(
-                content_texts)  # complete text, complete text without \n
-            topclass.ef.add_to_my_obj("origpost", origpost_red, object_number=element_counter)
-            topclass.ef.add_to_my_obj("type", segmentation_class.segment_tag, object_number=element_counter)
-            element_counter += 1
 
         joined_texts = dh.join_separated_lines(content_texts)  # join dash separated texts
         origpost, origpost_red = dh.create_stringified_linearray(joined_texts)   # final reduced array for further processing
+
+        if topclass.config.ADD_INFO_ENTRY_TO_OUTPUT:
+            # care!: origpost is added after joining seperated lines!
+            topclass.ef.add_to_my_obj("origpost", origpost_red, object_number=element_counter)
+            topclass.ef.add_to_my_obj("type", segmentation_class.segment_tag, object_number=element_counter)
+            element_counter += 1
 
         return origpost, origpost_red, element_counter, joined_texts
 

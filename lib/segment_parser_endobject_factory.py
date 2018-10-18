@@ -192,6 +192,9 @@ class EndobjectFactory(object):
         all_final_entries.sort(key=lambda x: len(x))
         all_final_entries.reverse()
 
+        #if key == "Sitz" and "Zement" in rest_text:
+        #    print("debugging check")
+
         # subtract
         for text in all_final_entries:
             rest_text = rest_text.replace(text, "")
