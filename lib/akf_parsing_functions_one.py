@@ -118,32 +118,34 @@ class AkfParsingFunctionsOne(object):
         # get basic data
         origpost, origpost_red, element_counter, content_texts = cf.add_check_element(self, content_texts,
                                                                          real_start_tag, segmentation_class, 0)
-
-
-        # do special matches
+        # do special match: Verwaltung und Betriebshof
         split_post = []
 
         match_special = regex.match(r"(?<Verw>Verwaltung.*)"
-                                 r"(?<Betr>Betriebshof.*)"
-                                 , origpost_red)
+                                    r"(?<Betr>Betriebshof.*)"
+                                    , origpost_red)
         if match_special:
             betriebshof = match_special.group("Betr")
             verwaltung = match_special.group("Verw")
             origpost_red = origpost_red.replace(betriebshof, "")
             origpost_red = origpost_red.replace(verwaltung, "")
-            #betriebshof = betriebshof.replace("Betriebshof", "") + " Betriebshof"
-            #verwaltung = verwaltung.replace("Verwaltung", "") + " Verwaltung"
             split_post.append(betriebshof)
             split_post.append(verwaltung)
 
+        # do special match: check if only numbers
+        only_num_check = origpost_red.replace("und", "").replace(",", "").replace(" ", "")
+        if only_num_check.strip(" .").isdigit() and len(only_num_check) <= len(origpost_red)- 4:
+            test_split = regex.split("und|,", origpost_red)
+            for number in test_split:
+                self.ef.add_to_my_obj("number_Sa.-Nr.", number, object_number=element_counter)
+                element_counter += 1
+            return
+
         # substitute in a separator char to integrate delimiters in next step
         origpost_red = regex.sub(r"(\d\.)", r"\1~~~~", origpost_red)
+
         # do  further matches (sc-separated)
-
-        split_post.extend(regex.split(';|~~~~|\su\.|(Verwaltung)|(Betriebshof)', origpost_red))
-
-        if "72680" in origpost_red or "Nr.6" in origpost_red:
-            print("asd")
+        split_post.extend(regex.split(';|~~~~|\su\.', origpost_red))
 
         for index, entry in enumerate(split_post):
             if entry is None:
@@ -171,9 +173,6 @@ class AkfParsingFunctionsOne(object):
                 self.ef.add_to_my_obj("number_Sa.-Nr.", number, object_number=element_counter)
                 self.ef.add_to_my_obj("location", location, object_number=element_counter)
                 element_counter += 1
-
-
-
 
     def parse_vorstand(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
 
