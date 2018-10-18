@@ -119,16 +119,35 @@ class AkfParsingFunctionsOne(object):
         origpost, origpost_red, element_counter, content_texts = cf.add_check_element(self, content_texts,
                                                                          real_start_tag, segmentation_class, 0)
 
+
+        # do special matches
+        split_post = []
+
+        match_special = regex.match(r"(?<Verw>Verwaltung.*)"
+                                 r"(?<Betr>Betriebshof.*)"
+                                 , origpost_red)
+        if match_special:
+            betriebshof = match_special.group("Betr")
+            verwaltung = match_special.group("Verw")
+            origpost_red = origpost_red.replace(betriebshof, "")
+            origpost_red = origpost_red.replace(verwaltung, "")
+            #betriebshof = betriebshof.replace("Betriebshof", "") + " Betriebshof"
+            #verwaltung = verwaltung.replace("Verwaltung", "") + " Verwaltung"
+            split_post.append(betriebshof)
+            split_post.append(verwaltung)
+
         # substitute in a separator char to integrate delimiters in next step
         origpost_red = regex.sub(r"(\d\.)", r"\1~~~~", origpost_red)
+        # do  further matches (sc-separated)
 
-        # do  matches (sc-separated)
-        split_post = regex.split(';|~~~~|\su\.', origpost_red)
+        split_post.extend(regex.split(';|~~~~|\su\.|(Verwaltung)|(Betriebshof)', origpost_red))
 
-        if "Düsseldorf" in origpost_red or "Köln 21" in origpost_red or "72680" in origpost_red or "Nr.6" in origpost_red:
+        if "72680" in origpost_red or "Nr.6" in origpost_red:
             print("asd")
 
         for index, entry in enumerate(split_post):
+            if entry is None:
+                continue
             entry_stripped = entry.strip()
             if entry_stripped == "":
                 continue
@@ -144,11 +163,10 @@ class AkfParsingFunctionsOne(object):
                     rest_tag = match_tag.group('rest_bef')
                     rest_tag_2 = match_tag.group('rest_end')
                     # sanr = match_tag.group('sanr') # this is the filtered group
-                    location = dh.strip_if_not_none(rest_tag + " " + rest_tag_2, "., ")
+                    location = dh.strip_if_not_none(rest_tag + " " + rest_tag_2, ":., ")
                 else:
                     # if there are no real descriptors in tag then tag is usually location  (like Düsseldorf 1 36 62.)
                     location = tag
-                    print("asd")
                 number = dh.strip_if_not_none(match_word.group("Numbers"), "., ")
                 self.ef.add_to_my_obj("number_Sa.-Nr.", number, object_number=element_counter)
                 self.ef.add_to_my_obj("location", location, object_number=element_counter)
