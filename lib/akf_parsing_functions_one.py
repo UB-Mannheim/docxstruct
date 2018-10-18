@@ -119,11 +119,14 @@ class AkfParsingFunctionsOne(object):
         origpost, origpost_red, element_counter, content_texts = cf.add_check_element(self, content_texts,
                                                                          real_start_tag, segmentation_class, 0)
 
-        # substitute in a seperator char to integrate delimiters in next step
+        # substitute in a separator char to integrate delimiters in next step
         origpost_red = regex.sub(r"(\d\.)", r"\1~~~~", origpost_red)
 
         # do  matches (sc-separated)
         split_post = regex.split(';|~~~~|\su\.', origpost_red)
+
+        if "Düsseldorf" in origpost_red or "Köln 21" in origpost_red or "72680" in origpost_red or "Nr.6" in origpost_red:
+            print("asd")
 
         for index, entry in enumerate(split_post):
             entry_stripped = entry.strip()
@@ -134,18 +137,23 @@ class AkfParsingFunctionsOne(object):
                                      r"(?<Numbers>[\d\s\W]*)"
                                      ,entry_stripped)
             if match_word is not None:
-                tag = dh.strip_if_not_none(match_word.group("Tag"),"")
+                tag = dh.strip_if_not_none(match_word.group("Tag"), "")
                 match_tag = regex.match(r"(?<rest_bef>.*)(?<sanr>Sa\.?\-Nr\.?)(?<rest_end>.*)", tag)
                 location = ""
                 if match_tag is not None:
                     rest_tag = match_tag.group('rest_bef')
                     rest_tag_2 = match_tag.group('rest_end')
                     # sanr = match_tag.group('sanr') # this is the filtered group
-                    location = dh.strip_if_not_none(rest_tag +" "+rest_tag_2,"., ")
+                    location = dh.strip_if_not_none(rest_tag + " " + rest_tag_2, "., ")
+                else:
+                    # if there are no real descriptors in tag then tag is usually location  (like Düsseldorf 1 36 62.)
+                    location = tag
+                    print("asd")
                 number = dh.strip_if_not_none(match_word.group("Numbers"), "., ")
                 self.ef.add_to_my_obj("number_Sa.-Nr.", number, object_number=element_counter)
                 self.ef.add_to_my_obj("location", location, object_number=element_counter)
                 element_counter += 1
+
 
 
 
