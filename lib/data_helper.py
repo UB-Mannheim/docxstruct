@@ -1,6 +1,8 @@
 from akf_corelib.filehandler import FileHandler as fh
 import io
 import re
+import regex
+
 
 class DataHelper(object):
     """
@@ -39,6 +41,35 @@ class DataHelper(object):
         if trim:
             rest_start = rest_start.strip()
         return rest_start
+
+    @staticmethod
+    def remove_multiple_outpbound_chars(text, pattern):
+        if "Werksverkehr" in text:
+            print("asd")
+
+        text_to_change = text
+        # filter left side
+        match_l = regex.search(r"^[" + pattern + r"]*(?<tag>.*)", text_to_change)
+        if match_l:
+            rest = match_l.group("tag")
+            text_to_change = rest
+
+        if text_to_change == "":
+            return text_to_change
+
+        # filter right side
+        match_r = regex.search(r"(?P<word>\b[\w\s]+\b)", text_to_change)
+        if match_r:
+            rest = match_r.group("word")
+            text_to_change = rest
+        return text_to_change
+
+
+        text_filtered = text.rstrip(pattern)
+        text_filtered = text_filtered.lstrip(pattern)
+        return text_filtered
+        print("asd")
+
 
     @staticmethod
     def get_content(segment_lines, feature_lines, segmentation_class):

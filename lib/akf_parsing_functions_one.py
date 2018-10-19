@@ -131,21 +131,53 @@ class AkfParsingFunctionsOne(object):
             origpost_red = origpost_red.replace(verwaltung, "")
             split_post.append(betriebshof)
             split_post.append(verwaltung)
+        # do special match: Ortsgespräche and Ferngespräche
+
+        match_special2 = regex.match(r"(?<og>Ortsgespräche.*)"
+                                     r"(?<fg>Ferngespräche.*)"
+                                     , origpost_red)
+        if match_special2:
+            ortsgespr = match_special2.group("og")
+            ferngespr = match_special2.group("fg")
+            origpost_red = origpost_red.replace(ortsgespr, "")
+            origpost_red = origpost_red.replace(ferngespr, "")
+            split_post.append(ortsgespr)
+            split_post.append(ferngespr)
+
 
         # do special match: check if only numbers
-        only_num_check = origpost_red.replace("und", "").replace(",", "").replace(" ", "")
-        if only_num_check.strip(" .").isdigit() and len(only_num_check) <= len(origpost_red)- 4:
-            test_split = regex.split("und|,", origpost_red)
-            for number in test_split:
-                self.ef.add_to_my_obj("number_Sa.-Nr.", number, object_number=element_counter)
-                element_counter += 1
-            return
+        origpost_red_new = origpost_red
+        #only_num_check = origpost_red.replace("und", "").replace(",", "").replace(" ", "")
+        test_split = regex.split("\su\.|\sund\s|,", origpost_red)
+        for number in test_split:
+            match_word_num = regex.search("(?<word>[^\d]*)(?<num>[\d\s\-/]*)", number)
+            if match_word_num is None:
+                continue
 
+            word = match_word_num.group("word")
+            num = match_word_num.group("num")
+            if "Sa." in word and "Nr" in word:
+                continue
+            number_stripped = num.strip(" ./").replace("/", "").replace("-", "").replace(" ", "")
+            if number_stripped.isdigit():
+                origpost_red_new = origpost_red_new.replace(number, "")  # remove number
+                origpost_red_new = origpost_red_new.replace(word, "")    # remove word found
+
+                change1 = self.ef.add_to_my_obj("number_Sa.-Nr.", num, object_number=element_counter, only_filled=True)
+                change2 = self.ef.add_to_my_obj("location", word, object_number=element_counter, only_filled=True)
+                if change1 or change2:
+                    element_counter += 1
+
+        if "32 20 47" in origpost_red:
+            print("asd")
+
+        origpost_red = origpost_red_new
         # substitute in a separator char to integrate delimiters in next step
         origpost_red = regex.sub(r"(\d\.)", r"\1~~~~", origpost_red)
 
         # do  further matches (sc-separated)
         split_post.extend(regex.split(';|~~~~|\su\.', origpost_red))
+
 
         for index, entry in enumerate(split_post):
             if entry is None:
@@ -173,6 +205,15 @@ class AkfParsingFunctionsOne(object):
                 self.ef.add_to_my_obj("number_Sa.-Nr.", number, object_number=element_counter)
                 self.ef.add_to_my_obj("location", location, object_number=element_counter)
                 element_counter += 1
+
+                origpost_red = origpost_red.replace(number, "")
+                origpost_red = origpost_red.replace(location, "")
+
+        origpost_red = origpost_red.replace("Sa.-Nr", "").replace("~~~~", "")
+        origpost_red_end = dh.remove_multiple_outpbound_chars(origpost_red, r",;\.\s")
+
+        if len(origpost_red_end) > 3:
+            self.ef.add_to_my_obj("additional_info_unparsed", origpost_red_end, object_number=element_counter)
 
     def parse_vorstand(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
 
@@ -257,7 +298,6 @@ class AkfParsingFunctionsOne(object):
 
         year = dh.strip_if_not_none(origpost_red, ".,\s")
         self.ef.add_to_my_obj("year", year, object_number=element_counter, only_filled=True)
-
 
     # Tätigkeitsgebiet
     def parse_taetigkeitsgebiet(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):

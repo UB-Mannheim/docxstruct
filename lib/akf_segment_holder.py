@@ -148,9 +148,29 @@ class SegmentHolder(object):
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
             match_start, errors = regu.fuzzy_search(r"^(?:Fernruf|Telefon)\s?:", line_text)
 
+            # if "Kupferberg" in combined_texts:
+            #    print("asd")
+
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
+
+
+    class SegmentGeschaeftsinhaber(Segment):
+        # example recognition:
+        # Geschäftsinhaber: Emil Kupferberg, Mainz; Dr. Christian Adalbert Kupferberg, Mainz.
+
+        def __init__(self):
+            super().__init__("Geschäftsinhaber/leitung")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
+            match_start, errors = regu.fuzzy_search(r"^Geschäfts(inhaber|leitung)\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
+
 
     class SegmentFernschreiber(Segment):
         # example recognition:

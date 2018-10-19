@@ -46,7 +46,7 @@ class EndobjectFactory(object):
     def add_to_my_obj(self, key, value, object_number=0, only_filled=False):
 
         if only_filled is True and (value == None or value == "" or value == [] or value == {}):
-            return
+            return False
 
         # fill main list if object index not in
         len_list = len(self.current_main_list)
@@ -55,6 +55,7 @@ class EndobjectFactory(object):
                 self.current_main_list.append({})
         # add or insert to the main_list
         self.current_main_list[object_number][key] = value
+        return True
 
     def print_me_and_return(self):
         print("my_object is:")
