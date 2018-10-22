@@ -118,6 +118,10 @@ class AkfParsingFunctionsOne(object):
         # get basic data
         origpost, origpost_red, element_counter, content_texts = cf.add_check_element(self, content_texts,
                                                                          real_start_tag, segmentation_class, 0)
+
+        if "8 52 91" in origpost_red:
+            print("asd")
+
         # do special match: Verwaltung und Betriebshof
         split_post = []
 
@@ -168,8 +172,8 @@ class AkfParsingFunctionsOne(object):
                 if change1 or change2:
                     element_counter += 1
 
-        if "32 20 47" in origpost_red:
-            print("asd")
+        #if "32 20 47" in origpost_red:
+        #    print("asd")
 
         origpost_red = origpost_red_new
         # substitute in a separator char to integrate delimiters in next step
@@ -201,6 +205,10 @@ class AkfParsingFunctionsOne(object):
                 else:
                     # if there are no real descriptors in tag then tag is usually location  (like Düsseldorf 1 36 62.)
                     location = tag
+
+                if "und" in location:
+                    location = regex.sub("[^\w]und[^\w]", "", location)
+
                 number = dh.strip_if_not_none(match_word.group("Numbers"), "., ")
                 self.ef.add_to_my_obj("number_Sa.-Nr.", number, object_number=element_counter)
                 self.ef.add_to_my_obj("location", location, object_number=element_counter)
@@ -210,7 +218,7 @@ class AkfParsingFunctionsOne(object):
                 origpost_red = origpost_red.replace(location, "")
 
         origpost_red = origpost_red.replace("Sa.-Nr", "").replace("~~~~", "")
-        origpost_red_end = dh.remove_multiple_outpbound_chars(origpost_red, r",;\.\s")
+        origpost_red_end = dh.remove_multiple_outbound_chars(origpost_red)
 
         if len(origpost_red_end) > 3:
             self.ef.add_to_my_obj("additional_info_unparsed", origpost_red_end, object_number=element_counter)

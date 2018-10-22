@@ -43,13 +43,20 @@ class DataHelper(object):
         return rest_start
 
     @staticmethod
-    def remove_multiple_outpbound_chars(text, pattern):
-        if "Werksverkehr" in text:
-            print("asd")
+    def remove_multiple_outbound_chars(text):
+        """
+        Strips the left and the right side of special characters in a string
+        and returns the stripped version then:
+        example ".;my text is;,,," returns "my text is"
+        :param text: input text
+        :return: filtered text
+        """
+        # print("input:", text)
 
         text_to_change = text
+
         # filter left side
-        match_l = regex.search(r"^[" + pattern + r"]*(?<tag>.*)", text_to_change)
+        match_l = regex.search(r"^[^\w\s]*(?<tag>.*)", text_to_change)
         if match_l:
             rest = match_l.group("tag")
             text_to_change = rest
@@ -58,17 +65,29 @@ class DataHelper(object):
             return text_to_change
 
         # filter right side
-        match_r = regex.search(r"(?P<word>\b[\w\s]+\b)", text_to_change)
-        if match_r:
-            rest = match_r.group("word")
-            text_to_change = rest
+        match_r2 = regex.search(r"(?P<right_rest>[^\w\s]*)$", text_to_change)
+
+        if match_r2:
+            rest = match_r2.group("right_rest")
+            text_to_change = DataHelper.rreplace(text_to_change, rest)
+
+        # print("output:", text_to_change)
         return text_to_change
 
+    @staticmethod
+    def rreplace(text, replace_text):
+        """
+        Replace text from the right hand side of a string
+        by reversing the strings
+        :param text: input text
+        :return: filtered text
+        """
+        reverse_text = text[::-1]
+        reverse_replace_text = replace_text[::-1]
+        new_reverse_text = reverse_text.replace(reverse_replace_text, "")
+        new_text = new_reverse_text[::-1].strip()
 
-        text_filtered = text.rstrip(pattern)
-        text_filtered = text_filtered.lstrip(pattern)
-        return text_filtered
-        print("asd")
+        return new_text
 
 
     @staticmethod
