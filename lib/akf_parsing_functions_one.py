@@ -118,10 +118,6 @@ class AkfParsingFunctionsOne(object):
         # get basic data
         origpost, origpost_red, element_counter, content_texts = cf.add_check_element(self, content_texts,
                                                                          real_start_tag, segmentation_class, 0)
-
-        if "8 52 91" in origpost_red:
-            print("asd")
-
         # do special match: Verwaltung und Betriebshof
         split_post = []
 
@@ -152,7 +148,7 @@ class AkfParsingFunctionsOne(object):
         # do special match: check if only numbers
         origpost_red_new = origpost_red
         #only_num_check = origpost_red.replace("und", "").replace(",", "").replace(" ", "")
-        test_split = regex.split("\su\.|\sund\s|,", origpost_red)
+        test_split = regex.split("\su\.|\sund\s|,|;", origpost_red)
         for number in test_split:
             match_word_num = regex.search("(?<word>[^\d]*)(?<num>[\d\s\-/]*)", number)
             if match_word_num is None:

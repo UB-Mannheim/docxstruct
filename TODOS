@@ -4,3 +4,4 @@
 # todo check and eventually fix 'Tätigkeitsgebiet' parse in tables like 1956-0115
 # todo fix warning for parsing of 'Fernschreiber'
 # todo also segment the last elements in akf (company names)
+# todo fix malicious strip methods for characters with the new version in data helpler (remove_outbound_characters)
