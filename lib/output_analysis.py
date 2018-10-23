@@ -115,7 +115,7 @@ class OutputAnalysis(object):
 
         info_to_write = []
         info_to_write.append("File:"+file_name+"---------------")
-        info_to_write.extend(rest_text)
+        info_to_write.append(rest_text)
         info_to_write.append("")
         info_to_write.append("")
 
