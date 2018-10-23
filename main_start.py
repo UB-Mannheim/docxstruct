@@ -43,13 +43,19 @@ for key in hocr_files:
     accumulated_diff_info_orig_to_segment = {}
 
     ocromore_data = None
-    ctr_test = 0
+    ctr_test = 1
 
     my_list = hocr_files[key]
     for file in my_list:
         if "msa_best" not in file.ocr_profile:
             continue
 
+        # only check files which are relevant (comment out if not used)
+        # Sitz ok:     72, 207,671, 731, 733
+        # Sitz faulty: 270,454
+        #if ctr_test not in [731, 733]:
+        #    ctr_test += 1
+        #    continue
 
         #if not "0064_1" in file.name and not "0142_1" in file.name:
         #    continue
@@ -83,7 +89,8 @@ for key in hocr_files:
             output_analyzer.accumulate_diff_info_orig_to_segmentation(diff_info_orig_to_segment, accumulated_diff_info_orig_to_segment)
 
         accumulated_diff_info = output_analyzer.accumulate_diff_info(ocromore_data, diff_info, accumulated_diff_info)
-        #ctr_test += 1
+        ctr_test += 1
+
         #if ctr_test >= 30:
         #    break
 

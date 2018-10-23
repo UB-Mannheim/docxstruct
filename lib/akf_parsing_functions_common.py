@@ -113,16 +113,18 @@ class AKFCommonParsingFunctions(object):
             # (22c) Zementfabrik bei Ober- kassel (Siegkr.)
             # (14a) Bietigheim uWürtt (Württ.).
 
+        # Sometimes the text contains an additional Sitz-preamble although segmented ok
+        origpost_red = regex.sub("^Sitz", "", origpost_red.strip()).strip()
         # do first match
         match = regex.match(r"(?<NumID>\(.*?\))"                 # find starting number (non greedy to stop at first closing parenthesis)
-                            r"(?<Location>.*?[,\.]|.*?)"         # find location string
+                            r"(?<Location>.*?(,|\.\s)|.*?)"         # find location string
                             r"(?<Rest>.*+)",                     # just get the rest which is usually streetname and number, but has other possibilities
                             origpost_red)
         if match is None:
             return None, None, None, None, None
 
-        numID = dh.strip_if_not_none(match.group("NumID"), "")
-        city = dh.strip_if_not_none(match.group("Location"), "")
+        numID = dh.strip_if_not_none(match.group("NumID"), ", ")
+        city = dh.strip_if_not_none(match.group("Location"), ", ")
         rest = dh.strip_if_not_none(match.group("Rest"), ". ")
 
         if rest.strip() == ")":
@@ -141,8 +143,13 @@ class AKFCommonParsingFunctions(object):
                 additional_info = dh.strip_if_not_none(match_rest.group("Rest"), ")., ")
                 return numID, city, street, street_number, additional_info
             else:
-                city_new = rest
-                return numID, city_new, None, None, None
+                additional_info = None
+                if city.strip() == "":
+                    city = rest
+                else:
+                    additional_info = dh.strip_if_not_none(rest, ")., ")
+
+                return numID, city, None, None, additional_info
 
         return numID, city, None, None, None
 
