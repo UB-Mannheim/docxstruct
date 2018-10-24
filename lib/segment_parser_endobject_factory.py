@@ -199,8 +199,8 @@ class EndobjectFactory(object):
 
         # subtract
         for text in all_final_entries:
-            rest_text = rest_text.replace(text, "")
-
+            text_stripped = text.strip() # remove spaces so texts better fit in
+            rest_text = rest_text.replace(text_stripped, "")
             rest_text = rest_text.strip()
 
         return rest_text, original_text
