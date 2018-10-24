@@ -308,9 +308,17 @@ class AkfParsingFunctionsOne(object):
         element_counter = 0
         origpost, origpost_red, element_counter, content_texts = \
             cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
-
-        year = dh.strip_if_not_none(origpost_red, ".,\s")
-        self.ef.add_to_my_obj("year", year, object_number=element_counter, only_filled=True)
+        match_year = regex.search("^\d*", origpost_red.strip())
+        if match_year:
+            result = match_year.group()
+            origpost_red_new = origpost_red.replace(result, "", 1)
+            year = dh.strip_if_not_none(result, ".,() ")
+            rest_info = dh.strip_if_not_none(origpost_red_new, ".,() ")
+            self.ef.add_to_my_obj("rest_info", rest_info, object_number=element_counter, only_filled=True)
+            self.ef.add_to_my_obj("year", year, object_number=element_counter, only_filled=True)
+        else:
+            rest_info = dh.strip_if_not_none(origpost_red, ".,() ")
+            self.ef.add_to_my_obj("rest_info", rest_info, object_number=element_counter, only_filled=True)
 
     # Tätigkeitsgebiet
     def parse_taetigkeitsgebiet(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):

@@ -9,7 +9,7 @@ from lib.output_analysis import OutputAnalysis
 from lib.additional_info_handler import AdditionalInfoHandler
 
 # load configuration and printer
-CODED_CONFIGURATION_PATH= './configuration/config_parse_hocr_js.conf'
+CODED_CONFIGURATION_PATH = './configuration/config_parse_hocr_js.conf'
 config_handler = ConfigurationHandler(first_init=True, fill_unkown_args=True, \
                                       coded_configuration_paths=[CODED_CONFIGURATION_PATH])
 config = config_handler.get_config()
@@ -53,7 +53,7 @@ for key in hocr_files:
         # only check files which are relevant (comment out if not used)
         # Sitz ok:     72, 207,671, 731, 733
         # Sitz faulty: 270,454
-        #if ctr_test not in [13, 16, 20, 56, 68, 146, 151, 154, 164, 258, 272, 310, 313, 317, 319]:
+        #if ctr_test not in [371, 549, 661, 679]:
         #    ctr_test += 1
         #    continue
 

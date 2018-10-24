@@ -179,7 +179,7 @@ class DataHelper(object):
         return final_string, final_string.replace("\n", " ")
 
     @staticmethod
-    def strip_if_not_none(text,strip_pattern):
+    def strip_if_not_none(text, strip_pattern):
         if text is None:
             return text
         else:

@@ -291,8 +291,6 @@ class AkfParsingFunctionsTwo(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
-
-
         # find last parenthesis and filter
         match_parenth = regex.findall(r"(\(.*?\))", origpost_red)
         found_parenth = None
