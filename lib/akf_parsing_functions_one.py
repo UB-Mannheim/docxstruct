@@ -229,10 +229,21 @@ class AkfParsingFunctionsOne(object):
 
         for index, entry in enumerate(split_post):
             entry_stripped = entry.strip()
+
+            if index == len(split_post)-1:
+                matchend = regex.match("^[Aa]lle", entry_stripped)
+                if matchend:
+                    self.ef.add_to_my_obj("additional_info", entry_stripped, object_number=element_counter)
+                    element_counter += 1
+                    continue
+
             match = regex.match(r"(?<Name>.*)[,]"             # find location string
                                 r"(?<Rest>.*+)",              # just get the rest which is usually streetname and number, but has other possibilities
                                 entry_stripped)
             if match is None:
+                name = dh.strip_if_not_none(entry_stripped, ", ")
+                self.ef.add_to_my_obj("name", name, object_number=element_counter)
+                element_counter += 1
                 continue
 
             name = dh.strip_if_not_none(match.group("Name"), ", ")

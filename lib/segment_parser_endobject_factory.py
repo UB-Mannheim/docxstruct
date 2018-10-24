@@ -36,7 +36,6 @@ class EndobjectFactory(object):
         self.cpr = ConditionalPrint(self.config.PRINT_OUTPUT_ANALYSIS, self.config.PRINT_EXCEPTION_LEVEL,
                                     self.config.PRINT_WARNING_LEVEL, leading_tag=self.__class__.__name__)
 
-
     def set_current_main_list(self, segment_tag):
         if segment_tag not in self.my_object.keys():
             self.my_object[segment_tag] = []              # create the main list (all subsequent entries are stored here)
@@ -53,6 +52,8 @@ class EndobjectFactory(object):
         if len_list < object_number+1:
             for index in range(len_list,object_number+1):
                 self.current_main_list.append({})
+
+        self.cpr.print("Adding value to List,- ObjectNr.:", object_number,"Key:", key, "Value:", value)
         # add or insert to the main_list
         self.current_main_list[object_number][key] = value
         return True
