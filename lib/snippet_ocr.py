@@ -32,7 +32,7 @@ class Snippet(object):
                 raise NameError
             self.img = Image.open(f"{self.imgpath}")
             self.snippet = self.img
-            self.shape = list(self.img.tile[0][1][:2]+self.img.tile[0][1][4:1:-1])
+            self.shape = list(self.img.tile[0][1]) #[:2]+self.img.tile[0][1][4:1:-1])
             self.bbox = self.shape
         except IOError:
             print(f"cannot open {self.imgpath}")
@@ -46,12 +46,12 @@ class Snippet(object):
             if self.imgname is None:
                 raise NameError
             bboxstr = "_".join(str(bboxval) for bboxval in self.bbox)
-            self.fname = path + self.imgname.split(".")[0] + "bbox_" + bboxstr +  "." + ".".join(self.imgname.split(".")[1:])
-            self.snippet.save(self.fname, self.snippet)
+            self.fname = path + self.imgname.split(".")[0] + "_bbox_" + bboxstr +  "." + ".".join(self.imgname.split(".")[1:])
+            self.snippet.save(self.fname)
         except NameError:
             print("Please load an image first.")
-        except:
-            print(f"{self.fname} could not be stored.")
+        except Exception as E:
+            print(f"{self.fname} could not be stored:{E}")
         return True
 
     def crop(self, bbox:list):
@@ -59,13 +59,13 @@ class Snippet(object):
         try:
             if self.img is None:
                 raise NameError
-            if all(np.less(bbox[:2],self.shape[:2])) or all(np.greater_equal(bbox[2:4],self.shape[2:4])):
+            if any(np.less(bbox[:2],self.shape[:2])) or any(np.greater(bbox[2:4],self.shape[2:4])):
                 raise ValueError
             if not isinstance(bbox,list) or len(bbox) != 4:
                 raise TypeError
             if bbox != self.bbox:
-                self.bbox = bbox
-                self.snippet = self.img.crop(bbox)
+                self.bbox = bbox[:]
+                self.snippet = self.img.crop(self.bbox)
         except TypeError:
             print("The bbox has not the right type or format.")
         except NameError:
@@ -74,7 +74,9 @@ class Snippet(object):
             print(f"The bbox shape doesnt match the image shape. {E}")
         except Exception as E:
             print(E)
-        return True
+        else:
+            return True
+        return False
 
     @property
     def ocr_settings(self):
@@ -104,17 +106,19 @@ class Snippet(object):
                 line = -1
                 self.result=[]
                 for r in iterate_level(ri, RIL.SYMBOL):
+                    if r.Empty(RIL.TEXTLINE):continue
                     if r.IsAtBeginningOf(RIL.TEXTLINE):
                         line += 1
                         self.result.append({"text":"","words":[],"charconf":[],"bbox":[]})
                         self.result[line]["text"] = r.GetUTF8Text(RIL.TEXTLINE)
+                        print(r.GetUTF8Text(RIL.TEXTLINE))
                     if r.IsAtFinalElement(RIL.WORD,RIL.SYMBOL):
                         self.result[line]["words"].append(r.GetUTF8Text(RIL.WORD))
                         self.result[line]["bbox"].append(r.BoundingBoxInternal(RIL.WORD))
                         self.result[line]["charconf"].append(conf)
                         conf = []
                     conf.append(r.Confidence(RIL.SYMBOL))
-                if conf != "":
+                if conf:
                     self.result[line]["charconf"].append(conf)
         except ValueError:
             print("Please first set the bbox value with snip_bbox.")
@@ -128,7 +132,7 @@ class Snippet(object):
                 text += line["text"]
             return text
         else:
-            return None
+            return ""
 
 
 
