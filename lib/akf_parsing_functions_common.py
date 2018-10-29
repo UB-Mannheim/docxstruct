@@ -46,7 +46,7 @@ class AKFCommonParsingFunctions(object):
                     key_count = list(final_items.keys()).count(current_key)
 
                     # remove current key from text
-                    text = text.replace(current_key, "").strip()
+                    text = text.replace(current_key, "", 1).strip()
                     abc_found = True
 
                     if key_count >= 1:
@@ -59,7 +59,8 @@ class AKFCommonParsingFunctions(object):
                 key_count = list(final_items.keys()).count(current_key)
 
                 # remove current key from text
-                text = text.replace(current_key, "").replace(":", "")
+                #text = text.replace(current_key, "").replace(":", "") # can lead to errors (double replacement in sth like  Lokomotive: Dampf-Lokomotive)
+                text = regex.sub(current_key+"\s?"+":", "", text)
 
                 if key_count >= 1:
                     current_key = current_key+"_"+str(key_count+1)

@@ -120,7 +120,7 @@ class EndobjectFactory(object):
             self.cpr.printw("no data to do returning")
             return
 
-        return
+        return # todo this seems to be wrong
         # copy orig string
         original_text = my_data[0]['origpost']
         rest_text = original_text
@@ -169,8 +169,8 @@ class EndobjectFactory(object):
 
         if key not in self.my_object.keys():
             return None
-        #if key == "Erzeugnisse":
-        #    print("debug")
+        if key == "Erzeugnisse":
+            print("todo remove debug")
 
 
         my_data = self.my_object[key]
