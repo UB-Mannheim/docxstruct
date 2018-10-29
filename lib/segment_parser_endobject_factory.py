@@ -2,6 +2,7 @@ import json
 import pprint
 from akf_corelib.conditional_print import ConditionalPrint
 from akf_corelib.configuration_handler import ConfigurationHandler
+from lib.akf_known_uncategories import KnownUncategories
 
 class EndobjectFactory(object):
     """
@@ -35,6 +36,9 @@ class EndobjectFactory(object):
         self.config = config_handler.get_config()
         self.cpr = ConditionalPrint(self.config.PRINT_OUTPUT_ANALYSIS, self.config.PRINT_EXCEPTION_LEVEL,
                                     self.config.PRINT_WARNING_LEVEL, leading_tag=self.__class__.__name__)
+
+        if self.config.REMOVE_TAGS_IN_ORIG_DIFF:
+            self.known_uc = KnownUncategories()
 
     def set_current_main_list(self, segment_tag):
         if segment_tag not in self.my_object.keys():
@@ -203,7 +207,25 @@ class EndobjectFactory(object):
         # subtract
         for text in all_final_entries:
             text_stripped = text.strip() # remove spaces so texts better fit in
-            rest_text = rest_text.replace(text_stripped, "",1)
+            rest_text = rest_text.replace(text_stripped, "", 1)
+            rest_text = rest_text.strip()
+
+        if not self.config.REMOVE_TAGS_IN_ORIG_DIFF:
+            return rest_text, original_text
+
+        # otherwise continue with keys here
+        final_keys = {}
+        for index in range(1, len(my_data)):
+            keys = my_data[index].keys()
+            for key in keys:
+                if key not in final_keys:
+                    final_keys[key] = True
+        # subtract keys 
+        for key in final_keys:
+            key_stripped = key.strip()
+            if key_stripped in self.known_uc.unkeys:
+                continue
+            rest_text = rest_text.replace(key_stripped, "", 1)
             rest_text = rest_text.strip()
 
         return rest_text, original_text
