@@ -36,8 +36,6 @@ class AKFCommonParsingFunctions(object):
             if text_index < len_content_texts-1:
                 next_text = content_texts[text_index+1].strip()
 
-
-
             abc_found = False
             if abc_sections:
                 starts_with_abc = regex.search("^\w\s?\)", text)
@@ -47,11 +45,12 @@ class AKFCommonParsingFunctions(object):
                     # if there is a multikey give it an additional counter
                     key_count = list(final_items.keys()).count(current_key)
 
-                    if key_count >= 1:
-                        current_key = current_key + "_" + str(key_count + 1)
                     # remove current key from text
                     text = text.replace(current_key, "").strip()
                     abc_found = True
+
+                    if key_count >= 1:
+                        current_key = current_key + "_" + str(key_count + 1)
 
             if ":" in text and abc_found is False:
                 # find out if there is a new category
@@ -59,12 +58,11 @@ class AKFCommonParsingFunctions(object):
                 # if there is a multikey give it an additional counter
                 key_count = list(final_items.keys()).count(current_key)
 
-                if key_count >= 1:
-                    current_key = current_key+"_"+str(key_count+1)
-
                 # remove current key from text
                 text = text.replace(current_key, "").replace(":", "")
 
+                if key_count >= 1:
+                    current_key = current_key+"_"+str(key_count+1)
 
 
             text = text.strip()

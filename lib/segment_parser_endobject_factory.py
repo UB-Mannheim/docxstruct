@@ -169,6 +169,9 @@ class EndobjectFactory(object):
 
         if key not in self.my_object.keys():
             return None
+        #if key == "Erzeugnisse":
+        #    print("debug")
+
 
         my_data = self.my_object[key]
 
