@@ -169,8 +169,8 @@ class EndobjectFactory(object):
 
         if key not in self.my_object.keys():
             return None
-        if key == "Erzeugnisse":
-            print("todo remove debug")
+        #if key == "Erzeugnisse":
+        #    print("todo remove debug")
 
 
         my_data = self.my_object[key]
@@ -203,7 +203,7 @@ class EndobjectFactory(object):
         # subtract
         for text in all_final_entries:
             text_stripped = text.strip() # remove spaces so texts better fit in
-            rest_text = rest_text.replace(text_stripped, "")
+            rest_text = rest_text.replace(text_stripped, "",1)
             rest_text = rest_text.strip()
 
         return rest_text, original_text

@@ -60,7 +60,7 @@ class AKFCommonParsingFunctions(object):
 
                 # remove current key from text
                 #text = text.replace(current_key, "").replace(":", "") # can lead to errors (double replacement in sth like  Lokomotive: Dampf-Lokomotive)
-                text = regex.sub(current_key+"\s?"+":", "", text)
+                text = regex.sub(regex.escape(current_key)+"\s?"+":", "", text)
 
                 if key_count >= 1:
                     current_key = current_key+"_"+str(key_count+1)

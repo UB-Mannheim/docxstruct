@@ -91,8 +91,8 @@ for key in hocr_files:
         accumulated_diff_info = output_analyzer.accumulate_diff_info(ocromore_data, diff_info, accumulated_diff_info)
         ctr_test += 1
 
-        if ctr_test >= 30:
-            break
+        #if ctr_test >= 30:
+        #    break
 
         # clear the current result in segment_parser cache to parse the next one
         segment_parser.clear_result(output_analyzer)
