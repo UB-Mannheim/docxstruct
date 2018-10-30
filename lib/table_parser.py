@@ -1,6 +1,8 @@
 import numpy as np
 import regex
 from akf_corelib.configuration_handler import ConfigurationHandler
+import glob
+import json
 from skimage import filters, color, measure, io
 from PIL import ImageDraw
 
@@ -27,10 +29,12 @@ class TableInfo(object):
         self.row = ""
         self.col = None
         self.lborder = None
+        self.order = None
         self.fst_order = None
         self.maxgap = 0
         self.nrow = None
         self.lidx = 0
+        self.lastmainitem= None
         self.widx = 0
         self.gapidx = -1
         self.separator = None
@@ -40,7 +44,7 @@ class TableInfo(object):
         self.snippet = snippet
         self.regex = TableRegex()
         self.config = ConfigurationHandler(first_init=False).get_config()
-
+        self.dictionary = None
 
 class Table(object):
     """This class helps to deal with tables
@@ -127,8 +131,6 @@ class Table(object):
         return
 
     def _find_separator(self, features, content):
-        if "Erträge" in content["text"]:
-            stop = "STOP"
         for widx, wordratio in enumerate(reversed(features.counters_alphabetical_ratios)):
             if wordratio > 0.5:
                 if widx >= 1:
@@ -205,7 +207,8 @@ class Table(object):
     ###### EXTRACT ######
     def extract_content(self, content_lines: list, feature_lines: list, template="datatable"):
         """Extracts the table information in a structured manner in a the 'content'-dict with the analyse information"""
-
+        if self.info.config.USE_TABLE_DICTIONARY:
+            self._read_dictionary(template.split("_")[-1])
         self.info.nrow = len(feature_lines)
         # Get the columnheader information based on date lines
         if not self.info.col or any(self.structure["date"][:4]):
@@ -236,6 +239,7 @@ class Table(object):
         # Extract content of each line
         for lidx, [entry, features] in enumerate(zip(content_lines, feature_lines)):
             self.info.lidx = lidx
+            self.info.order = 1
             if entry["text"] == "" or lidx < startidx:
                 continue
             if self.info.regex.additional_info.findall(entry["text"]):
@@ -260,9 +264,13 @@ class Table(object):
                 if features.counter_numbers < 2 and not self.info.regex.lastidxnumber.findall(entry['text']):
                     self.info.row = ''.join(
                         [i for i in entry['text'] if i not in list("()")]).strip() + " "
-                    continue
-                self.info.row += ''.join([i for i in entry['text'] if i not in list("0123456789()")]).strip()
-                self.info.row = self.info.row.replace("- ", "")
+                    if self.info.dictionary and not self._valid_itemname(lidx=lidx):
+                        continue
+                else:
+                    self.info.row += ''.join([i for i in entry['text'] if i not in list("0123456789()")]).strip()
+                    self._valid_itemname(lidx=lidx)
+                if self.info.order == 1:
+                    self.info.lastmainitem = self.info.row
                 if self.structure["date"][lidx] is True or self.info.row == "":
                     next_sections = list(np.nonzero(self.structure["next_section"][lidx:])[0])
                     if next_sections:
@@ -284,8 +292,15 @@ class Table(object):
                 self.info.row = ""
 
         # Get all var names
-        if template == "datatable_income":
-            self.var_occurence()
+        #if template == "datatable_income":
+            #self.var_occurence()
+        return
+
+    def _read_dictionary(self,tabletype):
+        test = glob.glob(f"{self.info.config.INPUT_TABLE_DICTIONARY}*{tabletype}.json")
+        if test:
+            with open(test[0], "r") as file:
+                self.info.dictionary = json.load(file)
         return
 
     def _columnheader(self, content_lines) -> int:
@@ -319,6 +334,8 @@ class Table(object):
 
     def _additional_columninfo(self, content_lines, lidxs, infotext=""):
         offset = 1
+        if self.info.amount:
+            infotext = self.info.amount
         if infotext == "":
             for counter, lidx in enumerate(lidxs):
                 if content_lines[lidx]['text'] == "":
@@ -332,6 +349,12 @@ class Table(object):
             else:
                 if not self.structure["next_section"][lidxs[1]]:
                     offset = 2
+            if infotext == "" and len(lidxs) > 1:
+                # Try to catch amount info with reocr
+                reinfo = self._reocr(list(content_lines[lidxs[1]]["hocr_coordinates"]))
+                amount = self.info.regex.amount.findall(reinfo)
+                if amount:
+                    infotext = ("(in 1 000 " + reinfo.replace(amount[0], "")).replace("  ", " ")
         for type in set(self.structure["type"]):
             self.content[type] = {}
             for col in range(0, len(self.info.col)):
@@ -448,7 +471,7 @@ class Table(object):
 
     def _reocr(self, bbox):
         if self.info.snippet.crop(bbox):
-            self.info.snippet.save("/media/sf_ShareVB/")
+            #self.info.snippet.save("/media/sf_ShareVB/")
             self.info.snippet.to_text()
             return self.info.snippet.text
         return ""
@@ -529,8 +552,28 @@ class Table(object):
                 return False
         return True
 
+    def _valid_itemname(self,lidx=None):
+        self.info.row = self.info.row.replace("- ", "")
+        if "Zusatz" not in self.info.dictionary.keys(): return False
+        item = self.info.row.lower().replace(" ","")
+        for additive in self.info.dictionary["Zusatz"].keys():
+            item.replace(additive+" ", "")
+        if len(item) < 8:
+            fuzzy_range = 1
+        else:
+            fuzzy_range = 2
+        itemregex = regex.compile(r"^"+item+"${e<=" + str(fuzzy_range) + "}")
+        for itemlvl in ["Unterpunkte","Hauptpunkte"]:
+            for itemname in list(self.info.dictionary[itemlvl].keys()):
+                if itemregex.search(itemname.lower().replace(" ","")):
+                    self.info.row = self.info.dictionary[itemlvl][itemname]
+                    if itemlvl == "Unterpunkte" and self.info.lastmainitem and lidx and self.info.fst_order < self.structure["lborder"][lidx]:
+                        self.info.order = 2
+                        self.info.row += f" ({self.info.lastmainitem})"
+                    return True
+        return False
+
     def var_occurence(self):
-        import json
         with open('./var_occurences.json') as f:
             data = json.load(f)
             for type in self.content:
