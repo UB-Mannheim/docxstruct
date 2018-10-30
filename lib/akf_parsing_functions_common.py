@@ -284,6 +284,28 @@ class AKFCommonParsingFunctions(object):
 
     @staticmethod
     def match_common_block(content_texts, content_lines, complex_parsing, additional_categories):
+        """
+        This is an algorithm to fetch content groups and create blocks which are parsed, parsing of these
+        blocks can be activated by naming the category of the block in 'additional categories'
+
+        Example input for content lines:
+        (I.) Flachglasbearbeitungs -Gesellschaft mbH. (Flabeg), Fürth-Kunzendorf
+        Kapital: DM 300 000. - (100 %)
+        (II.) Vereinigte Vopelius’sche und Wentzel’sche Glashütten GmbH.,St.Ingbert Saar)
+        Kapital: ffrs. 118 000 000.- (32,2 %) Thermolux Glas GmbH., Bergisch Gladbach Kapital:DM20000.-(50%)
+
+        This creates 2 blocks by knowing there was already a category (like Kapital) and a text without category is following
+        Roman numbers indicate the recognized block starts here.
+
+
+
+        :param content_texts: input list which contains the text lines
+        :param content_lines: line info list which contains additional infos
+        :param complex_parsing: within the additional categories, a more complex parsing approach is used
+        :param additional_categories: list of the additional categories which should be recognized as such (e.g.
+               'kapital' or 'dividenden'
+        :return: dictionary with combined blocks and parsed sub-entries
+        """
 
         # check the additional categories field which additional categories can be found
         dict_used_categories = {}
@@ -305,10 +327,10 @@ class AKFCommonParsingFunctions(object):
                 if match_kapital:
                     my_result = match_kapital.group()
                     if 'kapital' in current_object.keys():
-                        # refresh current object if already in keys
-                        current_object = {}
                         # append old object
                         results.append(current_object)
+                        # refresh current object if already in keys
+                        current_object = {}
 
                     simple, complex = AKFCommonParsingFunctions.parse_kapital_line(my_result, text_stripped,
                                                             detailed_parsing=complex_parsing)
@@ -323,10 +345,11 @@ class AKFCommonParsingFunctions(object):
                 if match_dividenden:
                     my_result = match_dividenden.group()
                     if 'dividenden' in current_object.keys():
-                        # refresh current object if already in keys
-                        current_object = {}
                         # append old object
                         results.append(current_object)
+                        # refresh current object if already in keys
+                        current_object = {}
+
                     simple, complex = AKFCommonParsingFunctions.parse_dividenden_line(my_result, text_stripped,
                                                                             detailed_parsing=complex_parsing)
                     current_object['dividenden'] =  complex if complex_parsing else simple  # conditionally set val
@@ -340,11 +363,10 @@ class AKFCommonParsingFunctions(object):
                 if match_parenth:
                     my_result = match_parenth.group()
                     if 'parenthesis' in current_object.keys():
-
-                        # refresh current object if already in keys
-                        current_object = {}
                         # append old object
                         results.append(current_object)
+                        # refresh current object if already in keys
+                        current_object = {}
 
                     current_object['add_info'] = my_result
                     category_hit = True  # indicate that an additional subcategory was already found in current object
@@ -357,15 +379,28 @@ class AKFCommonParsingFunctions(object):
                 if 'text' not in current_object.keys():
                     current_object['text'] = text_stripped
                 else:
-                    current_object['text'] += " " + text_stripped
+                    if len(current_object['text']) >= 1 and current_object['text'][-1] == "-":
+                        current_object['text'] += text_stripped
+                    else:
+                        current_object['text'] += " " + text_stripped
+
                     current_object['text'] = current_object['text'].strip()
                 continue
 
             # if other cases don't match add text to new object
-            current_object = {}
-            current_object['text'] = text_stripped
+            if current_object is None or category_hit is True:
+                results.append(current_object) # append existing content
+                current_object = {}  # create new holder
+                current_object['text'] = ""
+
+            if len(current_object['text']) >=1  and current_object['text'][-1] == "-":
+                current_object['text'] += text_stripped
+            else:
+                current_object['text'] += " " + text_stripped
+
+            current_object['text'] = current_object['text'].strip()
+
             category_hit = False  # indicate that there has been no category assigned yet
-            results.append(current_object)
 
         # check if object was not appended sh
         #if results is None:
