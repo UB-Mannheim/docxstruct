@@ -322,6 +322,10 @@ class AKFCommonParsingFunctions(object):
             text_stripped = text.strip()
             if text_stripped == "":
                 continue
+
+            if text_index == len(content_texts)-1:
+                print("asd")
+
             if dict_used_categories['kapital'] is True:
                 match_kapital, err_kapital = regu.fuzzy_search(r"^Kapital\s?:", text_stripped, err_number=1)
                 if match_kapital:
@@ -372,6 +376,7 @@ class AKFCommonParsingFunctions(object):
                     category_hit = True  # indicate that an additional subcategory was already found in current object
                     continue
 
+
             word_info = content_lines[text_index]['words']
 
             # if shorter line (wordcount) (skip this if a text and a category was already found 'category hit')
@@ -393,7 +398,7 @@ class AKFCommonParsingFunctions(object):
                 current_object = {}  # create new holder
                 current_object['text'] = ""
 
-            if len(current_object['text']) >=1  and current_object['text'][-1] == "-":
+            if len(current_object['text']) >=1 and current_object['text'][-1] == "-":
                 current_object['text'] += text_stripped
             else:
                 current_object['text'] += " " + text_stripped
@@ -401,6 +406,11 @@ class AKFCommonParsingFunctions(object):
             current_object['text'] = current_object['text'].strip()
 
             category_hit = False  # indicate that there has been no category assigned yet
+
+
+        if category_hit is True:
+            # last element was a category hit and therefore still has to be added
+            results.append(current_object)  # append existing content
 
         # check if object was not appended sh
         #if results is None:
