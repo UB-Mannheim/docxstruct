@@ -269,7 +269,7 @@ class Table(object):
                 else:
                     self.info.row += ''.join([i for i in entry['text'] if i not in list("0123456789()")]).strip()
                     self._valid_itemname(lidx=lidx)
-                if self.info.order == 1:
+                if self.info.order == 1 and any([True for char in self.info.row if char.isalpha()]):
                     self.info.lastmainitem = self.info.row
                 if self.structure["date"][lidx] is True or self.info.row == "":
                     next_sections = list(np.nonzero(self.structure["next_section"][lidx:])[0])
@@ -555,9 +555,10 @@ class Table(object):
     def _valid_itemname(self,lidx=None):
         self.info.row = self.info.row.replace("- ", "")
         if "Zusatz" not in self.info.dictionary.keys(): return False
-        item = self.info.row.lower().replace(" ","")
+        item = self.info.row
         for additive in self.info.dictionary["Zusatz"].keys():
-            item.replace(additive+" ", "")
+            item = item.replace(additive+" ", "")
+        item = item.lower().replace(" ","")
         if len(item) < 8:
             fuzzy_range = 1
         else:
