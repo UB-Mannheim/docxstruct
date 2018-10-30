@@ -313,7 +313,6 @@ class AKFCommonParsingFunctions(object):
             entry_low = entry.lower()
             dict_used_categories[entry_low] = True
 
-
         # create a writable results array
         results = []
         current_object = {}
@@ -326,7 +325,7 @@ class AKFCommonParsingFunctions(object):
             #if text_index == len(content_texts)-1:
             #    print("debug last element")
 
-            if dict_used_categories['kapital'] is True:
+            if 'kapital' in dict_used_categories:
                 match_kapital, err_kapital = regu.fuzzy_search(r"^Kapital\s?:", text_stripped, err_number=1)
                 if match_kapital:
                     my_result = match_kapital.group()
@@ -342,7 +341,7 @@ class AKFCommonParsingFunctions(object):
                     category_hit = True  # indicate that an additional subcategory was already found in current object
 
                     continue
-            if dict_used_categories['dividenden'] is True:
+            if 'dividenden' in dict_used_categories:
 
                 match_dividenden, err_divid = regu.fuzzy_search(r"^Dividenden\s?(:|ab)",
                                                                 text_stripped, err_number=1)
@@ -360,7 +359,29 @@ class AKFCommonParsingFunctions(object):
                     category_hit = True  # indicate that an additional subcategory was already found in current object
 
                     continue
-            if dict_used_categories['parenthesis'] is True:
+
+            if 'beteiligungen' in dict_used_categories:
+
+                match_bet, err_bet = regu.fuzzy_search(r"^(Beteiligungen|Beteiligung|Beteil\.)\s?(:|ab)",
+                                                                text_stripped, err_number=1)
+                if "Beteil" in text_stripped:
+                    print("sad")
+                if match_bet:
+                    my_result = match_bet.group().strip()
+                    if 'beteiligungen' in current_object.keys():
+                        # append old object
+                        results.append(current_object)
+                        # refresh current object if already in keys
+                        current_object = {}
+
+                    #simple, complex = AKFCommonParsingFunctions.parse_dividenden_line(my_result, text_stripped,
+                     #                                                       detailed_parsing=complex_parsing)
+                    current_object['beteiligungen'] =  text_stripped.replace(my_result, "").strip()  # conditionally set val
+                    category_hit = True  # indicate that an additional subcategory was already found in current object
+
+                    continue
+
+            if 'parenthesis' in dict_used_categories:
 
                 match_parenth = regex.search(r"^\(\.*\)",text_stripped)
 
@@ -408,7 +429,6 @@ class AKFCommonParsingFunctions(object):
             current_object['text'] = current_object['text'].strip()
 
             category_hit = False  # indicate that there has been no category assigned yet
-
 
         if category_hit is True:
             # last element was a category hit and therefore still has to be added

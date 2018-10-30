@@ -240,8 +240,18 @@ class DataHelper(object):
                 next_text = content_texts[text_index + 1].strip()
 
             # detect line with separator
-            if len(text) >= 2 and "-" in text[-1]:
-                if next_text is not None and len(next_text) >= 1:
+            if (len(text) >= 2 and "-" in text[-1]):
+                line_ends_with_amount = False
+
+                # this is a line which ends with a amount indicator like '6 500 000. -'
+                # and therefore no separator
+                if len(text) >= 3 and "-" in text[-1] and " " in text[-2] and "." in text[-3]:
+                    line_ends_with_amount = True
+                elif len(text) >= 2 and "-" in text[-1] and "." in text[-2]:
+                    line_ends_with_amount = True
+
+                if not line_ends_with_amount and next_text is not None and len(next_text) >= 1:
+
                     # if the next starting letter is uppercase don't do the joining (assuming it's a '-'
                     # separated Name like "Jan-Phillipp")
                     if not next_text[0].isupper():

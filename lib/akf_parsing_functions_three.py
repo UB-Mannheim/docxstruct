@@ -415,7 +415,7 @@ class AkfParsingFunctionsThree(object):
         complex_parsing = True  # parses some lines in more detailed way
 
         results = cf.match_common_block(content_texts, content_lines, complex_parsing, ['dividenden','kapital',
-                                                                                        'parenthesis'])
+                                                                                        'parenthesis', 'beteiligungen'])
         # log results to output
         for entry in results:
             change = False
