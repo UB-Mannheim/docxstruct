@@ -209,7 +209,7 @@ class AKFCommonParsingFunctions(object):
 
         # continue with detailed parsing here
         match_currency = regex.search(r"^[a-zA-Z\p{Sc}\.]+", text_reduced)
-        match_numbers = regex.search(r"[\d\s\.\-]+", text_reduced)
+        match_numbers = regex.search(r"[\d\s]+[\.\s\-]+", text_reduced)
         match_parenthesis = regex.search(r"\(.+\)", text_reduced)
 
         return_object = {}

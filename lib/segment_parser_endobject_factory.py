@@ -173,8 +173,8 @@ class EndobjectFactory(object):
 
         if key not in self.my_object.keys():
             return None
-        #if key == "Erzeugnisse":
-        #    print("todo remove debug")
+        if key == "Beteiligungen":
+            print("todo remove debug")
 
 
         my_data = self.my_object[key]
@@ -220,7 +220,7 @@ class EndobjectFactory(object):
             for key in keys:
                 if key not in final_keys:
                     final_keys[key] = True
-        # subtract keys 
+        # subtract keys
         for key in final_keys:
             key_stripped = key.strip()
             if key_stripped in self.known_uc.unkeys:
