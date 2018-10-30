@@ -809,7 +809,7 @@ class SegmentHolder(object):
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
             # matches ss or ß (group is not capturing)
-            match_start, errors = regu.fuzzy_search(r"^Aus d(?:en)? Bilanzen\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"^Aus (den|der) Bilanz(|en)\s?:", line_text)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
@@ -825,7 +825,7 @@ class SegmentHolder(object):
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
             # matches ss or ß (group is not capturing)
-            match_start, errors = regu.fuzzy_search(r"^Aus d(?:en)? Gewinn- und Verlust- ", line_text)
+            match_start, errors = regu.fuzzy_search(r"^Aus (der|den) Gewinn- und Verlust- ", line_text)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)

@@ -24,6 +24,8 @@ class Segment(object):
         self.key_tag_cindex_stop = -1  # character index of keytag: 'Vorstand: Name' ---> 9
         self.restcontent_in_start_line = -1
         self.segment_tag = segment_tag
+        self.snippet = None
+        self.info_handler = None
 
     def disable(self):
         self.enabled = False
