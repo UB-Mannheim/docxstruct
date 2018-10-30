@@ -171,10 +171,23 @@ class EndobjectFactory(object):
 
             return final_texts
 
+        def fetch_keys_recusive(entry, final_keys, create_multiple=True):
+            # just return if there are no keys (cause no dictionary)
+            if not isinstance(entry, dict):
+                return final_keys
+
+            for key in entry:
+                value = entry[key]
+                if create_multiple or key not in final_keys:
+                    final_keys.append(key)
+                final_keys = fetch_keys_recusive(value, final_keys)
+            return final_keys
+
+
         if key not in self.my_object.keys():
             return None
-        if key == "Beteiligungen":
-            print("todo remove debug")
+        #if key == "Beteiligungen":
+        #   print("todo remove debug")
 
 
         my_data = self.my_object[key]
@@ -214,12 +227,14 @@ class EndobjectFactory(object):
             return rest_text, original_text
 
         # otherwise continue with keys here
-        final_keys = {}
+        final_keys = [] # gets multiple of the same key for later 1 by 1 subtraction
         for index in range(1, len(my_data)):
-            keys = my_data[index].keys()
-            for key in keys:
-                if key not in final_keys:
-                    final_keys[key] = True
+            final_keys = fetch_keys_recusive(my_data[index], final_keys, create_multiple=True)
+
+        # order diff data after length
+        final_keys.sort(key=lambda x: len(x))
+        final_keys.reverse()
+
         # subtract keys
         for key in final_keys:
             key_stripped = key.strip()

@@ -397,11 +397,13 @@ class AKFCommonParsingFunctions(object):
                 results.append(current_object) # append existing content
                 current_object = {} # create new holder
                 current_object['text'] = ""
-
-            if len(current_object['text']) >=1 and current_object['text'][-1] == "-":
-                current_object['text'] += text_stripped
+            if "text" in current_object.keys():
+                if len(current_object['text']) >=1 and current_object['text'][-1] == "-":
+                    current_object['text'] += text_stripped
+                else:
+                    current_object['text'] += " " + text_stripped
             else:
-                current_object['text'] += " " + text_stripped
+                current_object['text'] = text_stripped
 
             current_object['text'] = current_object['text'].strip()
 
