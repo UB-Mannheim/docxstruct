@@ -208,7 +208,7 @@ class AKFCommonParsingFunctions(object):
             return text_reduced, None
 
         # continue with detailed parsing here
-        match_currency = regex.search(r"^[a-zA-Z\.]+", text_reduced)
+        match_currency = regex.search(r"^[a-zA-Z\p{Sc}\.]+", text_reduced)
         match_numbers = regex.search(r"[\d\s\.\-]+", text_reduced)
         match_parenthesis = regex.search(r"\(.+\)", text_reduced)
 
@@ -288,7 +288,7 @@ class AKFCommonParsingFunctions(object):
         This is an algorithm to fetch content groups and create blocks which are parsed, parsing of these
         blocks can be activated by naming the category of the block in 'additional categories'
 
-        Example input for content lines:
+        Example input for content lines (Roman Numbers in parenthesis are added for description here):
         (I.) Flachglasbearbeitungs -Gesellschaft mbH. (Flabeg), Fürth-Kunzendorf
         Kapital: DM 300 000. - (100 %)
         (II.) Vereinigte Vopelius’sche und Wentzel’sche Glashütten GmbH.,St.Ingbert Saar)
@@ -323,8 +323,8 @@ class AKFCommonParsingFunctions(object):
             if text_stripped == "":
                 continue
 
-            if text_index == len(content_texts)-1:
-                print("asd")
+            #if text_index == len(content_texts)-1:
+            #    print("debug last element")
 
             if dict_used_categories['kapital'] is True:
                 match_kapital, err_kapital = regu.fuzzy_search(r"^Kapital\s?:", text_stripped, err_number=1)
@@ -395,7 +395,7 @@ class AKFCommonParsingFunctions(object):
             # if other cases don't match add text to new object
             if current_object is None or category_hit is True:
                 results.append(current_object) # append existing content
-                current_object = {}  # create new holder
+                current_object = {} # create new holder
                 current_object['text'] = ""
 
             if len(current_object['text']) >=1 and current_object['text'][-1] == "-":
