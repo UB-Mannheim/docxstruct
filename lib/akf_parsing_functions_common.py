@@ -317,11 +317,13 @@ class AKFCommonParsingFunctions(object):
         results = []
         current_object = {}
         category_hit = False
+        ended_with_only_text = False
+
         for text_index, text in enumerate(content_texts):
             text_stripped = text.strip()
             if text_stripped == "":
                 continue
-
+            ended_with_only_text = False # refresh ended with text property
             #if text_index == len(content_texts)-1:
             #    print("debug last element")
 
@@ -419,12 +421,13 @@ class AKFCommonParsingFunctions(object):
                 current_object = {} # create new holder
                 current_object['text'] = ""
             if "text" in current_object.keys():
-                if len(current_object['text']) >=1 and current_object['text'][-1] == "-":
+                if len(current_object['text']) >= 1 and current_object['text'][-1] == "-":
                     current_object['text'] += " " + text_stripped # todo needed w/o space ? remove case  if ok
                 else:
                     current_object['text'] += " " + text_stripped
             else:
                 current_object['text'] = text_stripped
+                ended_with_only_text = True # indicate last line ended with text
 
             current_object['text'] = current_object['text'].strip()
 
@@ -433,6 +436,8 @@ class AKFCommonParsingFunctions(object):
         if category_hit is True:
             # last element was a category hit and therefore still has to be added
             results.append(current_object)  # append existing content
+        if ended_with_only_text is True:
+            results.append(current_object)  # last object was not applied because it ended with text
 
         # check if object was not appended sh
         #if results is None:

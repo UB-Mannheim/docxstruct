@@ -53,7 +53,7 @@ for key in hocr_files:
         # only check files which are relevant (comment out if not used)
         # Sitz ok:     72, 207,671, 731, 733
         # Sitz faulty: 270,454
-        if ctr_test not in [89, 114, 125, 129]:
+        if ctr_test not in [125, 129]:
             ctr_test += 1
             continue
 
