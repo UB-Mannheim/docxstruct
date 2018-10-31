@@ -121,7 +121,6 @@ class Table(object):
         if template == "datatable_income":
             if self.info.regex.incometype.search(content["text"]) is not None:
                 self.structure["type"][-1] = "Gewinn"
-                #self.info.type = "Gewinn"
         return self.info.type
 
     def _check_evaluability(self, content, features):
@@ -137,7 +136,6 @@ class Table(object):
                     if widx != features.counter_words:
                         if content["words"][features.counter_words - widx - 1]["text"][-1].isdigit():
                             widx -= 1
-                    #test = np.zeros(features.counter_words - widx)
                     xgaps = np.append(np.zeros(features.counter_words - widx),
                                       features.x_gaps[features.counter_words - widx:])
                     maxgap = int(np.argmax(xgaps))
@@ -272,8 +270,6 @@ class Table(object):
                 else:
                     self.info.row += ''.join([i for i in entry['text'] if i not in list("0123456789()")]).strip()
                     self._valid_itemname(lidx=lidx)
-                if self.info.row.isdigit():
-                    stop = "STOP"
                 if self.info.order == 1 and any([True for char in self.info.row if char.isalpha()]):
                     self.info.lastmainitem = self.info.row
                 if self.structure["date"][lidx] is True or self.info.row == "":
@@ -297,8 +293,8 @@ class Table(object):
                 self.info.row = ""
 
         # Get all var names
-        #if template == "datatable_income":
-            #self.var_occurence()
+        if self.info.config.STORE_OCCURENCES and template == self.info.config.OCCURENCES_TABLETYPE:
+            self.var_occurence()
         return
 
     def _read_dictionary(self,tabletype):
@@ -476,7 +472,8 @@ class Table(object):
 
     def _reocr(self, bbox):
         if self.info.snippet.crop(bbox):
-            #self.info.snippet.save("/media/sf_ShareVB/")
+            if self.info.config.SAVE_SNIPPET:
+                self.info.snippet.save(self.info.config.IMAGE_PATH)
             self.info.snippet.to_text()
             return self.info.snippet.text
         return ""
@@ -507,21 +504,19 @@ class Table(object):
             whitespace = {}
             whitespace["label"] = measure.label(threshed_red)
             whitespace["area"] = np.bincount(whitespace["label"].ravel())
+            # Generate list with occurences without black areas and the first left and right area
             whitespace["biggest"] = sorted(whitespace["area"] [2:len(whitespace["area"])-1], reverse=True)[:2]
             if whitespace["biggest"][0] * 0.3 > whitespace["biggest"][1]:
                 whitespace["selected"] = whitespace["biggest"][0]
             else:
                 whitespace["selected"] = [area for area in whitespace["area"] if area in whitespace["biggest"]][1]
             gapidx = np.argwhere(whitespace["area"] == whitespace["selected"])[-1][0]
-            #if gapidx == 1 or gapidx == len(whitespace["area"])-1:
-            #    # Check that the gap is not left or right (to much cutting area)
-            #    whitespace["selected"] = np.argwhere(whitespace["biggest"] != whitespace["selected"])[-1][0]
-            #    gapidx = np.argwhere(whitespace["area"] >= whitespace["selected"])[-1][0]
             gap = np.nonzero(whitespace["label"] == gapidx)[0]
             separator = int(gap[0] + len(gap) * 0.35)
-            draw = ImageDraw.Draw(self.info.snippet.snippet)
-            draw.line((separator,0,separator,threshed.shape[0]),fill=128)
-            self.info.snippet.save("/media/sf_ShareVB/")
+            if self.info.config.DRAW_SEPARATOR:
+                draw = ImageDraw.Draw(self.info.snippet.snippet)
+                draw.line((separator,0,separator,threshed.shape[0]),fill=128)
+                self.info.snippet.save(self.info.config.IMAGE_PATH)
             return separator + tablebbox[0]
         return None
 
