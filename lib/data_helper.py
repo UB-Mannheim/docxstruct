@@ -234,6 +234,9 @@ class DataHelper(object):
         for text_index, text in enumerate(content_texts):
             if text is None:
                 continue
+            if "Kommanditeinlagen" in text:
+                print("asd")
+
             # if there is one, get the follow up text
             next_text = None
             if text_index < len_content_texts - 1:

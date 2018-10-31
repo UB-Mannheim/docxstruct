@@ -406,7 +406,7 @@ class AKFCommonParsingFunctions(object):
                     current_object['text'] = text_stripped
                 else:
                     if len(current_object['text']) >= 1 and current_object['text'][-1] == "-":
-                        current_object['text'] += text_stripped
+                        current_object['text'] += " " + text_stripped # todo needed w/o space ? remove case  if ok
                     else:
                         current_object['text'] += " " + text_stripped
 
@@ -420,7 +420,7 @@ class AKFCommonParsingFunctions(object):
                 current_object['text'] = ""
             if "text" in current_object.keys():
                 if len(current_object['text']) >=1 and current_object['text'][-1] == "-":
-                    current_object['text'] += text_stripped
+                    current_object['text'] += " " + text_stripped # todo needed w/o space ? remove case  if ok
                 else:
                     current_object['text'] += " " + text_stripped
             else:

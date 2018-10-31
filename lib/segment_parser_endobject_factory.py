@@ -183,11 +183,11 @@ class EndobjectFactory(object):
                 final_keys = fetch_keys_recusive(value, final_keys)
             return final_keys
 
-
         if key not in self.my_object.keys():
             return None
-        #if key == "Beteiligungen":
-        #   print("todo remove debug")
+
+        if key == "Beteiligungen":
+           print("todo remove debug")
 
 
         my_data = self.my_object[key]
@@ -219,7 +219,7 @@ class EndobjectFactory(object):
 
         # subtract
         for text in all_final_entries:
-            text_stripped = text.strip() # remove spaces so texts better fit in
+            text_stripped = text.strip()  # remove spaces so texts better fit in
             rest_text = rest_text.replace(text_stripped, "", 1)
             rest_text = rest_text.strip()
 
