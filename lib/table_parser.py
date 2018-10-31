@@ -236,6 +236,9 @@ class Table(object):
                         np.median([val for val in self.structure["separator"][startidx:next_date] if val > -1]))
             else:
                 self.info.separator = int(np.median(self.structure["rborder"]))
+        else:
+            if abs(self.info.separator-int(np.median([val for val in self.structure["separator"][startidx:next_date] if val > -1]))) > 250:
+                self.info.separator = self._imgseparator(content_lines, startidx, next_date)
         # Extract content of each line
         for lidx, [entry, features] in enumerate(zip(content_lines, feature_lines)):
             self.info.lidx = lidx
@@ -269,6 +272,8 @@ class Table(object):
                 else:
                     self.info.row += ''.join([i for i in entry['text'] if i not in list("0123456789()")]).strip()
                     self._valid_itemname(lidx=lidx)
+                if self.info.row.isdigit():
+                    stop = "STOP"
                 if self.info.order == 1 and any([True for char in self.info.row if char.isalpha()]):
                     self.info.lastmainitem = self.info.row
                 if self.structure["date"][lidx] is True or self.info.row == "":
@@ -361,8 +366,8 @@ class Table(object):
                 self.content[type][col] = {}
                 if self.info.col != [1, 0]:
                     self.content[type][col]["date"] = self.info.col[col]
-                self.info.amount = infotext
-                self.content[type][col]["amount"] = infotext
+                self.info.amount = infotext.replace("(","").replace(")","")
+                self.content[type][col]["amount"] = self.info.amount
         return infotext, offset
 
     def _extract_content(self, entry, features, extractlevel) -> bool:
@@ -502,17 +507,21 @@ class Table(object):
             whitespace = {}
             whitespace["label"] = measure.label(threshed_red)
             whitespace["area"] = np.bincount(whitespace["label"].ravel())
-            whitespace["biggest"] = sorted(whitespace["area"] [1:], reverse=True)[:2]
+            whitespace["biggest"] = sorted(whitespace["area"] [2:len(whitespace["area"])-1], reverse=True)[:2]
             if whitespace["biggest"][0] * 0.3 > whitespace["biggest"][1]:
                 whitespace["selected"] = whitespace["biggest"][0]
             else:
-                whitespace["selected"] = whitespace["biggest"][1]
-            gapidx = np.argwhere(whitespace["area"] >= whitespace["selected"])[-1][0]
+                whitespace["selected"] = [area for area in whitespace["area"] if area in whitespace["biggest"]][1]
+            gapidx = np.argwhere(whitespace["area"] == whitespace["selected"])[-1][0]
+            #if gapidx == 1 or gapidx == len(whitespace["area"])-1:
+            #    # Check that the gap is not left or right (to much cutting area)
+            #    whitespace["selected"] = np.argwhere(whitespace["biggest"] != whitespace["selected"])[-1][0]
+            #    gapidx = np.argwhere(whitespace["area"] >= whitespace["selected"])[-1][0]
             gap = np.nonzero(whitespace["label"] == gapidx)[0]
             separator = int(gap[0] + len(gap) * 0.35)
-            # draw = ImageDraw.Draw(self.info.snippet.snippet)
-            # draw.line((separator,0,separator,threshed.shape[0]),fill=128)
-            # self.info.snippet.save("/media/sf_ShareVB/")
+            draw = ImageDraw.Draw(self.info.snippet.snippet)
+            draw.line((separator,0,separator,threshed.shape[0]),fill=128)
+            self.info.snippet.save("/media/sf_ShareVB/")
             return separator + tablebbox[0]
         return None
 
@@ -561,6 +570,8 @@ class Table(object):
         item = item.lower().replace(" ","")
         if len(item) < 8:
             fuzzy_range = 1
+        elif len(item) >= 12:
+            fuzzy_range = 3
         else:
             fuzzy_range = 2
         itemregex = regex.compile(r"^"+item+"${e<=" + str(fuzzy_range) + "}")
