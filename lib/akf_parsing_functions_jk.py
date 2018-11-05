@@ -28,11 +28,14 @@ class AkfParsingFunctionsJK(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
-        #return
         # init
         only_add_if_string = True
-        #geschaeftslage = origpost_red.replace("- ", "")
+        if self.config.LOG_SIMPLE:
+            geschaeftslage = origpost_red.replace("- ", "")
 
+            #parsing
+            self.ef.add_to_my_obj("balances", geschaeftslage, object_number=element_counter,only_filled=only_add_if_string)
+            return True
         #parsing
         table = Table(snippet=segmentation_class.snippet)
         table.analyse_structure(content_lines,feature_lines, template="datatable_balance")
@@ -59,8 +62,12 @@ class AkfParsingFunctionsJK(object):
 
         # init
         only_add_if_string = True
-        geschaeftslage = origpost_red.replace("- ", "")
+        if self.config.LOG_SIMPLE:
+            geschaeftslage = origpost_red.replace("- ", "")
 
+            #parsing
+            self.ef.add_to_my_obj("income", geschaeftslage, object_number=element_counter,only_filled=only_add_if_string)
+            return True
         # Clear firmname information
         #if isinstance(feature_lines[-1],bool) or feature_lines[-1].counter_numbers < 1:
         #    del feature_lines[-1]
