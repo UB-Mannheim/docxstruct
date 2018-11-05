@@ -228,7 +228,7 @@ class Table(object):
         # Calculate first separator
         if not self.info.separator:
             if len(self.info.col) > 1:
-                if self.info.config.USE_TOOLBBOX:
+                if self.info.config.USE_SNIPPET:
                     self.info.separator = self._imgseparator(content_lines, startidx, next_date)
                 if not self.info.separator:
                     self.info.separator = int(

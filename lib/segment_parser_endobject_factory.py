@@ -179,6 +179,8 @@ class EndobjectFactory(object):
             for key in entry:
                 value = entry[key]
                 if create_multiple or key not in final_keys:
+                    if isinstance(key, int):
+                        continue
                     final_keys.append(key)
                 final_keys = fetch_keys_recusive(value, final_keys)
             return final_keys

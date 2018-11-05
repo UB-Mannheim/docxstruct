@@ -80,10 +80,10 @@ class FunctionMapAKF(object):
             "Anleihen": self.akf_three.parse_anleihen,
             "KursVonZuteilungsrechten": self.akf_three.parse_kurse_v_zuteilungsrechten,
             "Emissionsbetrag": self.akf_three.parse_emissionsbetrag,
-            "AusDenKonsolidiertenBilanzen": self.akf_three.parse_something,                 # table
-            "AusDenBilanzen": self.akf_three.parse_something,                               # table
-            "Konsolid.Gewinn-u.Verlustrechnungen": self.akf_three.parse_something,          # table
-            "AusGewinnVerlustrechnungen": self.akf_three.parse_something,                   # @jk last element works now
+            "AusDenKonsolidiertenBilanzen": self.akf_jk.parse_bilanzen,                 # table
+            "AusDenBilanzen": self.akf_jk.parse_bilanzen,                               # table
+            "Konsolid.Gewinn-u.Verlustrechnungen": self.akf_jk.parse_gewinn_und_verlust,          # table
+            "AusGewinnVerlustrechnungen": self.akf_jk.parse_gewinn_und_verlust,                   # @jk last element works now
             "Bezugsrechte": self.akf_three.parse_something,
             "ZurGeschäftslage": self.akf_three.parse_geschaeftslage
         }
@@ -148,7 +148,7 @@ class SegmentParser(object):
 
         #Init toolbbox
         snippet = None
-        if self.config.USE_TOOLBBOX:
+        if self.config.USE_SNIPPET:
             if "./" in self.config.IMGPATH:
                 ipath = os.path.dirname(ocromore_data["file_info"].path)+self.config.IMGPATH[1:]
             else:
