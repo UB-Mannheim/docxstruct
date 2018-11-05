@@ -1,4 +1,4 @@
-from os import path
+from os import path, makedirs
 import numpy as np
 from PIL import Image
 from tesserocr import PyTessBaseAPI, RIL, iterate_level
@@ -40,13 +40,15 @@ class Snippet(object):
             print(f"The image filetype {self.ftype} is not supported!")
         return True
 
-    def save(self, path:str):
+    def save(self, snippetpath:str):
         """Saves the snippet"""
         try:
             if self.imgname is None:
                 raise NameError
+            if not path.exists(snippetpath):
+                makedirs(snippetpath)
             bboxstr = "_".join(str(bboxval) for bboxval in self.bbox)
-            self.fname = path + self.imgname.split(".")[0] + "_bbox_" + bboxstr +  "." + ".".join(self.imgname.split(".")[1:])
+            self.fname = snippetpath + self.imgname.split(".")[0] + "_bbox_" + bboxstr +  "." + ".".join(self.imgname.split(".")[1:])
             self.snippet.save(self.fname)
         except NameError:
             print("Please load an image first.")
