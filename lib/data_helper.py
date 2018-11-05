@@ -1,5 +1,8 @@
 from akf_corelib.filehandler import FileHandler as fh
 import io
+import re
+import regex
+
 
 class DataHelper(object):
     """
@@ -38,6 +41,54 @@ class DataHelper(object):
         if trim:
             rest_start = rest_start.strip()
         return rest_start
+
+    @staticmethod
+    def remove_multiple_outbound_chars(text):
+        """
+        Strips the left and the right side of special characters in a string
+        and returns the stripped version then:
+        example ".;my text is;,,," returns "my text is"
+        :param text: input text
+        :return: filtered text
+        """
+        # print("input:", text)
+
+        text_to_change = text
+
+        # filter left side
+        match_l = regex.search(r"^[^\w\s]*(?<tag>.*)", text_to_change)
+        if match_l:
+            rest = match_l.group("tag")
+            text_to_change = rest
+
+        if text_to_change == "":
+            return text_to_change
+
+        # filter right side
+        match_r2 = regex.search(r"(?P<right_rest>[^\w\s]*)$", text_to_change)
+
+        if match_r2:
+            rest = match_r2.group("right_rest")
+            text_to_change = DataHelper.rreplace(text_to_change, rest)
+
+        # print("output:", text_to_change)
+        return text_to_change
+
+    @staticmethod
+    def rreplace(text, replace_text):
+        """
+        Replace text from the right hand side of a string
+        by reversing the strings
+        :param text: input text
+        :return: filtered text
+        """
+        reverse_text = text[::-1]
+        reverse_replace_text = replace_text[::-1]
+        new_reverse_text = reverse_text.replace(reverse_replace_text, "")
+        new_text = new_reverse_text[::-1].strip()
+
+        return new_text
+
 
     @staticmethod
     def get_content(segment_lines, feature_lines, segmentation_class):
@@ -128,7 +179,7 @@ class DataHelper(object):
         return final_string, final_string.replace("\n", " ")
 
     @staticmethod
-    def strip_if_not_none(text,strip_pattern):
+    def strip_if_not_none(text, strip_pattern):
         if text is None:
             return text
         else:
@@ -183,14 +234,27 @@ class DataHelper(object):
         for text_index, text in enumerate(content_texts):
             if text is None:
                 continue
+            if "Kommanditeinlagen" in text:
+                print("asd")
+
             # if there is one, get the follow up text
             next_text = None
             if text_index < len_content_texts - 1:
                 next_text = content_texts[text_index + 1].strip()
 
             # detect line with separator
-            if len(text) >= 2 and "-" in text[-1]:
-                if next_text is not None and len(next_text) >= 1:
+            if (len(text) >= 2 and "-" in text[-1]):
+                line_ends_with_amount = False
+
+                # this is a line which ends with a amount indicator like '6 500 000. -'
+                # and therefore no separator
+                if len(text) >= 3 and "-" in text[-1] and " " in text[-2] and "." in text[-3]:
+                    line_ends_with_amount = True
+                elif len(text) >= 2 and "-" in text[-1] and "." in text[-2]:
+                    line_ends_with_amount = True
+
+                if not line_ends_with_amount and next_text is not None and len(next_text) >= 1:
+
                     # if the next starting letter is uppercase don't do the joining (assuming it's a '-'
                     # separated Name like "Jan-Phillipp")
                     if not next_text[0].isupper():
@@ -211,7 +275,7 @@ class DataHelper(object):
 
         for current_index, ttext_info in enumerate(tagged_texts):
             if ttext_info == None:
-                continue # line was already joined
+                continue  # line was already joined
 
             current_ttext, current_id = ttext_info
             if current_id == NORMAL_LINE:
@@ -223,11 +287,27 @@ class DataHelper(object):
                     current_ttext = current_ttext + follow_ttext
                     tagged_texts[follow_up_index] = None
                     if follow_id == NORMAL_LINE or follow_id == LAST_LINE:
-                        #update my new array
+                        # update my new array
                         joined_texts.append(current_ttext)
-                        break # done escape the inner loop
+                        break  # done escape the inner loop
                     elif follow_id == SEPARATOR_LINE:
-                        continue # continue  inner loop
+                        continue  # continue  inner loop
 
         # return the modified list
         return joined_texts
+
+    @staticmethod
+    def filter_special_chars(text, remove_spaces=True):
+        """
+        Remove special characters from input text
+        :param text: input text
+        :param remove_spaces: if true also removes spaces
+        :return: filtered text
+        """
+
+        if remove_spaces:
+            text_filtered = re.sub('[^A-Za-z0-9]+', '', text)
+        else:
+            text_filtered = re.sub('[^A-Za-z0-9\s]+', '', text)
+
+        return text_filtered

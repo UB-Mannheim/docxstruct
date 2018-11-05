@@ -1,5 +1,8 @@
 import json
 import pprint
+from akf_corelib.conditional_print import ConditionalPrint
+from akf_corelib.configuration_handler import ConfigurationHandler
+from lib.akf_known_uncategories import KnownUncategories
 
 class EndobjectFactory(object):
     """
@@ -28,6 +31,15 @@ class EndobjectFactory(object):
         self.current_main_list = None
         self.pp = pprint.PrettyPrinter(indent=5)
 
+        config_handler = ConfigurationHandler(first_init=False)
+
+        self.config = config_handler.get_config()
+        self.cpr = ConditionalPrint(self.config.PRINT_OUTPUT_ANALYSIS, self.config.PRINT_EXCEPTION_LEVEL,
+                                    self.config.PRINT_WARNING_LEVEL, leading_tag=self.__class__.__name__)
+
+        if self.config.REMOVE_TAGS_IN_ORIG_DIFF:
+            self.known_uc = KnownUncategories()
+
     def set_current_main_list(self, segment_tag):
         if segment_tag not in self.my_object.keys():
             self.my_object[segment_tag] = []              # create the main list (all subsequent entries are stored here)
@@ -37,15 +49,18 @@ class EndobjectFactory(object):
     def add_to_my_obj(self, key, value, object_number=0, only_filled=False):
 
         if only_filled is True and (value == None or value == "" or value == [] or value == {}):
-            return
+            return False
 
         # fill main list if object index not in
         len_list = len(self.current_main_list)
         if len_list < object_number+1:
             for index in range(len_list,object_number+1):
                 self.current_main_list.append({})
+
+        self.cpr.print("Adding value to List,- ObjectNr.:", object_number,"Key:", key, "Value:", value)
         # add or insert to the main_list
         self.current_main_list[object_number][key] = value
+        return True
 
     def print_me_and_return(self):
         print("my_object is:")
@@ -60,11 +75,172 @@ class EndobjectFactory(object):
         my_obj_json = json.dumps(self.my_object, indent=5, ensure_ascii=False)
         return my_obj_json
 
-    def export_as_json_at_key(self, key):
+    def export_as_json_at_key(self, key, remove_first_object=False):
 
         if key not in self.my_object.keys():
             return None
 
-        my_obj_json = json.dumps(self.my_object[key], indent=5, ensure_ascii=False)
+        my_obj = self.my_object[key]
+        if remove_first_object:
+            if len(my_obj) >= 1:
+                my_obj = my_obj[1:]  # remove the first object which usally contains generic info
+
+        my_obj_json = json.dumps(my_obj, indent=5, ensure_ascii=False)
         return my_obj_json
 
+    def diff_seg_to_orig_at_key(self, key):
+
+        def fetch_subentries_recursive(entry):
+            final_texts = []
+
+            for item in entry:
+                if isinstance(entry, list):
+                    value = item
+                else:
+                    # item is a key
+                    value = entry[item]
+                if isinstance(value, str):
+                    final_texts.append(value)
+                elif isinstance(value, int):
+                    final_texts.append(str(value))
+                elif isinstance(value, object):
+                    obj_size = len(value)
+                    if obj_size > 0:
+                        recursive_texts = fetch_subentries_recursive(value)
+                        final_texts.extend(recursive_texts)
+
+            return final_texts
+
+        if key not in self.my_object.keys():
+            return None
+
+        my_data = self.my_object[key]
+
+        # check if the orig-post property can exist warn if not
+        if not self.config.ADD_INFO_ENTRY_TO_OUTPUT:
+            self.cpr.printw("trying to fetch original data, original data is not added to results")
+            self.cpr.printw("toggle ADD_INFO_ENTRY_TO_OUTPUT in config to True")
+        if len(my_data) <= 0:
+            self.cpr.printw("no data to do returning")
+            return
+
+        return # todo this seems to be wrong
+        # copy orig string
+        original_text = my_data[0]['origpost']
+        rest_text = original_text
+
+        # fetch parsed entries for diff
+        all_final_entries = []  # array of final entries
+        for index in range(1, len(my_data)):
+            entry = my_data[index]
+            final_entries = fetch_subentries_recursive(entry)
+            all_final_entries.extend(final_entries)
+
+        # order diff data after length
+        all_final_entries.sort(key=lambda x: len(x))
+        all_final_entries.reverse()
+
+        # subtract
+        for text in all_final_entries:
+            rest_text = rest_text.replace(text, "")
+
+            rest_text = rest_text.strip()
+
+        return rest_text, original_text
+
+    def diff_parsed_to_orig_at_key(self, key):
+
+        def fetch_subentries_recursive(entry):
+            final_texts = []
+
+            for item in entry:
+                if isinstance(entry, list):
+                    value = item
+                else:
+                    # item is a key
+                    value = entry[item]
+                if isinstance(value, str):
+                    final_texts.append(value)
+                elif isinstance(value, int):
+                    final_texts.append(str(value))
+                elif isinstance(value, object):
+                    obj_size = len(value)
+                    if obj_size > 0:
+                        recursive_texts = fetch_subentries_recursive(value)
+                        final_texts.extend(recursive_texts)
+
+            return final_texts
+
+        def fetch_keys_recusive(entry, final_keys, create_multiple=True):
+            # just return if there are no keys (cause no dictionary)
+            if not isinstance(entry, dict):
+                return final_keys
+
+            for key in entry:
+                value = entry[key]
+                if create_multiple or key not in final_keys:
+                    final_keys.append(key)
+                final_keys = fetch_keys_recusive(value, final_keys)
+            return final_keys
+
+        if key not in self.my_object.keys():
+            return None
+
+        if key == "Beteiligungen":
+           print("todo remove debug")
+
+
+        my_data = self.my_object[key]
+
+        # check if the orig-post property can exist warn if not
+        if not self.config.ADD_INFO_ENTRY_TO_OUTPUT:
+            self.cpr.printw("trying to fetch original data, original data is not added to results")
+            self.cpr.printw("toggle ADD_INFO_ENTRY_TO_OUTPUT in config to True")
+        if len(my_data) <= 0:
+            self.cpr.printw("no data to do returning")
+            return
+        # copy orig string
+        original_text = my_data[0]['origpost']
+        rest_text = original_text
+
+        # fetch parsed entries for diff
+        all_final_entries = []  # array of final entries
+        for index in range(1, len(my_data)):
+            entry = my_data[index]
+            final_entries = fetch_subentries_recursive(entry)
+            all_final_entries.extend(final_entries)
+
+        # order diff data after length
+        all_final_entries.sort(key=lambda x: len(x))
+        all_final_entries.reverse()
+
+        #if key == "Sitz" and "Zement" in rest_text:
+        #    print("debugging check")
+
+        # subtract
+        for text in all_final_entries:
+            text_stripped = text.strip()  # remove spaces so texts better fit in
+            rest_text = rest_text.replace(text_stripped, "", 1)
+            rest_text = rest_text.strip()
+
+        if not self.config.REMOVE_TAGS_IN_ORIG_DIFF:
+            return rest_text, original_text
+
+        # otherwise continue with keys here
+        final_keys = [] # gets multiple of the same key for later 1 by 1 subtraction
+        for index in range(1, len(my_data)):
+            final_keys = fetch_keys_recusive(my_data[index], final_keys, create_multiple=True)
+
+        # order diff data after length
+        final_keys.sort(key=lambda x: len(x))
+        final_keys.reverse()
+
+        # subtract keys
+        for key in final_keys:
+            key_stripped = key.strip()
+            if key_stripped in self.known_uc.unkeys:
+                continue
+            rest_text = rest_text.replace(key_stripped, "", 1)
+            rest_text = rest_text.strip()
+
+        return rest_text, original_text

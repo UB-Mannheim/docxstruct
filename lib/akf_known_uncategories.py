@@ -19,6 +19,26 @@ class KnownUncategories(object):
             "ab \d{4}(\/\d{2})?"             # 1956: i.e "ab 1949/50"-part of other categories
         ]
 
+        # non-specific keys (which get not removed from original-rest in analysis)
+        self.nkeys = [
+            "street",
+            "street_number",
+            "additional_info",
+            "city",
+            "name",
+            "title",
+            "rest",
+            "location",
+            "number_Sa.-Nr.",
+            "rest_info",
+            "bank",
+            "title",
+            "amount",
+            "ord_number",
+            "organization",
+
+        ]
+
         # create corresponding regexes
         self.uc_regex = []
         for item in self.uc:
@@ -28,6 +48,10 @@ class KnownUncategories(object):
     @property
     def uncategories(self):
         return self.uc
+
+    @property
+    def unkeys(self):
+        return self.nkeys
 
     def check_uncategories(self, text_to_check):
         """

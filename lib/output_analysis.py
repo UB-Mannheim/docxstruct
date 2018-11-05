@@ -29,6 +29,10 @@ class OutputAnalysis(object):
         # more simple for verification, arbitrary chars then : then some other chars
         self.regex_simple_segtest = re.compile(r"(?P<TAG>^.+):.*")
         self.known_ucs = KnownUncategories()
+        self.ocromore_data = None
+
+    def set_current_data(self, data):
+        self.ocromore_data = data
 
     def clear_output_folder(self):
         """
@@ -41,7 +45,7 @@ class OutputAnalysis(object):
         if self.config.LOG_PARSED_SEGMENTED_OUTPUT is False:
             return
         results = ocromore_data['results']
-
+        file_info = ocromore_data['file_info'].name
         # iterate the recognized tags
         for key in results.my_object:
             value_json = results.export_as_json_at_key(key)
@@ -49,7 +53,7 @@ class OutputAnalysis(object):
             final_text_lines = []
 
             # add dividers to the lines
-            final_text_lines.append(key + "------------------------------------------------")
+            final_text_lines.append(key + ": " + file_info + "------------------------------------------------")
             final_text_lines.extend(lines_json)
             final_text_lines.append("")
             final_text_lines.append("")
@@ -59,6 +63,136 @@ class OutputAnalysis(object):
             # print to file finally (append style)
             dh.write_array_to_root_simple("parsed_output", key,
                                           final_text_lines, self.analysis_root, append_mode=True)
+
+    def log_original_to_segment_diff(self, ocromore_data, use_delimiters=True):
+        """
+        logs the difference of original to segmented texts to files
+        in 'orig_to_seg_difference'
+        :param ocromore_data: main data object which data is extracted from
+        :param use_delimiters: add delimeters between each line in original text before subtraction
+        :return: diff_info object which contains fileinfo and rest-text after subtraction
+        """
+        if self.config.LOG_SEGMENTED_TO_ORIG_DIFF_PER_FILE is False:
+            return
+
+        diff_info = {}  # diff info object which is used for accumulated report
+
+        # fetch the rest text from ocromore_data
+        rest_texts = ocromore_data['analysis_to_orig']['original_rest']
+        rest_text = ""
+        for text in rest_texts:
+
+            rest_text += text
+            if use_delimiters:
+                rest_text += "\n"  # delimiters are optional
+
+        # get the segmented data
+        segmented_texts = []
+        complete_text = ""
+        for inst_class in ocromore_data['segmentation'].my_classes:
+            if not inst_class.is_start_segmented():
+                continue
+            start_line_index = inst_class.start_line_index
+            stop_line_index = inst_class.stop_line_index
+
+            for index in range(start_line_index,stop_line_index+1):
+                text = ocromore_data['lines'][index]['text']
+                segmented_texts.append(text)
+                complete_text += text
+
+        # sort segmented texts after length
+        segmented_texts.sort(key=lambda s: len(s))
+        segmented_texts.reverse()
+
+        # subtract each segmented text line from the original text
+        for text_subtr in segmented_texts:
+            rest_text = rest_text.replace(text_subtr, "", 1)  # only replace once
+
+        # create data to log
+        file_name = ocromore_data['file_info'].name
+        db_path = ocromore_data['file_info'].dbpath
+        db_name = ocromore_data['file_info'].dbname
+
+        info_to_write = []
+        info_to_write.append("File:"+file_name+"---------------")
+        info_to_write.append(rest_text)
+        info_to_write.append("")
+        info_to_write.append("")
+
+        # log information
+        dh.write_array_to_root_simple("orig_to_seg_difference"+db_path+"/", "rests_"+db_name, info_to_write
+                                      , self.analysis_root, append_mode=True)
+
+        # create the diff info object and return for accumulated report
+        diff_info['file_name'] = file_name
+        diff_info['db_name'] = db_name
+        diff_info['original_length'] = len(complete_text)
+        diff_info['rest'] = rest_text
+        diff_info['rest_length'] = len(rest_text)
+
+        return diff_info
+
+    def log_segmentation_diff_orig_to_parsed_output(self, ocromore_data):
+        """
+        Takes the current ocromore_data for a table and for each
+        occuring key logs the rest text and the difference
+        within a diff info object which is returned (and can
+        from which be accumulated later for multiple tables/files)
+
+        there is a flag in config which also allows to write the
+        actual output in the diff info which is the subtractor
+        element in the diff for better checking.
+        :param ocromore_data: input data for table
+        :return: diff info object contains texts and rests per found tag (
+        """
+        if self.config.LOG_PARSED_TO_ORIG_DIFF_PER_CATEGORY is False:
+            return
+
+        diff_info = {}
+        results = ocromore_data['results']
+        file_info = ocromore_data['file_info'].name
+        diff_info['file_info'] = file_info
+        diff_info['keys'] = {}
+        # iterate the recognized tags
+        for key in results.my_object:
+            if key is 'overall_info':
+                continue  # skip special key which has different structure (in case it's enabled)
+            rest_text, original_text = results.diff_parsed_to_orig_at_key(key)
+            diff_info['keys'][key] = {}
+            diff_info['keys'][key]['rest_text'] = rest_text
+            diff_info['keys'][key]['original_text'] = original_text
+            # without special chars
+            rest_text_filtered_sc = dh.filter_special_chars(rest_text)
+            orig_text_filtered_sc = dh.filter_special_chars(original_text)
+            diff_info['keys'][key]['rest_text_filtered_sc'] = rest_text_filtered_sc
+            diff_info['keys'][key]['original_text_filtered_sc'] = orig_text_filtered_sc
+
+            value_json = None
+            if self.config.LOG_PARSED_TO_ORIG_ADD_OUTPUT_JSON:
+                value_json = results.export_as_json_at_key(key, remove_first_object=True)
+
+            final_text_lines = []
+
+            # add dividers to the lines
+            final_text_lines.append(key + ": " + file_info + "------------------------------------------------")
+            final_text_lines.append("Rest:" + rest_text)
+            final_text_lines.append("Rest_filtered_sc:" + rest_text_filtered_sc)
+            final_text_lines.append("Original:" + original_text)
+            final_text_lines.append("Original_filtered_sc:" + orig_text_filtered_sc)
+
+            if value_json != None:
+                final_text_lines.append("Parsed-Json:" + value_json)
+
+            final_text_lines.append("")
+            final_text_lines.append("")
+
+            key = key.replace("/", "_")  # fix to prevent folder hop in filename
+
+            # print to file finally (append style)
+            dh.write_array_to_root_simple("parsed_to_orig_difference", key,
+                                          final_text_lines, self.analysis_root, append_mode=True)
+
+        return diff_info
 
     def log_segmentation_simple(self, ocromore_data, separator='¦¦'):
         lines = ocromore_data['lines']
@@ -74,6 +208,7 @@ class OutputAnalysis(object):
 
         dh.write_array_to_root("segmentation_simple/", final_text_lines, ocromore_data, self.analysis_root)
 
+
     def log_segment_information(self, segment_tag, text_lines, real_segment_tag):
         """
         Logs an array with a given tag append wise into a file with the name
@@ -86,9 +221,10 @@ class OutputAnalysis(object):
         """
 
         final_text_lines = []
+        file_name = self.ocromore_data['file_info'].name
 
         # add dividers to the lines
-        final_text_lines.append(real_segment_tag+"------------------------------------------------")
+        final_text_lines.append(real_segment_tag + ": " + file_name + "------------------------------------------------")
         final_text_lines.extend(text_lines)
         final_text_lines.append("")
         final_text_lines.append("")
@@ -114,9 +250,39 @@ class OutputAnalysis(object):
         return diff_info
 
     def log_accumulated_unsegmentated(self, accumulated_diff_info, ocromore_data):
-        acc_diff_array =  self.acc_diff_data_to_array(accumulated_diff_info)
+        acc_diff_array = self.acc_diff_data_to_array(accumulated_diff_info)
         dh.write_array_to_root("diff_info/", acc_diff_array, ocromore_data, \
                                self.analysis_root, accumulated=True)
+
+    def log_accumulated_orig_to_parsed_output(self, accumulated_diff_info, ocromore_data):
+        """
+        Logs the accumulated (over many files in a folder) information on
+        difference of original to parsed content to 'parsed_to_orig_difference' in analysis
+        :param accumulated_diff_info: contains content to log
+        :param ocromore_data: main data object
+        :return:
+        """
+
+        # create array to log
+        acc_diff_array = self.acc_origindiff_data_to_array(accumulated_diff_info)
+        # log array to files
+        dh.write_array_to_root("parsed_to_orig_difference/", acc_diff_array, ocromore_data, \
+                               self.analysis_root, accumulated=True)
+
+    def log_accumulated_orig_to_segment(self, accumulated_diff_info, ocromore_data):
+        """
+        Logs the accumulated (over many files in a folder) information on
+        difference of segmented to original content to 'orig_to_seg_difference' in analysis
+        :param accumulated_diff_info: contains content to log
+        :param ocromore_data: main data object
+        :return:
+        """
+        # create array to log
+        acc_diff_array = self.acc_segmentdiff_data_to_array(accumulated_diff_info)
+        # log array to files
+        dh.write_array_to_root("orig_to_seg_difference/", acc_diff_array, ocromore_data, \
+                               self.analysis_root, accumulated=True)
+
 
 
     def accumulate_diff_info(self, ocromore_data, diff_info, accumulated_diff_info):
@@ -138,9 +304,118 @@ class OutputAnalysis(object):
         for tag in same_keys:
             accumulated_diff_info.add_info_at(tag, table_name, False, False, True)
 
+        return accumulated_diff_info
+
+    def accumulate_diff_info_output_to_orig(self, diff_info, accumulated_diff_info):
+        """
+        accumulate diff info from parsed output to original difference
+        :param diff_info: diff info which gets accumulated
+        :param accumulated_diff_info: the diff info content get's added to this object
+        :return: accumulated diff info + diff info
+        """
+
+        for key in diff_info['keys']:
+            value = diff_info['keys'][key]
+            rest_text = value['rest_text']
+            original_text = value['original_text']
+            rest_text_filtered = value['rest_text_filtered_sc']
+            original_text_filtered = value['original_text_filtered_sc']
+            if key not in accumulated_diff_info.keys():
+                accumulated_diff_info[key] = {'rest_chars': 0,
+                                              'original_chars': 0,
+                                              "rest_chars_filtered": 0,
+                                              "original_chars_filtered": 0
+                                              }
+
+            accumulated_diff_info[key]['rest_chars'] += len(rest_text)
+            accumulated_diff_info[key]['original_chars'] += len(original_text)
+            accumulated_diff_info[key]['rest_chars_filtered'] += len(rest_text_filtered)
+            accumulated_diff_info[key]['original_chars_filtered'] += len(original_text_filtered)
+
+        return accumulated_diff_info
+    
+    
+    def accumulate_diff_info_orig_to_segmentation(self, diff_info, accumulated_diff_info):
+        """
+        accumulate diff info from original to segmentation difference
+        :param diff_info: diff info which gets accumulated
+        :param accumulated_diff_info: the diff info content get's added to this object
+        :return: accumulated diff info + diff info
+        """
+
+        file_name = diff_info['file_name']
+        # db_name = diff_info['db_name'] # maybe use later
+        rest_text = diff_info['rest']
+        len_rest_text = diff_info['rest_length']
+        len_orig_text = diff_info['original_length']
+
+        if 'acc_len_rest_text' not in accumulated_diff_info.keys():
+            accumulated_diff_info['acc_len_rest_text'] = len_rest_text
+        else:
+            accumulated_diff_info['acc_len_rest_text'] += len_rest_text
+
+        if 'acc_rest_text' not in accumulated_diff_info.keys():
+            accumulated_diff_info['acc_rest_text'] = rest_text
+        else:
+            accumulated_diff_info['acc_rest_text'] += rest_text
+
+        if 'len_orig_text' not in accumulated_diff_info.keys():
+            accumulated_diff_info['len_orig_text'] = len_orig_text
+        else:
+            accumulated_diff_info['len_orig_text'] += len_orig_text
+
+        if 'filenames' not in accumulated_diff_info.keys():
+            accumulated_diff_info['filenames'] = []
+
+        accumulated_diff_info['filenames'].append(file_name)
 
         return accumulated_diff_info
 
+
+    def acc_segmentdiff_data_to_array(self, accumulated_diff_info):
+        """
+        creates an text-line-array of accumulated_diff_info for print out
+        for difference of segmented output to origin
+        :param accumulated_diff_info:
+        :return: final lines array
+        """
+        final_lines = []
+
+        separators = '%-30s%-30s'
+        final_lines.append(separators % ("Overall Rest Length in Chars: ", str(accumulated_diff_info['acc_len_rest_text'])))
+        final_lines.append(separators % ("Original Length in Chars: ", str(accumulated_diff_info['len_orig_text'])))
+        final_lines.append("Overall Rest Text: " + accumulated_diff_info['acc_rest_text'])
+
+        return final_lines
+    
+    def acc_origindiff_data_to_array(self, accumulated_diff_info):
+        """
+        creates an text-line-array of accumulated_diff_info for print out
+        for difference of parsed output to rest info - at
+        the moment logs numbers of chars in original and rest after subtraction
+        with the related key
+        :param accumulated_diff_info:
+        :return: final lines array
+        """
+        final_lines = []
+
+        for key in accumulated_diff_info:
+            value = accumulated_diff_info[key]
+            rest_chars = value['rest_chars']
+            rest_chars_filtered = value['rest_chars_filtered']
+            orig_chars = value['original_chars']
+            orig_chars_filtered = value['original_chars_filtered']
+
+            final_line_text = (
+                    '%-38s%-30s%-30s%-30s%-30s' % ("Key: " + key,
+                                              "Rest-Chars:  " + str(rest_chars),
+                                              "Rest-Chars-filtered:" + str(rest_chars_filtered),
+                                              "Original-Chars:  " + str(orig_chars),
+                                              "Original-Chars-filtered:" + str(orig_chars_filtered)))
+
+            final_lines.append(final_line_text)
+
+        return final_lines
 
     def acc_diff_data_to_array(self, accumulated_diff_info, separator='¦¦', shorten_tablenames=True):
         """
@@ -167,7 +442,6 @@ class OutputAnalysis(object):
                     is_uc = self.known_ucs.check_uncategories(info_tag)
                     if is_uc:
                         continue
-
 
                 counter_str = str(info_obj.counter)
                 table_all_str = ""
@@ -202,10 +476,34 @@ class OutputAnalysis(object):
         lines_same = create_lines(accumulated_diff_info.same_tags)
         final_lines.extend(lines_same)
 
-
         return final_lines
 
     def diff_data_to_array(self, diff_info, separator='¦¦'):
+        (missing_keys, additional_keys, same_keys) = diff_info
+        final_lines = []
+
+        # linify missing keys + headline
+        final_lines.append("### Missing keys (missing in main-seg, there in test-seg)------------------------")
+        for key in missing_keys:
+            final_lines.append(key)
+        final_lines.append("")
+
+        # linify additional keys + headline
+        final_lines.append("### Additional keys (there in main-seg, missing in test-seg)---------------------")
+        for key in additional_keys:
+            final_lines.append(key)
+        final_lines.append("")
+
+        # linify same keys + headline
+        final_lines.append("### Same keys (there in main-seg and also in test-seg)---------------------------")
+        for key in same_keys:
+            final_lines.append(key)
+        final_lines.append("")
+
+        return final_lines
+
+
+    def diff_data_to_array_categories(self, diff_info, separator='¦¦'):
         (missing_keys, additional_keys, same_keys) = diff_info
         final_lines = []
 
@@ -258,7 +556,6 @@ class OutputAnalysis(object):
 
             if key_main not in test_seg.keys():
                  additional_keys = append_multi(additional_keys, key_main, value_main)
-
 
         return (missing_keys, additional_keys, same_keys)
 
@@ -325,7 +622,6 @@ class OutputAnalysis(object):
 
         return segmentation_dict
 
-
     class AccumulatedInfo(object):
 
         class InfoObj(object):
@@ -346,7 +642,6 @@ class OutputAnalysis(object):
             self.missing_tags = {}
             self.additional_tags = {}
             self.same_tags = {}
-
 
         def add_info_at(self, tag, tablename, missing, additional, same):
             """
@@ -370,8 +665,6 @@ class OutputAnalysis(object):
                     info_obj.add_tag_from_table(tag, tablename)
                     ref_obj[tag] = info_obj
                 return ref_obj
-
-
 
             if missing is True:
                 updated_ref = update_ref_dict(tag, tablename, self.missing_tags)

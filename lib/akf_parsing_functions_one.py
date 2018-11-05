@@ -53,11 +53,11 @@ class AkfParsingFunctionsOne(object):
 
         # add stuff to ef
         only_add_if_value = True
-        self.ef.add_to_my_obj("numID", num_id, object_number=element_counter, only_filled=only_add_if_value)
-        self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_value)
-        self.ef.add_to_my_obj("street", street, object_number=element_counter, only_filled=only_add_if_value)
-        self.ef.add_to_my_obj("street_number", street_number, object_number=element_counter, only_filled=only_add_if_value)
-        self.ef.add_to_my_obj("additional_info", additional_info, object_number=element_counter, only_filled=only_add_if_value)
+        self.ef.add_to_my_obj("numID", num_id, object_number=element_counter, only_filled= only_add_if_value)
+        self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled= only_add_if_value)
+        self.ef.add_to_my_obj("street", street, object_number=element_counter, only_filled= only_add_if_value)
+        self.ef.add_to_my_obj("street_number", street_number, object_number=element_counter, only_filled= only_add_if_value)
+        self.ef.add_to_my_obj("additional_info", additional_info, object_number=element_counter, only_filled= only_add_if_value)
 
         return True
 
@@ -116,14 +116,70 @@ class AkfParsingFunctionsOne(object):
         # get basic data
         origpost, origpost_red, element_counter, content_texts = cf.add_check_element(self, content_texts,
                                                                          real_start_tag, segmentation_class, 0)
+        # do special match: Verwaltung und Betriebshof
+        split_post = []
 
-        # substitute in a seperator char to integrate delimiters in next step
+        match_special = regex.match(r"(?<Verw>Verwaltung.*)"
+                                    r"(?<Betr>Betriebshof.*)"
+                                    , origpost_red)
+        if match_special:
+            betriebshof = match_special.group("Betr")
+            verwaltung = match_special.group("Verw")
+            origpost_red = origpost_red.replace(betriebshof, "")
+            origpost_red = origpost_red.replace(verwaltung, "")
+            split_post.append(betriebshof)
+            split_post.append(verwaltung)
+        # do special match: Ortsgespräche and Ferngespräche
+
+        match_special2 = regex.match(r"(?<og>Ortsgespräche.*)"
+                                     r"(?<fg>Ferngespräche.*)"
+                                     , origpost_red)
+        if match_special2:
+            ortsgespr = match_special2.group("og")
+            ferngespr = match_special2.group("fg")
+            origpost_red = origpost_red.replace(ortsgespr, "")
+            origpost_red = origpost_red.replace(ferngespr, "")
+            split_post.append(ortsgespr)
+            split_post.append(ferngespr)
+
+
+        # do special match: check if only numbers
+        origpost_red_new = origpost_red
+        #only_num_check = origpost_red.replace("und", "").replace(",", "").replace(" ", "")
+        test_split = regex.split("\su\.|\sund\s|,|;", origpost_red)
+        for number in test_split:
+            match_word_num = regex.search("(?<word>[^\d]*)(?<num>[\d\s\-/]*)", number)
+            if match_word_num is None:
+                continue
+
+            word = match_word_num.group("word")
+            num = match_word_num.group("num")
+            if "Sa." in word and "Nr" in word:
+                continue
+            number_stripped = num.strip(" ./").replace("/", "").replace("-", "").replace(" ", "")
+            if number_stripped.isdigit():
+                origpost_red_new = origpost_red_new.replace(number, "")  # remove number
+                origpost_red_new = origpost_red_new.replace(word, "")    # remove word found
+
+                change1 = self.ef.add_to_my_obj("number_Sa.-Nr.", num, object_number=element_counter, only_filled=True)
+                change2 = self.ef.add_to_my_obj("location", word, object_number=element_counter, only_filled=True)
+                if change1 or change2:
+                    element_counter += 1
+
+        #if "32 20 47" in origpost_red:
+        #    print("asd")
+
+        origpost_red = origpost_red_new
+        # substitute in a separator char to integrate delimiters in next step
         origpost_red = regex.sub(r"(\d\.)", r"\1~~~~", origpost_red)
 
-        # do  matches (sc-separated)
-        split_post = regex.split(';|~~~~|\su\.', origpost_red)
+        # do  further matches (sc-separated)
+        split_post.extend(regex.split(';|~~~~|\su\.', origpost_red))
+
 
         for index, entry in enumerate(split_post):
+            if entry is None:
+                continue
             entry_stripped = entry.strip()
             if entry_stripped == "":
                 continue
@@ -132,20 +188,34 @@ class AkfParsingFunctionsOne(object):
                                      r"(?<Numbers>[\d\s\W]*)"
                                      ,entry_stripped)
             if match_word is not None:
-                tag = dh.strip_if_not_none(match_word.group("Tag"),"")
+                tag = dh.strip_if_not_none(match_word.group("Tag"), "")
                 match_tag = regex.match(r"(?<rest_bef>.*)(?<sanr>Sa\.?\-Nr\.?)(?<rest_end>.*)", tag)
                 location = ""
                 if match_tag is not None:
                     rest_tag = match_tag.group('rest_bef')
                     rest_tag_2 = match_tag.group('rest_end')
                     # sanr = match_tag.group('sanr') # this is the filtered group
-                    location = dh.strip_if_not_none(rest_tag +" "+rest_tag_2,"., ")
+                    location = dh.strip_if_not_none(rest_tag + " " + rest_tag_2, ":., ")
+                else:
+                    # if there are no real descriptors in tag then tag is usually location  (like Düsseldorf 1 36 62.)
+                    location = tag
+
+                if "und" in location:
+                    location = regex.sub("[^\w]und[^\w]", "", location)
+
                 number = dh.strip_if_not_none(match_word.group("Numbers"), "., ")
                 self.ef.add_to_my_obj("number_Sa.-Nr.", number, object_number=element_counter)
                 self.ef.add_to_my_obj("location", location, object_number=element_counter)
                 element_counter += 1
 
+                origpost_red = origpost_red.replace(number, "")
+                origpost_red = origpost_red.replace(location, "")
 
+        origpost_red = origpost_red.replace("Sa.-Nr", "").replace("~~~~", "")
+        origpost_red_end = dh.remove_multiple_outbound_chars(origpost_red)
+
+        if len(origpost_red_end) > 3:
+            self.ef.add_to_my_obj("additional_info_unparsed", origpost_red_end, object_number=element_counter)
 
     def parse_vorstand(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
 
@@ -159,10 +229,21 @@ class AkfParsingFunctionsOne(object):
 
         for index, entry in enumerate(split_post):
             entry_stripped = entry.strip()
+
+            if index == len(split_post)-1:
+                matchend = regex.match("^[Aa]lle", entry_stripped)
+                if matchend:
+                    self.ef.add_to_my_obj("additional_info", entry_stripped, object_number=element_counter)
+                    element_counter += 1
+                    continue
+
             match = regex.match(r"(?<Name>.*)[,]"             # find location string
                                 r"(?<Rest>.*+)",              # just get the rest which is usually streetname and number, but has other possibilities
                                 entry_stripped)
             if match is None:
+                name = dh.strip_if_not_none(entry_stripped, ", ")
+                self.ef.add_to_my_obj("name", name, object_number=element_counter)
+                element_counter += 1
                 continue
 
             name = dh.strip_if_not_none(match.group("Name"), ", ")
@@ -227,10 +308,17 @@ class AkfParsingFunctionsOne(object):
         element_counter = 0
         origpost, origpost_red, element_counter, content_texts = \
             cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
-
-        year = dh.strip_if_not_none(origpost_red, ".,\s")
-        self.ef.add_to_my_obj("year", year, object_number=element_counter, only_filled=True)
-
+        match_year = regex.search("^\d*", origpost_red.strip())
+        if match_year:
+            result = match_year.group()
+            origpost_red_new = origpost_red.replace(result, "", 1)
+            year = dh.strip_if_not_none(result, ".,() ")
+            rest_info = dh.strip_if_not_none(origpost_red_new, ".,() ")
+            self.ef.add_to_my_obj("rest_info", rest_info, object_number=element_counter, only_filled=True)
+            self.ef.add_to_my_obj("year", year, object_number=element_counter, only_filled=True)
+        else:
+            rest_info = dh.strip_if_not_none(origpost_red, ".,() ")
+            self.ef.add_to_my_obj("rest_info", rest_info, object_number=element_counter, only_filled=True)
 
     # Tätigkeitsgebiet
     def parse_taetigkeitsgebiet(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
@@ -244,7 +332,7 @@ class AkfParsingFunctionsOne(object):
                                                 current_key_initial_value="General_Info")
 
         for key in final_items.keys():
-            value = final_items[key]
+            value = final_items[key].strip()
             if value is None or value == "":
                 continue
             self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=True)

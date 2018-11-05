@@ -70,19 +70,19 @@ class FunctionMapAKF(object):
             "Betriebsanlagen": self.akf_three.parse_betriebsanlagen,
             "Beteiligungsgesellschaften": self.akf_three.parse_beteiligungsgesellschaften,                # not a category in 1956 -> #todo maybe use later
             "Beteiligungen": self.akf_three.parse_beteiligungen,
-            "Tochtergesellschaften": self.akf_three.parse_something,
-            "Wertpapier-Kenn-Nr": self.akf_three.parse_something,
-            "RechteVorzugsaktien": self.akf_three.parse_something,
-            "Aktionäre": self.akf_three.parse_something,
-            "Anleihen": self.akf_three.parse_something,
-            "KursVonZuteilungsrechten": self.akf_three.parse_something,
-            "Emissionsbetrag": self.akf_three.parse_something,
-            "AusDenKonsolidiertenBilanzen": self.akf_jk.parse_bilanzen,
-            "AusDenBilanzen": self.akf_jk.parse_bilanzen,
-            "Konsolid.Gewinn-u.Verlustrechnungen": self.akf_jk.parse_gewinn_und_verlust,
-            "AusGewinnVerlustrechnungen": self.akf_jk.parse_gewinn_und_verlust,
-            "Bezugsrechte": self.akf_jk.parse_bezugsrechte,
-            "ZurGeschäftslage": self.akf_jk.parse_geschaeftslage
+            "Tochtergesellschaften": self.akf_three.parse_tochtergesellschaften,
+            "Wertpapier-Kenn-Nr": self.akf_three.parse_wertpapier_kenn_nr,              # not a category in 1956 -> #todo maybe use later
+            "RechteVorzugsaktien": self.akf_three.parse_rechte_und_vorzugsaktien,
+            "Aktionäre": self.akf_three.parse_aktionaere,
+            "Anleihen": self.akf_three.parse_anleihen,
+            "KursVonZuteilungsrechten": self.akf_three.parse_kurse_v_zuteilungsrechten,
+            "Emissionsbetrag": self.akf_three.parse_emissionsbetrag,
+            "AusDenKonsolidiertenBilanzen": self.akf_three.parse_something,                 # table
+            "AusDenBilanzen": self.akf_three.parse_something,                               # table
+            "Konsolid.Gewinn-u.Verlustrechnungen": self.akf_three.parse_something,          # table
+            "AusGewinnVerlustrechnungen": self.akf_three.parse_something,                   # @jk last element works now
+            "Bezugsrechte": self.akf_three.parse_something,
+            "ZurGeschäftslage": self.akf_three.parse_geschaeftslage
         }
 
     def get_function_map(self):
@@ -129,6 +129,16 @@ class SegmentParser(object):
             all_texts = self.get_all_text(ocromore_data)
             self.ef.set_current_main_list("overall_info")
             self.ef.add_to_my_obj("fulltexts",all_texts)
+        # add a duplicate of the original text from which in the below analysis case the files get subtracted
+        if self.config.LOG_SEGMENTED_TO_ORIG_DIFF_PER_FILE:
+            if self.config.ADD_FULLTEXT_ENTRY:
+                ocromore_data['analysis_to_orig'] = {}
+                original_rest, complete_text = self.get_all_text(ocromore_data, join_separated_lines=True)
+                ocromore_data['analysis_to_orig']['original_rest'] = original_rest
+                ocromore_data['analysis_to_orig']['original_length_initial'] = len(complete_text)
+            else:
+                self.cpr.printw("activated segment to orig diff, but no saving of origin activate ADD_FULLTEXT_ENTRY "
+                                "in config for this functionality")
 
         # start parsing for each successfully segmented area
         for segmentation_class in segmentation_classes:
@@ -166,12 +176,27 @@ class SegmentParser(object):
 
         return real_start_tag, content_texts, content_lines, feature_lines
 
-    def get_all_text(self, ocromore_data):
-        all_text = []
+    def get_all_text(self, ocromore_data, join_separated_lines=False):
+        """
+        Gets all text lines in ocromore_data as
+        array and as joined string
+        :param ocromore_data: data from which the text is extracted
+        :return: texts list, complete text
+        """
+        all_texts = []
+        complete_text = ""
         for line in ocromore_data['lines']:
-            all_text.append(line['text'])
-        return all_text
+            text = line['text']
+            all_texts.append(text)
+            complete_text += text
 
+        if join_separated_lines:
+            complete_text = ""
+            all_texts = dh.join_separated_lines(all_texts)
+            for text in all_texts:
+                complete_text += text
+
+        return all_texts, complete_text
 
     def write_result_to_output(self, as_json, ocromore_data):
         if as_json is True:
