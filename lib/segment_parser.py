@@ -10,6 +10,9 @@ from .akf_parsing_functions_tables_one import AkfParsingFunctionsTablesOne
 from .data_helper import DataHelper
 from .segment_parser_endobject_factory import EndobjectFactory
 from lib.data_helper import DataHelper as dh
+from lib.snippet_ocr import Snippet
+import glob
+import os
 
 
 class FunctionMapAKF(object):
@@ -97,7 +100,7 @@ class SegmentParser(object):
     each segment defined code the parser points to.
     """
 
-    def __init__(self, output_analyzer):
+    def __init__(self, output_analyzer,ocromore_data=None):
 
         self.ef = EndobjectFactory()
         # map which maps tags to functions for parsing -> change constuctor for other project
@@ -112,7 +115,7 @@ class SegmentParser(object):
         self.function_map = fmap.get_function_map()
         self.result_root = self.config.OUTPUT_ROOT_PATH + "/results/"
 
-    def clear_result(self, output_analyzer):
+    def clear_result(self, output_analyzer,ocromore_data=None):
         # create a new end object factory, new content
         self.ef = EndobjectFactory()
         # map to the new ef object which has been recreated
@@ -121,6 +124,7 @@ class SegmentParser(object):
 
 
     def parse_segments(self, ocromore_data):
+        self.ocromore_data = ocromore_data
         segmentation = ocromore_data['segmentation']
         segmentation_classes = segmentation.my_classes
 
@@ -140,6 +144,22 @@ class SegmentParser(object):
                 self.cpr.printw("activated segment to orig diff, but no saving of origin activate ADD_FULLTEXT_ENTRY "
                                 "in config for this functionality")
 
+
+
+        #Init toolbbox
+        snippet = None
+        if self.config.USE_TOOLBBOX:
+            if "./" in self.config.IMGPATH:
+                ipath = os.path.dirname(ocromore_data["file_info"].path)+self.config.IMGPATH[1:]
+            else:
+                ipath = os.path.normcase(self.config.IMGPATH)
+            results = glob.glob(ipath+ocromore_data["file_info"].name.split(".")[0].replace("_msa_best","")+"*",recursive=True)
+            if results:
+                snippet = Snippet()
+                snippet.imread(results[0])
+            else:
+                self.config.USE_TOOLBBOX = False
+        info_handler = {}
         # start parsing for each successfully segmented area
         for segmentation_class in segmentation_classes:
 
@@ -147,8 +167,10 @@ class SegmentParser(object):
             if segmentation_class.is_start_segmented():
                 # get the unique identifier for this class
                 segment_tag = segmentation_class.get_segment_tag()
-
+                segmentation_class.snippet = snippet
+                segmentation_class.info_handler = info_handler
                 self.trigger_mapped_function(segment_tag, segmentation_class, ocromore_data)
+
 
         # add and return result
         ocromore_data['results'] = self.ef
@@ -158,7 +180,7 @@ class SegmentParser(object):
 
         if segment_tag not in self.function_map.keys():
             return
-
+        #todo: fileinfo -> parsing
         real_start_tag, content_texts, content_lines, feature_lines = self.prepare_parsing_info(segmentation_class, ocromore_data)
 
         # switch the object to save context
