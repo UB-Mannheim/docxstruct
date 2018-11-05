@@ -17,6 +17,7 @@ class TableRegex(object):
         self.incometype = regex.compile(r"(?:" + "ertrag|erträge|ergebnis|einnahme" + "){e<=" + str(1) + "}")
         self.lastidxnumber = regex.compile(r"(\d|\d.)$")
         self.amount = regex.compile(r"\S?in{e<=" + str(1) + "}.{0,3}\d.?[0|Ö|O]{2,3}")
+        self.amountmio = regex.compile(r"\S?in{e<=" + str(1) + "}.Mio")
         self.additional_info = regex.compile(
             r"(^[+][\)]|Bilanzposten|Erinnerungswert|Verlustausweis){e<=" + str(1) + "}")
 
@@ -198,8 +199,8 @@ class Table(object):
             for delidx in reversed(delidxs):
                 del content_lines[delidx[0]]
                 del feature_lines[delidx[0]]
-                for structurkey in self.structure.keys():
-                    del self.structure[structurkey][delidx[0]]
+                for skey in self.structure.keys():
+                    del self.structure[skey][delidx[0]]
         self.info.start = False
 
     ###### EXTRACT ######
@@ -235,7 +236,8 @@ class Table(object):
             else:
                 self.info.separator = int(np.median(self.structure["rborder"]))
         else:
-            if abs(self.info.separator-int(np.median([val for val in self.structure["separator"][startidx:next_date] if val > -1]))) > 250:
+            separatorlist = [val for val in self.structure["separator"][startidx:next_date] if val > -1]
+            if separatorlist and  abs(self.info.separator-int(np.median(separatorlist))) > 250:
                 self.info.separator = self._imgseparator(content_lines, startidx, next_date)
         # Extract content of each line
         for lidx, [entry, features] in enumerate(zip(content_lines, feature_lines)):
@@ -356,6 +358,9 @@ class Table(object):
                 amount = self.info.regex.amount.findall(reinfo)
                 if amount:
                     infotext = ("(in 1 000 " + reinfo.replace(amount[0], "")).replace("  ", " ")
+                amountmio = self.info.regex.amountmio.findall(reinfo)
+                if amountmio:
+                    infotext = ("(in 1 000 " + reinfo.replace(amountmio[0], "")).replace("  ", " ")
         for type in set(self.structure["type"]):
             self.content[type] = {}
             for col in range(0, len(self.info.col)):
@@ -392,7 +397,7 @@ class Table(object):
 
         # Validate the number
         bbox = [val - 5 if pos < 2 else val + 5 for pos, val in enumerate(list(entry["hocr_coordinates"]))]
-        fst_num, sec_num = self._valid_num_reocr(fst_num, snd_num, bbox)
+        fst_num, snd_num = self._valid_num_reocr(fst_num, snd_num, bbox)
 
         self.content[self.structure["type"][self.info.lidx]][0][self.info.row] = fst_num
         self.content[self.structure["type"][self.info.lidx]][1][self.info.row] = snd_num
@@ -521,14 +526,14 @@ class Table(object):
         return None
 
     def _valid_num_reocr(self, fst_num, snd_num,bbox,fst_alt=None,snd_alt=None):
-        if not self._valid_numpattern(fst_num):
+        if not self._valid_numpattern(fst_num) or abs(len(fst_num)-len(snd_num))>1:
             if fst_alt:
                 fst_num = fst_alt
             else:
                 reocr_num = self._reocr_num(bbox,2)
                 if self._valid_numpattern(reocr_num):
                     fst_num = reocr_num
-        if not self._valid_numpattern(snd_num):
+        if not self._valid_numpattern(snd_num) or abs(len(fst_num)-len(snd_num))>0:
             if snd_alt:
                 snd_num = snd_alt
             else:
@@ -543,7 +548,7 @@ class Table(object):
         reocr_bbox = bbox[:]
         reocr_bbox[separator_position] = self.info.separator + 13
         self.info.snippet.crop(reocr_bbox)
-        reocr_text = self._reocr(reocr_bbox).replace("\n", "").replace("+)", "")
+        reocr_text = self._reocr(reocr_bbox).replace("\n", "").replace("+)", "").replace("."," ").replace(","," ")
         reocr_num = ''.join([i for i in reocr_text if i.isdigit() or i == " "]).strip()
         return reocr_num
 
@@ -576,7 +581,7 @@ class Table(object):
                     self.info.row = self.info.dictionary[itemlvl][itemname]
                     if itemlvl == "Unterpunkte" and self.info.lastmainitem and lidx and self.info.fst_order < self.structure["lborder"][lidx]:
                         self.info.order = 2
-                        self.info.row += f" ({self.info.lastmainitem})"
+                        self.info.row = f"{self.info.lastmainitem} ({self.info.row})"
                     return True
         return False
 
