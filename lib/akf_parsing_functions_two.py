@@ -144,7 +144,6 @@ class AkfParsingFunctionsTwo(object):
 
         return True
 
-
     def parse_ordnungsnrdaktien(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
         element_counter = 0
@@ -219,6 +218,17 @@ class AkfParsingFunctionsTwo(object):
 
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        only_add_if_value = True
+        final_jahr = []
+
+        for text in content_texts:
+            text_stripped = text.strip("., ")
+            if text_stripped != "":
+                final_jahr.append(text_stripped)
+
+        self.ef.add_to_my_obj('year', final_jahr, object_number=element_counter,only_filled=only_add_if_value)
+        return True
 
     def parse_stimmrechtaktien(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data

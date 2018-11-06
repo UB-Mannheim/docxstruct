@@ -1,7 +1,7 @@
 import re
 import regex # backwards compatible to 're', but additional functionality
 # https://pypi.org/project/regex/ ---> 'fuzzy'-matches
-
+from akf_corelib.regex_util import RegexUtil as regu
 
 test_texts = [
     "Fernschreiber:",
@@ -16,7 +16,7 @@ test_texts = [
 
 
 example = regex.fullmatch(r"(?:cats|cat){e<=1}", "cat").fuzzy_counts
-print("Example is:",example)
+print("Example is:", example)
 
 def regexfuzzy_search(pattern, text ,err_number=2):
     compiled_wrapper = regex.compile(r"(?:"+pattern+"){e<="+str(err_number)+"}")
@@ -51,4 +51,11 @@ for text in test_texts:
 
 
 
+match_shorter_text, errs  = regu.fuzzy_search("^Texte", "Text", err_number=2)
+#if match_shorter_text:
+    #result = match_shorter_text.text
 
+# jk example
+match_shorter_text2, errs2  = regu.fuzzy_search("^rückstellungen$", "rücksstellungen", err_number=2)
+if match_shorter_text2:
+    result = match_shorter_text2.text
