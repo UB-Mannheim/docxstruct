@@ -365,9 +365,7 @@ class AKFCommonParsingFunctions(object):
             if 'beteiligungen' in dict_used_categories:
 
                 match_bet, err_bet = regu.fuzzy_search(r"^(Beteiligungen|Beteiligung|Beteil\.)\s?(:|ab)",
-                                                                text_stripped, err_number=1)
-                if "Beteil" in text_stripped:
-                    print("sad")
+                                                                text_stripped, err_number=0)
                 if match_bet:
                     my_result = match_bet.group().strip()
                     if 'beteiligungen' in current_object.keys():
@@ -378,14 +376,14 @@ class AKFCommonParsingFunctions(object):
 
                     #simple, complex = AKFCommonParsingFunctions.parse_dividenden_line(my_result, text_stripped,
                      #                                                       detailed_parsing=complex_parsing)
-                    current_object['beteiligungen'] =  text_stripped.replace(my_result, "").strip()  # conditionally set val
+                    current_object['beteiligungen'] = text_stripped.replace(my_result, "", 1).strip()  # conditionally set val
                     category_hit = True  # indicate that an additional subcategory was already found in current object
 
                     continue
 
             if 'parenthesis' in dict_used_categories:
 
-                match_parenth = regex.search(r"^\(\.*\)",text_stripped)
+                match_parenth = regex.search(r"^\(\.*\)", text_stripped)
 
                 if match_parenth:
                     my_result = match_parenth.group()
@@ -413,6 +411,7 @@ class AKFCommonParsingFunctions(object):
                         current_object['text'] += " " + text_stripped
 
                     current_object['text'] = current_object['text'].strip()
+                ended_with_only_text = True # indicate last line ended with text
                 continue
 
             # if other cases don't match add text to new object
@@ -425,6 +424,7 @@ class AKFCommonParsingFunctions(object):
                     current_object['text'] += " " + text_stripped # todo needed w/o space ? remove case  if ok
                 else:
                     current_object['text'] += " " + text_stripped
+                ended_with_only_text = True # indicate last line ended with text
             else:
                 current_object['text'] = text_stripped
                 ended_with_only_text = True # indicate last line ended with text
