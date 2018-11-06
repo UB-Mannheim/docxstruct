@@ -14,6 +14,7 @@ class TableRegex(object):
         self.columnheader = regex.compile(r"\d\d[- /.]\d\d[- /.]\d\d\d\d|\d\d\d\d\/\d\d|\d\d\d\d")
         self.balancetype = regex.compile(r"(?:" + "Aktiva|Passiva" + "){e<=" + str(2) + "}")
         self.assets_stop = regex.compile(r"(?:" + "kaptial|Passiva" + "){e<=" + str(2) + "}")
+        self.assets_stop_exceptions = regex.compile(r"(?:" + "Grundkapital" + "){e<=" + str(2) + "}")
         self.incometype = regex.compile(r"(?:" + "ertrag|erträge|ergebnis|einnahme|erlöse|erlös" + "){e<=" + str(1) + "}")
         self.lastidxnumber = regex.compile(r"(\d|\d.)$")
         self.amount = regex.compile(r"\S?in{e<=" + str(1) + "}.{0,3}\d.?[0|Ö|O]{2,3}")
@@ -116,7 +117,8 @@ class Table(object):
 
     def _check_type(self, content,template):
         if template == "datatable_balance":
-            if self.info.type == "Aktiva" and self.info.regex.assets_stop.search(content["text"]) is not None:
+            if self.info.type == "Aktiva" and self.info.regex.assets_stop.search(content["text"]) is not None\
+                    and not self.info.regex.assets_stop_exceptions.search(content["text"]):
                 self.info.type = "Passiva"
                 self.structure["type"][-1] = self.info.type
         if template == "datatable_income":
@@ -265,7 +267,7 @@ class Table(object):
             # If no date was found in the beginning..
             if self.info.start is True:
                 if features.counter_numbers < 2 and not self.info.regex.lastidxnumber.findall(entry['text']):
-                    self.info.row = ''.join(
+                    self.info.row += ''.join(
                         [i for i in entry['text'] if i not in list("()")]).strip() + " "
                     if self.info.dictionary and not self._valid_itemname(lidx=lidx):
                         continue
@@ -580,18 +582,14 @@ class Table(object):
             for additive in self.info.dictionary["Zusatz"].keys():
                 item = item.replace(additive+" ", "")
             item = "".join([char for char in item.lower() if char !=  " "])
-            if len(item) < 8:
-                fuzzy_range = 1
-            elif len(item) >= 12:
-                fuzzy_range = 3
-            else:
-                fuzzy_range = 2
-            itemregex = regex.compile(r"^"+item+"${e<=" + str(fuzzy_range) + "}")
+            fuzzy_range = len(item)//8
+            itemregex = regex.compile(r"^(?:"+regex.escape(item)+"){e<=" + str(fuzzy_range) + "}")
+            #itemregex = regex.compile(r"(?b)(?:" + item + "){e<=" + str(3) + "}")
             for itemlvl in ["Unterpunkte","Hauptpunkte"]:
                 for itemname in list(self.info.dictionary[itemlvl].keys()):
                     if itemregex.search(itemname.lower().replace(" ","")):
                         # Check if the last chars are there or if the itemname is split in 2 lines
-                        if regex.compile(r"^"+item[-4:]+"${e<=" + str(2) + "}").search(itemname.lower().replace(" ","")[-4:]):
+                        if regex.compile(r"(?:"+regex.escape(item[-4:])+"){e<=" + str(2) + "}").search(regex.escape(itemname.lower().replace(" ","")[-4:])):
                             self.info.row = self.info.dictionary[itemlvl][itemname]
                             if itemlvl == "Unterpunkte" and self.info.lastmainitem and lidx and self.info.fst_order < self.structure["lborder"][lidx]:
                                 self.info.order = 2
