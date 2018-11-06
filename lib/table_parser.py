@@ -14,7 +14,7 @@ class TableRegex(object):
         self.columnheader = regex.compile(r"\d\d[- /.]\d\d[- /.]\d\d\d\d|\d\d\d\d\/\d\d|\d\d\d\d")
         self.balancetype = regex.compile(r"(?:" + "Aktiva|Passiva" + "){e<=" + str(2) + "}")
         self.assets_stop = regex.compile(r"(?:" + "kaptial|Passiva" + "){e<=" + str(2) + "}")
-        self.incometype = regex.compile(r"(?:" + "ertrag|erträge|ergebnis|einnahme" + "){e<=" + str(1) + "}")
+        self.incometype = regex.compile(r"(?:" + "ertrag|erträge|ergebnis|einnahme|erlöse|erlös" + "){e<=" + str(1) + "}")
         self.lastidxnumber = regex.compile(r"(\d|\d.)$")
         self.amount = regex.compile(r"\S?in{e<=" + str(1) + "}.{0,3}\d.?[0|Ö|O]{2,3}")
         self.amountmio = regex.compile(r"\S?in{e<=" + str(1) + "}.Mio")
@@ -230,9 +230,9 @@ class Table(object):
             if len(self.info.col) > 1:
                 if self.info.config.USE_SNIPPET:
                     self.info.separator = self._imgseparator(content_lines, startidx, next_date)
-                if not self.info.separator:
-                    self.info.separator = int(
-                        np.median([val for val in self.structure["separator"][startidx:next_date] if val > -1]))
+                # Beware of second statement (RLY GOOD CHOICE ONLY FOR "AKTIENFÜHRER")
+                if not self.info.separator or (self.info.separator < 600 and 600< int(np.median([val for val in self.structure["separator"][startidx:next_date] if val > -1])) <800):
+                    self.info.separator = int(np.median([val for val in self.structure["separator"][startidx:next_date] if val > -1]))
             else:
                 self.info.separator = int(np.median(self.structure["rborder"]))
         else:
@@ -290,6 +290,12 @@ class Table(object):
                     lidx] / 2) < self.info.separator < (
                                self.structure["separator"][lidx] + self.structure["gapsize"][lidx] / 2):
                     extractlevel = "text"
+                # Find special cases
+                if self.info.row == "ohne Vortrag":
+                    if extractlevel == "bbox":
+                       entry["words"][0]["text"]= ""
+                    else:
+                        entry["text"] = entry["text"][8:]
                 # Get the content in structured manner
                 self._extract_content(entry, features, extractlevel)
                 self.info.row = ""
@@ -346,7 +352,12 @@ class Table(object):
                     lidx += 1
                 amount = self.info.regex.amount.findall(content_lines[lidx]['text'])
                 if amount:
-                    infotext = ("(in 1 000 " + content_lines[lidx]['text'].replace(amount[0], "")).replace("  "," ")
+                    infotext = ("in 1 000 " + content_lines[lidx]['text'].replace(amount[0], "")).replace("  "," ")
+                    offset += counter
+                    break
+                amountmio = self.info.regex.amountmio.findall(content_lines[lidx]['text'])
+                if amountmio:
+                    infotext = ("in Mio " + content_lines[lidx]['text'].replace(amountmio[0], "")).replace("  "," ")
                     offset += counter
                     break
             else:
@@ -357,10 +368,10 @@ class Table(object):
                 reinfo = self._reocr(list(content_lines[lidxs[1]]["hocr_coordinates"]))
                 amount = self.info.regex.amount.findall(reinfo)
                 if amount:
-                    infotext = ("(in 1 000 " + reinfo.replace(amount[0], "")).replace("  ", " ")
+                    infotext = ("in 1 000 " + reinfo.replace(amount[0], "")).replace("  ", " ")
                 amountmio = self.info.regex.amountmio.findall(reinfo)
                 if amountmio:
-                    infotext = ("(in 1 000 " + reinfo.replace(amountmio[0], "")).replace("  ", " ")
+                    infotext = ("in Mio " + reinfo.replace(amountmio[0], "")).replace("  ", " ")
         for type in set(self.structure["type"]):
             self.content[type] = {}
             for col in range(0, len(self.info.col)):
@@ -565,24 +576,27 @@ class Table(object):
         self.info.row = self.info.row.replace("- ", "")
         if "Zusatz" not in self.info.dictionary.keys(): return False
         item = self.info.row
-        for additive in self.info.dictionary["Zusatz"].keys():
-            item = item.replace(additive+" ", "")
-        item = item.lower().replace(" ","")
-        if len(item) < 8:
-            fuzzy_range = 1
-        elif len(item) >= 12:
-            fuzzy_range = 3
-        else:
-            fuzzy_range = 2
-        itemregex = regex.compile(r"^"+item+"${e<=" + str(fuzzy_range) + "}")
-        for itemlvl in ["Unterpunkte","Hauptpunkte"]:
-            for itemname in list(self.info.dictionary[itemlvl].keys()):
-                if itemregex.search(itemname.lower().replace(" ","")):
-                    self.info.row = self.info.dictionary[itemlvl][itemname]
-                    if itemlvl == "Unterpunkte" and self.info.lastmainitem and lidx and self.info.fst_order < self.structure["lborder"][lidx]:
-                        self.info.order = 2
-                        self.info.row = f"{self.info.lastmainitem} ({self.info.row})"
-                    return True
+        if len(item) > 3:
+            for additive in self.info.dictionary["Zusatz"].keys():
+                item = item.replace(additive+" ", "")
+            item = "".join([char for char in item.lower() if char !=  " "])
+            if len(item) < 8:
+                fuzzy_range = 1
+            elif len(item) >= 12:
+                fuzzy_range = 3
+            else:
+                fuzzy_range = 2
+            itemregex = regex.compile(r"^"+item+"${e<=" + str(fuzzy_range) + "}")
+            for itemlvl in ["Unterpunkte","Hauptpunkte"]:
+                for itemname in list(self.info.dictionary[itemlvl].keys()):
+                    if itemregex.search(itemname.lower().replace(" ","")):
+                        # Check if the last chars are there or if the itemname is split in 2 lines
+                        if regex.compile(r"^"+item[-4:]+"${e<=" + str(2) + "}").search(itemname.lower().replace(" ","")[-4:]):
+                            self.info.row = self.info.dictionary[itemlvl][itemname]
+                            if itemlvl == "Unterpunkte" and self.info.lastmainitem and lidx and self.info.fst_order < self.structure["lborder"][lidx]:
+                                self.info.order = 2
+                                self.info.row = f"{self.info.lastmainitem} ({self.info.row})"
+                            return True
         return False
 
     def var_occurence(self):
