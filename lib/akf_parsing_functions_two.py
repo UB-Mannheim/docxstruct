@@ -253,7 +253,8 @@ class AkfParsingFunctionsTwo(object):
             sbe = None
             if match_sb is not None:
                 sbe = match_sb.group()
-                entry = entry.replace(sbe, "")
+                sbe = sbe.replace("Stimmrechtsbeschränkung:", "", 1)
+                entry = entry.replace(sbe, "").replace("Stimmrechtsbeschränkung:", "", 1)
 
             self.ef.add_to_my_obj("entry", entry, object_number=element_counter ,only_filled=only_add_if_value)
             self.ef.add_to_my_obj("Stimmrechtsbeschränkung", sbe, object_number=element_counter ,only_filled=only_add_if_value)
