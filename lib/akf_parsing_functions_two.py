@@ -40,27 +40,40 @@ class AkfParsingFunctionsTwo(object):
             entry_stripped = entry.strip()
 
             if "beide" in entry_stripped:
-                entry_final = regex.sub(r"beide\s?\.?", "", entry_stripped).strip()
-                final_entries.append((ADDITIONAL_INFO_BOTH, entry_final, "", ""))
+                entry_final = regex.sub(r"beide\s?\.?", "##", entry_stripped).strip()
+                entry_final_split = entry_final.split('##')
+                for index_fs, entry_fs in enumerate(entry_final_split):
+                    if entry_fs.strip() == "" : continue
+                    if index_fs < len(entry_final_split)-1:
+                        final_entries.append((DEFAULT_ENTRY, entry_fs, "", "", ""))
+                    else:
+                        final_entries.append((ADDITIONAL_INFO_BOTH, entry_fs, "", "", ""))
                 continue
-            if "sämtl" in entry_stripped:
-                entry_final = regex.sub(r"sämtl\s?\.?", "", entry_stripped).strip()
-                final_entries.append((ADDITIONAL_INFO_ALL_PREV, entry_final, "", ""))
+            if regex.search("sämtl\s?\.?", entry_stripped):
+                entry_final = regex.sub(r"sämtl\s?\.?", "##", entry_stripped).strip()
+                entry_final_split = entry_final.split('##')
+                for index_fs, entry_fs in enumerate(entry_final_split):
+                    if entry_fs.strip() == "": continue
+                    if index_fs < len(entry_final_split)-1:
+                        final_entries.append((DEFAULT_ENTRY, entry_fs, "", "", ""))
+                    else:
+                        final_entries.append((ADDITIONAL_INFO_ALL_PREV, entry_fs, "", "", ""))
                 continue
 
             entry_split = entry_stripped.split(',')
             bank = ""
             city = ""
             title = ""
-            rest_info = ""
+            rest_info = []
             for fragment_index, fragment in enumerate(entry_split):
                 if fragment_index == 0:
                     bank = fragment
                 elif fragment_index == 1:
                     city = fragment
                 elif fragment_index >= 2:
-                    rest_info += fragment
-            final_entries.append((DEFAULT_ENTRY, bank, city, title))
+                    rest_info.append(fragment)
+            if bank != "" or city != "" or title != "":
+                final_entries.append((DEFAULT_ENTRY, bank, city, title, rest_info))
 
         # reverse list for better processing
         reverse_fe = final_entries.__reversed__()
@@ -69,13 +82,13 @@ class AkfParsingFunctionsTwo(object):
         current_entry_type = None
         final_list = []
         for item_index, item in enumerate(reverse_fe):
-            entry_type, entryorbank, city, title = item
+            entry_type, entryorbank, city, title, rest_info = item
             # change current additional info
             if entry_type == ADDITIONAL_INFO_BOTH or entry_type == ADDITIONAL_INFO_ALL_PREV:
                 current_info_index = item_index
                 current_additional_info = entryorbank
             elif entry_type == DEFAULT_ENTRY:
-                templist = [(entryorbank, city, title, current_additional_info)]
+                templist = [(entryorbank, city, title, current_additional_info, rest_info)]
                 templist.extend(final_list)
                 final_list = templist
 
@@ -87,12 +100,22 @@ class AkfParsingFunctionsTwo(object):
         # finally note the entries to output
         only_add_if_value = True
         for entry in final_list:
-            bank, city, title, add_info = entry
-            if add_info != "" and add_info != None:
-                city += add_info
+            bank, city, title, add_info, rest_info = entry
+            if add_info.strip() != "":
+                rest_info_new = [add_info]
+                rest_info_new.extend(rest_info)
+            else:
+                rest_info_new = rest_info
+
+            #if add_info != "" and add_info != None and city =="":
+            #    city += add_info
             self.ef.add_to_my_obj("bank", bank, object_number=element_counter, only_filled=only_add_if_value)
             self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_value)
             self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_value)
+            #self.ef.add_to_my_obj("additional_info", add_info, object_number=element_counter, only_filled=only_add_if_value)
+            #self.ef.add_to_my_obj("rest_info", rest_info, object_number=element_counter, only_filled=only_add_if_value)
+            self.ef.add_to_my_obj("rest_info", rest_info_new, object_number=element_counter, only_filled=only_add_if_value)
+
             element_counter += 1
 
         return True
