@@ -6,12 +6,61 @@ import json
 from skimage import filters, color, measure, io
 from PIL import ImageDraw
 
+class Table(object):
+    """This class helps to deal with tables
+    - Analyse structure
+    - Extract information"""
 
-class TableRegex(object):
+    def __init__(self):
+        self.content = {}
+        self.structure = {}
+        self.info = {}
+
+    ###### ANALYSE ######
+
+    def _check_evaluability(self, content, features):
+        if features.counters_alphabetical_ratios[features.counter_words - 1] < 0.5 or \
+                any([True for char in content["text"][:-2] if char.isdigit()]):
+            self.structure["eval"][-1] = True
+        return
+
+    ###### EXTRACT ######
+
+    def _reocr(self, bbox):
+        if self.info and self.info.snippet.crop(bbox):
+            if self.info.config.SAVE_SNIPPET:
+                self.info.snippet.save(self.info.config.IMAGE_PATH)
+            self.info.snippet.to_text()
+            return self.info.snippet.text
+        return ""
+
+    def _read_dictionary(self,tabletype):
+        test = glob.glob(f"{self.info.config.INPUT_TABLE_DICTIONARY}*{tabletype}.json")
+        if test:
+            with open(test[0], "r") as file:
+                self.info.dictionary = json.load(file)
+        return
+
+    def var_occurence(self):
+        with open('./var_occurences.json') as f:
+            data = json.load(f)
+            for type in self.content:
+                if not isinstance(self.content[type][0], str):
+                    for content_keys in self.content[type][0].keys():
+                        if content_keys in data.keys():
+                            data[content_keys] += 1
+                        else:
+                            data[content_keys] = 0
+        with open('./var_occurences.json', 'w') as outfile:
+            json.dump(data, outfile,indent=4,ensure_ascii=False)
+        return
+
+class DatatableRegex(object):
     """Compiled regex pattern for TP"""
 
     def __init__(self):
         self.columnheader = regex.compile(r"\d\d[- /.]\d\d[- /.]\d\d\d\d|\d\d\d\d\/\d\d|\d\d\d\d")
+        self.notcompleteitemname = regex.compile(r"Beteiligung"+"{e<=" + str(1) + "}")
         self.balancetype = regex.compile(r"(?:" + "Aktiva|Passiva" + "){e<=" + str(2) + "}")
         self.assets_stop = regex.compile(r"(?:" + "kaptial|Passiva" + "){e<=" + str(2) + "}")
         self.assets_stop_exceptions = regex.compile(r"(?:" + "Grundkapital" + "){e<=" + str(2) + "}")
@@ -23,7 +72,7 @@ class TableRegex(object):
             r"(^[+][\)]|Bilanzposten|Erinnerungswert|Verlustausweis){e<=" + str(1) + "}")
 
 
-class TableInfo(object):
+class DatatableInfo(object):
     """Helper dataclass - Information storage for TP"""
 
     def __init__(self, snippet=None):
@@ -44,17 +93,14 @@ class TableInfo(object):
         self.type = None
         self.amount = None
         self.snippet = snippet
-        self.regex = TableRegex()
+        self.regex = DatatableRegex()
         self.config = ConfigurationHandler(first_init=False).get_config()
         self.dictionary = None
 
-class Table(object):
-    """This class helps to deal with tables
-    - Analyse structure
-    - Extract information"""
+class Datatable(Table):
 
     def __init__(self, snippet=None):
-        self.content = {}
+        Table.__init__(self)
         self.structure = {"eval": [],
                           "date": [],
                           "next_section": [],
@@ -65,32 +111,30 @@ class Table(object):
                           "gapsize": [],
                           "gapidx": [],
                           "rborder": []}
-        self.info = TableInfo(snippet)
+        self.info = DatatableInfo(snippet)
 
     ###### ANALYSE ######
     def analyse_structure(self, content_lines, feature_lines, template="datatable"):
         """Analyse the structure of table with the help from the template information and extract some necessary parameter"""
-
-        if template in ["datatable", "datatable_balance", "datatable_income"]:
-            if template == "datatable_balance":
-                self.info.type = "Aktiva"
-            if template == "datatable_income":
-                self.info.type = "Verlust"
-            for content, features in zip(content_lines, feature_lines):
-                # Append the default values to the structure list
-                self._append_defaults(content,type=self.info.type)
-                # Checks if any text was recognized
-                if isinstance(features, bool):
-                    continue
-                # Checks if line is evaluable
-                self._check_evaluability(content, features)
-                # Checks the current template type (balance= Aktiva/Passiva,income=Gewinn/Verlust)
-                self._check_type(content,template)
-                # Iterate over all words and search for valid separator values (based on bbox)
-                if features.counter_numbers > 3:
-                    self._find_separator(features, content)
+        if template == "datatable_balance":
+            self.info.type = "Aktiva"
+        if template == "datatable_income":
+            self.info.type = "Verlust"
+        for content, features in zip(content_lines, feature_lines):
+            # Append the default values to the structure list
+            self._append_defaults(content, type=self.info.type)
+            # Checks if any text was recognized
+            if isinstance(features, bool):
+                continue
+            # Checks if line is evaluable
+            self._check_evaluability(content, features)
+            # Checks the current template type (balance= Aktiva/Passiva,income=Gewinn/Verlust)
+            self._check_type(content, template)
+            # Iterate over all words and search for valid separator values (based on bbox)
+            if features.counter_numbers > 3:
+                self._find_separator(features, content)
         # check if date is over more than one line
-        self._check_multiline_date()
+        self._check_multiline_date(content_lines)
         # delete unnecassary lines
         self._del_empty_lines(content_lines, feature_lines)
         return
@@ -115,9 +159,9 @@ class Table(object):
             self.structure["lborder"].append(content["words"][0]['hocr_coordinates'][0])
         return
 
-    def _check_type(self, content,template):
+    def _check_type(self, content, template):
         if template == "datatable_balance":
-            if self.info.type == "Aktiva" and self.info.regex.assets_stop.search(content["text"]) is not None\
+            if self.info.type == "Aktiva" and self.info.regex.assets_stop.search(content["text"]) is not None \
                     and not self.info.regex.assets_stop_exceptions.search(content["text"]):
                 self.info.type = "Passiva"
                 self.structure["type"][-1] = self.info.type
@@ -126,11 +170,7 @@ class Table(object):
                 self.structure["type"][-1] = "Gewinn"
         return self.info.type
 
-    def _check_evaluability(self, content, features):
-        if features.counters_alphabetical_ratios[features.counter_words - 1] < 0.5 or \
-                any([True for char in content["text"][:-2] if char.isdigit()]):
-            self.structure["eval"][-1] = True
-        return
+
 
     def _find_separator(self, features, content):
         for widx, wordratio in enumerate(reversed(features.counters_alphabetical_ratios)):
@@ -152,7 +192,8 @@ class Table(object):
                         offset = -3
                     # Todo: maybe search for amount to fuzzy?
                     if not self._vali_date(features, content):
-                        if self.info.start is True and self.info.regex.lastidxnumber.search(content["text"][offset:]) \
+                        if self.info.start is True and self.info.regex.lastidxnumber.search(
+                                content["text"][offset:]) \
                                 and not self.info.regex.amount.findall(content["text"]):
                             self.info.start = False
                             self.structure["next_section"][-1] = True
@@ -177,18 +218,20 @@ class Table(object):
         """Checks if the string contains a valid date"""
 
         if features.counter_numbers > 5 and \
-                (features.counter_alphabetical < 3 or
-                 self.info.regex.balancetype.search(content["text"]) is not None) and \
-                self.info.regex.columnheader.search(content["text"]):
+                (features.counter_alphabetical < 5 or self.info.regex.balancetype.search(content["text"]) is not None) \
+                and self.info.regex.columnheader.search(content["text"]):
             self.structure["date"][-1] = True
             self.info.start = True
         return False
 
-    def _check_multiline_date(self):
+    def _check_multiline_date(self,content_lines):
         old_date = None
         for date in list(np.nonzero(np.array(self.structure["date"])))[0]:
             if not old_date:
                 old_date = date
+                continue
+            if self.info.regex.amount.search(content_lines[date]["text"]) or self.info.regex.amountmio.search(content_lines[date]["text"]):
+                self.structure["date"][date] = False
                 continue
             if date - old_date < 3:
                 if not any(self.structure["next_section"][old_date:date + 1]):
@@ -205,7 +248,9 @@ class Table(object):
                     del self.structure[skey][delidx[0]]
         self.info.start = False
 
-    ###### EXTRACT ######
+
+    ##### EXTRACT #####
+
     def extract_content(self, content_lines: list, feature_lines: list, template="datatable"):
         """Extracts the table information in a structured manner in a the 'content'-dict with the analyse information"""
         if self.info.config.USE_TABLE_DICTIONARY:
@@ -269,7 +314,8 @@ class Table(object):
                 if features.counter_numbers < 2 and not self.info.regex.lastidxnumber.findall(entry['text']):
                     self.info.row += ''.join(
                         [i for i in entry['text'] if i not in list("()")]).strip() + " "
-                    if self.info.dictionary and not self._valid_itemname(lidx=lidx):
+                    #TODO:control firste regex statement
+                    if self.info.regex.notcompleteitemname.search(self.info.row) or (self.info.dictionary and not self._valid_itemname(lidx=lidx)):
                         continue
                 else:
                     self.info.row += ''.join([i for i in entry['text'] if i not in list("0123456789()")]).strip()
@@ -307,12 +353,7 @@ class Table(object):
             self.var_occurence()
         return
 
-    def _read_dictionary(self,tabletype):
-        test = glob.glob(f"{self.info.config.INPUT_TABLE_DICTIONARY}*{tabletype}.json")
-        if test:
-            with open(test[0], "r") as file:
-                self.info.dictionary = json.load(file)
-        return
+
 
     def _columnheader(self, content_lines) -> int:
         """"Helper to find the column headers"""
@@ -334,7 +375,23 @@ class Table(object):
         else:
             for line in lines:
                 result = self.info.regex.columnheader.findall(content_lines[line]['text'])
+                # ONLY VALID if there can be only two coloumns
+                if len(result) == 4:
+                    result[0] = result[0]+result[1]
+                    result[2] = result[2]+result[3]
+                    del result[1]
+                    del result[len(result)]
+                if len(result) == 3:
+                    if len(result[0]) > len(result[1]):
+                        result[1] = result[1]+result[2]
+                        del result[2]
+                    else:
+                        result[0] = result[0]+result[1]
+                        del result[1]
                 if result is not None:
+                    for idx,res in enumerate(result):
+                        if len(res) == 8 and "." not in res and "/" not in res:
+                            result[idx] = res[:2]+"."+res[2:4]+"."+res[4:]
                     self.info.col = result
                     break
             else:
@@ -354,12 +411,12 @@ class Table(object):
                     lidx += 1
                 amount = self.info.regex.amount.findall(content_lines[lidx]['text'])
                 if amount:
-                    infotext = ("in 1 000 " + content_lines[lidx]['text'].replace(amount[0], "")).replace("  "," ")
+                    infotext = ("in 1 000 " + "".join([char for char in content_lines[lidx]['text'].replace(amount[0], "").replace("8","$").replace("\n","") if not char.isdigit()])).replace("  "," ")
                     offset += counter
                     break
                 amountmio = self.info.regex.amountmio.findall(content_lines[lidx]['text'])
                 if amountmio:
-                    infotext = ("in Mio " + content_lines[lidx]['text'].replace(amountmio[0], "")).replace("  "," ")
+                    infotext = ("in Mio " + "".join([char for char in content_lines[lidx]['text'].replace(amountmio[0], "").replace("8","$").replace("\n","") if not char.isdigit()])).replace("  "," ")
                     offset += counter
                     break
             else:
@@ -370,10 +427,10 @@ class Table(object):
                 reinfo = self._reocr(list(content_lines[lidxs[1]]["hocr_coordinates"]))
                 amount = self.info.regex.amount.findall(reinfo)
                 if amount:
-                    infotext = ("in 1 000 " + reinfo.replace(amount[0], "")).replace("  ", " ")
+                    infotext = ("in 1 000 " + "".join([char for char in content_lines[lidx]['text'].replace(amount[0], "").replace("8","$").replace("\n","") if not char.isdigit()])).replace("  "," ")
                 amountmio = self.info.regex.amountmio.findall(reinfo)
                 if amountmio:
-                    infotext = ("in Mio " + reinfo.replace(amountmio[0], "")).replace("  ", " ")
+                    infotext = ("in Mio " + "".join([char for char in content_lines[lidx]['text'].replace(amountmio[0], "").replace("8","$").replace("\n", "") if not char.isdigit()])).replace("  ", " ")
         for type in set(self.structure["type"]):
             self.content[type] = {}
             for col in range(0, len(self.info.col)):
@@ -488,14 +545,6 @@ class Table(object):
                 print("Reocr did not work!")
         return False
 
-    def _reocr(self, bbox):
-        if self.info.snippet.crop(bbox):
-            if self.info.config.SAVE_SNIPPET:
-                self.info.snippet.save(self.info.config.IMAGE_PATH)
-            self.info.snippet.to_text()
-            return self.info.snippet.text
-        return ""
-
     def _imgseparator(self, content_lines, startidx, next_date):
         # Find a representativ area of the table
         sections = list(np.nonzero(self.structure["next_section"])[0])
@@ -507,8 +556,8 @@ class Table(object):
             snd_section = fst_section + 3
         else:
             snd_section = next_date - 1
-        if snd_section == fst_section:
-            snd_section += 1
+        if snd_section <= fst_section:
+            snd_section = fst_section+1
         lborder = min(self.structure["lborder"][fst_section:snd_section + 1])
         rborder = max(self.structure["rborder"][fst_section:snd_section + 1])
         tablebbox = [lborder, content_lines[fst_section]["words"][0]["hocr_coordinates"][1], rborder,
@@ -578,38 +627,223 @@ class Table(object):
         self.info.row = self.info.row.replace("- ", "")
         if "Zusatz" not in self.info.dictionary.keys(): return False
         item = self.info.row
+        subitemflag = False
         if len(item) > 3:
+            add = ""
             for additive in self.info.dictionary["Zusatz"].keys():
+                oldlen = len(item)
                 item = item.replace(additive+" ", "")
-            item = "".join([char for char in item.lower() if char !=  " "])
+                if oldlen != len(item) and additive in ["darunter","davon"]:
+                    subitemflag = True
+                elif oldlen != len(item) and additive not in ["Passiva","Aktiva"]:
+                    add += additive+" "
+            item = "".join([char for char in item.lower() if char != " "])
             fuzzy_range = len(item)//8
             itemregex = regex.compile(r"^(?:"+regex.escape(item)+"){e<=" + str(fuzzy_range) + "}")
             #itemregex = regex.compile(r"(?b)(?:" + item + "){e<=" + str(3) + "}")
+            # 426_1967 ??
             for itemlvl in ["Unterpunkte","Hauptpunkte"]:
                 for itemname in list(self.info.dictionary[itemlvl].keys()):
-                    if itemregex.search(itemname.lower().replace(" ","")):
-                        # Check if the last chars are there or if the itemname is split in 2 lines
-                        if regex.compile(r"(?:"+regex.escape(item[-4:])+"){e<=" + str(2) + "}").search(regex.escape(itemname.lower().replace(" ","")[-4:])):
-                            self.info.row = self.info.dictionary[itemlvl][itemname]
-                            if itemlvl == "Unterpunkte" and self.info.lastmainitem and lidx and self.info.fst_order < self.structure["lborder"][lidx]:
-                                self.info.order = 2
-                                self.info.row = f"{self.info.lastmainitem} ({self.info.row})"
-                            return True
+                    if len(item)-3<len(itemname)<len(item)+3:
+                        if itemregex.search(itemname.lower().replace(" ","")):
+                            # Check if the last chars are there or if the itemname is split in 2 lines
+                            if regex.compile(r"(?:"+regex.escape(item[-4:])+"){e<=" + str(2) + "}").search(regex.escape(itemname.lower().replace(" ","")[-4:])):
+                                self.info.row = add+self.info.dictionary[itemlvl][itemname]
+                                if subitemflag or (itemlvl == "Unterpunkte" and self.info.lastmainitem and lidx and self.info.fst_order < self.structure["lborder"][lidx]):
+                                    if itemname == "Barmittel" and self.info.lastmainitem != "Umlaufvermögen" and self.structure["order"][self.info.lidx] == 1:
+                                        self.info.order = 1
+                                    if itemname == "Beteiligungen" and self.info.lastmainitem != "Anlagevermögen":
+                                        continue
+                                    else:
+                                        self.info.order = 2
+                                        self.info.row = f"{self.info.lastmainitem} ({self.info.row})"
+                                return True
         return False
 
-    def var_occurence(self):
-        with open('./var_occurences.json') as f:
-            data = json.load(f)
-            for type in self.content:
-                if not isinstance(self.content[type][0], str):
-                    for content_keys in self.content[type][0].keys():
-                        if content_keys in data.keys():
-                            data[content_keys] += 1
-                        else:
-                            data[content_keys] = 0
-        with open('./var_occurences.json', 'w') as outfile:
-            json.dump(data, outfile,indent=4,ensure_ascii=False)
+class SharetableRegex(object):
+    """Compiled regex pattern for TP"""
+
+    def __init__(self):
+        self.date = regex.compile(r"(?:19\d\d)")
+
+class SharetableInfo(object):
+    """Helper dataclass - Information storage for TP"""
+
+    def __init__(self, snippet=None):
+        self.separator = {}
+        self.start = False
+        self.row = ""
+        self.col = None
+        self.lborder = None
+        self.order = None
+        self.fst_order = None
+        self.subtables = 0
+        self.nrow = None
+        self.lidx = 0
+        self.lastmainitem= None
+        self.widx = 0
+        self.gapidx = -1
+        self.rborder = None
+        self.type = None
+        self.amount = None
+        self.snippet = snippet
+        self.regex = SharetableRegex()
+        self.config = ConfigurationHandler(first_init=False).get_config()
+        self.dictionary = None
+
+class Sharetable(Table):
+    def __init__(self, snippet=None):
+        Table.__init__(self)
+        self.structure = {"eval": [],
+                          "data": [],
+                          "type": [],
+                          "order": [],
+                          "currency":[],
+                          "lborder": [],
+                          "separator": [],
+                          "gapsize": [],
+                          "gapidx": [],
+                          "rborder": []}
+        self.info = SharetableInfo(snippet)
+
+    ##### ANALYSE #####
+    def analyse_structure(self, content_lines, feature_lines, template="sharetable"):
+        """Analyse the structure of table with the help from the template information and extract some necessary parameter"""
+        for lidx, (content, features) in enumerate(zip(content_lines, feature_lines)):
+            self.info.lidx = lidx
+            # Append the default values to the structure list
+            self._append_defaults(content, type=self.info.type)
+            # Checks if any text was recognized
+            if isinstance(features, bool):
+                continue
+            # Checks if line is evaluable
+            self._check_evaluability(content, features)
+            # Checks the current template type (balance= Aktiva/Passiva,income=Gewinn/Verlust)
+            if self._check_data(content,features, template):
+                self._find_separator(content)
+            # Iterate over all words and search for valid separator values (based on bbox)
+            #if features.counter_numbers > 3:
+            #    self._find_separator(features, content)
+        #self._generate_separator()
+        # check if date is over more than one line
+        #self._check_multiline_date()
+        # delete unnecassary lines
+        #self._del_empty_lines(content_lines, feature_lines)
         return
+
+    def _append_defaults(self, content, type=None):
+        default_dict = {"eval": False,
+                        "data": False,
+                        "type": type,
+                        "currency": None,
+                        "order": 0,
+                        "separator": None,
+                        "gapsize": -1,
+                        "gapidx": -1}
+
+        for param, default in default_dict.items():
+            self.structure[param].append(default)
+        if content["text"] == "":
+            self.structure["rborder"].append(-1)
+            self.structure["lborder"].append(-1)
+        else:
+            self.structure["rborder"].append(content["words"][len(content["words"]) - 1]['hocr_coordinates'][2])
+            self.structure["lborder"].append(content["words"][0]['hocr_coordinates'][0])
+        return
+
+    def _check_data(self, content,features, template):
+        if features.counter_alphabetical < 9:
+            self.structure["data"][-1] = True
+            return True
+        return False
+
+    def _find_separator(self,content):
+        if "DM" in content["text"] or "%" in content["text"]:
+            bbox_separator = []
+            visual_separator = []
+            markerflag = False
+            lastwidx = 0
+            self.structure["currency"][self.info.lidx]= []
+            bbox = list(content["hocr_coordinates"])
+            for widx, word in enumerate(content["words"]):
+                if self.info.regex.date.search(word["text"]):
+                    lastwidx = widx
+                    markerflag = True
+                elif lastwidx<widx-2 or all(False for char in word["text"] if char.isdigit() or char.ispunctuation()):
+                    markerflag = False
+                if word["text"] in ["DM","%"] or word["text"][-1] in ["%"] or word["text"][-2:] in ["DM"]:
+                    if markerflag and lastwidx+2==widx:
+                        bbox_separator.append([int(np.mean([content["words"][widx-1]["hocr_coordinates"][0],content["words"][widx-2]["hocr_coordinates"][2]])),
+                                            int(np.mean([word["hocr_coordinates"][0],content["words"][widx-1]["hocr_coordinates"][2]])),
+                                            word["hocr_coordinates"][2]])
+                        #visual_separator.append([content["words"][widx]["hocr_coordinates"][0],word["hocr_coordinates"][2]])
+                        if word["text"][-1] == "%":
+                            self.structure["currency"][self.info.lidx].append(["%"])
+                        else:
+                            self.structure["currency"][self.info.lidx].append(["DM"])
+                    bbox[2] = word["hocr_coordinates"][2]
+                    visual_separator.append(self._generate_separator(bbox))
+                    bbox[0] = bbox[2]
+            if len(visual_separator)-1 > self.info.subtables-1:
+                self.info.subtables = len(visual_separator)-1
+            self.structure["separator"][self.info.lidx] = {"bbox": bbox_separator, "visual": visual_separator}
+        return True
+
+    def _generate_separator(self,tablebbox):
+        if self.info.snippet.crop(tablebbox):
+            tableimg = color.rgb2gray(np.array(self.info.snippet.snippet))
+            thresh = filters.threshold_otsu(tableimg)
+            threshed = tableimg > thresh
+            threshed_red = np.sum(threshed, axis=0) > threshed.shape[0] * 0.95
+            whitespace = {}
+            whitespace["label"] = measure.label(threshed_red)
+            whitespace["area"] = np.bincount(whitespace["label"].ravel())
+            # Generate list with occurences without black areas and the first left and right area
+            whitespace["biggest"] = sorted(whitespace["area"][2:], reverse=True)[:2]
+            #if whitespace["biggest"][1]*0.75 > whitespace["biggest"][2]:
+            #    whitespace["biggest"] = whitespace["biggest"][:2]
+            whitespace["selected"] = [area for area in whitespace["area"] if area in whitespace["biggest"]]
+            draw = ImageDraw.Draw(self.info.snippet.snippet)
+            separator = []
+            for selected_area in whitespace["selected"]:
+                gapidx = np.argwhere(whitespace["area"] == selected_area)[-1][0]
+                gap = np.nonzero(whitespace["label"] == gapidx)[0]
+                separator.append(int(gap[0] + len(gap) * 0.35))
+                #if self.info.config.DRAW_SEPARATOR:
+                draw.line((separator[-1],0,separator[-1],threshed.shape[0]),fill=128)
+            self.info.snippet.save(self.info.config.IMAGE_PATH)
+            return [separator[0] + tablebbox[0], separator[1]+tablebbox[0], tablebbox[2]]
+        return []
+
+
+
+    ##### EXTRACT #####
+
+    def extract_content(self, content_lines: list, feature_lines: list, template="sharetable"):
+        """Extracts the table information in a structured manner in a the 'content'-dict with the analyse information"""
+        self.info.nrow = len(feature_lines)
+        # Get the columnheader information based on date lines
+        if self.info.subtables == 0:
+            self.info.separator = self.structure["separator"][1]["bbox"][0][0]
+            for content in content_lines:
+                text = ""
+                money = ""
+                amount = ""
+                for widx, word in enumerate(content["words"]):
+                    #if word["hocr_coordinates"][2] > self.info.separator:
+                    #    break
+                    if word["hocr_coordinates"][0] > self.info.separator:
+                        money += "".join([char for char in word["text"] if char.isdigit()])
+                        amount += "".join([char for char in word["text"] if char.isalpha() or char == "%"])
+                    else:
+                        text += "".join([char for char in word["text"] if char.isdigit()])
+                print(f"Money: {money}")
+                print(f"Amount: {amount}")
+                print(f"Year: {text}")
+        return
+
+
+
 
 #legacy code just in case..
 """
