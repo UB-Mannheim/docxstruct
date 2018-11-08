@@ -127,43 +127,78 @@ class AkfParsingFunctionsTwo(object):
         origpost, origpost_red, element_counter, content_texts = \
             cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
 
+        only_add_if_value = True
+
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
         final_entries = []
         current_ref_index = -1
+        found_main_amount = False
+        additional_info = []
         for text_index, text in enumerate(content_texts):
-            match_dm = regex.match(r"^DM.*", text)
-            if match_dm is not None:
-                final_entries.append(text)
-                # get last entry as ref
-                current_ref_index += 1
+            #match_dm = regex.match(r"^DM.*", text)
+            match_dm = regex.search(r"^(?P<currency>\D{1,4})(?P<amount>[\d\.\-\s]*)",text)
+            if found_main_amount is False and match_dm is not None:
+                currency = match_dm.group("currency").strip(",. ")
+                amount = match_dm.group("amount")
+                self.ef.add_to_my_obj("currency", currency, object_number=element_counter, only_filled=only_add_if_value)
+                self.ef.add_to_my_obj("amount", amount, object_number=element_counter, only_filled=only_add_if_value)
+                found_main_amount = True
             else:
-                if current_ref_index == -1:
-                    # special case there was no leading dm entry
-                    final_entries.append(text)
-                    # get last entry as ref
-                    current_ref_index += 1
 
-                # update ref
-                final_entries[current_ref_index] += " "+text
+                # DM34000000. - Inh. - St. - Akt.
+                # DM266000. - Nam. - St. - Akt.
+                # DM1718400. - St. - Akt.
+                # DM21600. - Vorz. - Akt.
+                # DM 2 000 000.- St.-Akt.,
+                # DM 60 000.- Vorz.-Akt. Lit.A,
+                # DM 9 000.- Vorz.-Akt. Lit.B.
 
-        only_add_if_value = True
-        for entry in final_entries:
-            match_entry = regex.match(r"(?<amount>.*?\.\-)"     # match until first '.-'
-                                      r"(?<add_info>.*)",       # match the rest string
-                                      entry)
-            if match_entry is None:
-                self.ef.add_to_my_obj("amount", entry, object_number=element_counter, only_filled=only_add_if_value)
-                element_counter += 1
-                continue
+                if "Akt." in text:
+                    match_entry = regex.search(r"^(?P<currency>\D{1,4})(?P<amount>[\d\.\-\s]*)(?P<rest_info>.*)", text)
+                    addt_currency = ""
+                    addt_amount = ""
+                    addt_rest_info = ""
+                    final_object = {}
 
-            amount = dh.strip_if_not_none(match_entry.group("amount"), "")
-            add_info = dh.strip_if_not_none(match_entry.group("add_info"), "")
+                    if match_entry:
+                        addt_currency = match_entry.group("currency")
+                        addt_amount = match_entry.group("amount")
+                        addt_rest_info = match_entry.group("rest_info")
+                        final_object = {
+                            "currency":addt_currency,
+                            "amount": addt_amount,
+                            "rest_info": addt_rest_info
+                        }
+                    if "Inh." in text and "St." in text:
+                        # Inhaber Stammaktien
+                        self.ef.add_to_my_obj("Inhaber-Stammaktien", final_object, object_number=element_counter,
+                                              only_filled=only_add_if_value)
 
-            self.ef.add_to_my_obj("amount", amount, object_number=element_counter, only_filled= only_add_if_value)
-            self.ef.add_to_my_obj("additional_info", add_info, object_number=element_counter, only_filled= only_add_if_value)
-            element_counter += 1
+
+                    elif "Nam." in text and "St." in text:
+                        # Nanhafte Stammaktien
+                        self.ef.add_to_my_obj("Namhafte-Stammaktien", final_object, object_number=element_counter,
+                                              only_filled=only_add_if_value)
+                    elif "St." in text:
+                        # Stammaktien
+                        self.ef.add_to_my_obj("Stammaktien", final_object, object_number=element_counter,
+                                              only_filled=only_add_if_value)
+                    elif "Vorz." in text:
+                        self.ef.add_to_my_obj("Vorzeigeaktien", final_object, object_number=element_counter,
+                                              only_filled=only_add_if_value)
+                    else:
+                        # not recognized just add as additional info
+                        additional_info.append(text)
+                    # element_counter += 1
+                    continue
+                additional_info.append(text)
+                # element_counter += 1
+
+        if len(additional_info) >= 1:
+            self.ef.add_to_my_obj("additional_info", additional_info, object_number=element_counter,
+                                     only_filled=only_add_if_value)
 
         return True
 
@@ -180,18 +215,33 @@ class AkfParsingFunctionsTwo(object):
         # example values - each line of content_texts list
         # '589300 (St.-Akt.)'
         # '589300.'
+        first_number_match = True
         for entry in content_texts:
-            match_number = regex.match(r"\d*", entry)
-            match_parenth = regex.search(r"\(.*\)", entry)
+            entry_stripped = entry.strip()
+            rest = entry_stripped
+            if entry_stripped == "":
+                continue
 
-            if match_number is not None:
-                number = match_number.group(0)
+            match_number = regex.search(r"^([\d\s]*)", entry_stripped)
+            match_parenth = regex.search(r"\(.*\)", entry_stripped) # take content in parenthesis
+
+            if match_number is not None and match_number.group(0).strip() != "":
+
+                if not first_number_match:
+                    element_counter += 1        # switch to next element if number not true
+                number = match_number.group(0).strip()
+
                 self.ef.add_to_my_obj("ord_number", number, object_number=element_counter, only_filled=only_add_if_value)
+                rest = rest.replace(number, "", 1)
+                first_number_match = False
             if match_parenth is not None:
                 parenth = match_parenth.group(0)
-                self.ef.add_to_my_obj("additional_info", parenth, object_number=element_counter, only_filled=only_add_if_value)
-            if match_number is not None or match_parenth is not None:
-                element_counter += 1
+                self.ef.add_to_my_obj("category", parenth, object_number=element_counter, only_filled=only_add_if_value)
+                rest = rest.replace(parenth, "", 1)
+
+            rest_stripped = rest.strip()
+            if rest_stripped != "":
+                self.ef.add_to_my_obj("additional_info", rest_stripped, object_number=element_counter, only_filled=only_add_if_value)
 
     def parse_grossaktionaer(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
