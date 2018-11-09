@@ -252,6 +252,8 @@ class DataHelper(object):
                     line_ends_with_amount = True
                 elif len(text) >= 2 and "-" in text[-1] and "." in text[-2]:
                     line_ends_with_amount = True
+                elif len(text) >= 2 and "-" in text[-1] and text[-2].isdigit():
+                    line_ends_with_amount = True # no amount, but similar case it's a timespan '1996-\n1997' or similar
 
                 if not line_ends_with_amount and next_text is not None and len(next_text) >= 1:
 

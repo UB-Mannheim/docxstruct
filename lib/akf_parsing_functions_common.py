@@ -462,7 +462,7 @@ class AKFCommonParsingFunctions(object):
             # possible to add some simple parsing here
             return input_text, None
 
-        match_percentag = regex.search("[\d\,\.\-\/]*\s?%", input_text)
+        match_percentag = regex.search("[\d\,\.\-\/\s]*\s?%", input_text)
         match_vonyer = regex.search("von\s\d*", input_text)
         percentage = match_percentag.group() if match_percentag else ""
         year = match_vonyer.group() if match_vonyer else ""
@@ -476,11 +476,11 @@ class AKFCommonParsingFunctions(object):
         rest_3 = rest_2.replace(lead_num, "").strip()
 
         return_object = {}
-        return_object['percentage'] = percentage
-        return_object['year'] = year
-        return_object['amount'] = lead_num
-        return_object['name'] = rest_3
-        return_object['add_info'] = add_info_start
+        return_object['percentage'] = percentage.strip()
+        return_object['year'] = year.strip()
+        return_object['amount'] = lead_num.strip()
+        return_object['name'] = rest_3.strip()
+        return_object['add_info'] = add_info_start.strip()
 
         return input_text, return_object
 

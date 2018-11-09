@@ -556,7 +556,10 @@ class AkfParsingFunctionsThree(object):
             if match_only_year and text_index != len(content_texts)-1:
                 multi_entries = True
                 #current_entry = (current_entry + " " + text).strip()
-                current_key = text.strip()
+                #current_key = text.strip()
+                #entries_adapted[current_key] = text.strip()
+                entries_adapted[current_key] = (entries_adapted[current_key] + " " + text).strip()
+
                 #entries_adapted.append(current_entry)
 
                 # if text_index == len(content_texts) - 1:
