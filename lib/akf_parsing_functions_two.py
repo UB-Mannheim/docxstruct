@@ -258,26 +258,32 @@ class AkfParsingFunctionsTwo(object):
             # testline
             # line = "Société Sidérurgique de Participations et d’ Approvisionnement en Charbons, par abréviation (Sidechar), Paris (ca.60,2 %)."
 
-            match_parenth = regex.findall(r"(\(.*?\))", line)
+            # find parenthesis with 2 or more characters inside
+            match_parenth = regex.findall(r"(\(.{2,}\))", line)
             found_parenth = None
+            parenth_is_used = False
             organization = None
             location = None
             # find additional info in  each line and subtract it
             if match_parenth:
                 found_parenth = match_parenth[-1].strip("., ") # find the last parenthesis grounp
-                line = line.replace(found_parenth, "")
+                # if the parenthesis are at the end of line
+                if line.strip()[-1] == ")" and not(len(found_parenth.replace(" ", "")) <= 5 and "%" in found_parenth): # exclude percentages from parenthesis matches
+                    line = line.replace(found_parenth, "", 1)
+                    parenth_is_used = True
 
             split_line = line.split(',')
             len_split_line = len(split_line)
             if len_split_line == 1:
                 organization = line.strip("., ")
             else:
-                organization = line.replace(split_line[-1], "").strip("., ")
+                organization = line.replace(split_line[-1], "", 1).strip("., ")
                 location = split_line[-1].strip("., ")  # town
 
             self.ef.add_to_my_obj("organization", organization, object_number=element_counter,only_filled=only_add_if_value)
             self.ef.add_to_my_obj("location", location, object_number=element_counter,only_filled=only_add_if_value)
-            self.ef.add_to_my_obj("additional_info", found_parenth, object_number=element_counter,only_filled=only_add_if_value)
+            if parenth_is_used:
+                self.ef.add_to_my_obj("additional_info", found_parenth, object_number=element_counter,only_filled=only_add_if_value)
             element_counter += 1
 
         return True
