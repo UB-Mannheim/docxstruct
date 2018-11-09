@@ -396,21 +396,21 @@ class AkfParsingFunctionsTwo(object):
             if match_saemtlsakt is not None and match_akt is not None:
                 saemtl_res = match_saemtlsakt.group()
                 self.ef.add_to_my_obj("additional_info", saemtl_res, object_number=element_counter, only_filled=only_add_if_value)
-                reduced_text = text.replace(saemtl_res,"")
+                reduced_text = text.replace(saemtl_res, "")
                 final_lines.append(reduced_text)
                 element_counter += 1
                 continue
-            if match_saemtlsakt is not None:
-                self.ef.add_to_my_obj("additional_info", text, object_number=element_counter, only_filled=only_add_if_value)
-                element_counter += 1
-                continue
+            #if match_saemtlsakt is not None:
+            #    self.ef.add_to_my_obj("additional_info", text, object_number=element_counter, only_filled=only_add_if_value)
+            #    element_counter += 1
+            #    continue
             if match_akt is not None:
                 final_lines.append(text)
             else:
                 if len(final_lines) == 0:
                     final_lines.append(text)
                     continue
-                final_lines[-1] = final_lines[-1] + text
+                final_lines[-1] = final_lines[-1] + " " + text.strip()
 
         for line in final_lines:
             self.ef.add_to_my_obj("entry", line, object_number=element_counter, only_filled=only_add_if_value)

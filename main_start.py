@@ -26,7 +26,7 @@ segment_parser = SegmentParser(output_analyzer)
 
 dh = DatabaseHandler(dbdir="")
 dh.set_dirpos(tablename_pos=config.TABLENAME_POS,ocr_profile_pos=config.OCR_PROFILE_POS,\
-              ocr_pos=config.OCR_POS,dbname_pos=config.DBPATH_POS)
+              ocr_pos=config.OCR_POS, dbname_pos=config.DBPATH_POS)
 
 dh.fetch_files(config.INPUT_FILEGLOB, config.INPUT_FILETYPES)
 # get files-list
@@ -53,7 +53,7 @@ for key in hocr_files:
         # only check files which are relevant (comment out if not used)
         # Sitz ok:     72, 207,671, 731, 733
         # Sitz faulty: 270,454
-        #if ctr_test not in [473]:
+        #if ctr_test not in [731]:
         #    ctr_test += 1
         #    continue
 

@@ -188,8 +188,8 @@ class EndobjectFactory(object):
         if key not in self.my_object.keys():
             return None
 
-        if key == "Beteiligungen":
-           print("todo remove debug")
+        #if key == "Beteiligungen":
+        #   print("todo remove debug")
 
 
         my_data = self.my_object[key]
@@ -211,6 +211,14 @@ class EndobjectFactory(object):
             entry = my_data[index]
             final_entries = fetch_subentries_recursive(entry)
             all_final_entries.extend(final_entries)
+
+        if self.config.REMOVE_SPACES_IN_ORIGIN_DIFF is True:
+            # removes all spaces from rest and comparison values because spaces are often
+            # a problem in subtracting the rests
+            rest_text = rest_text.replace(" ", "")
+            for index in range(0,len(all_final_entries)):
+                all_final_entries[index] = all_final_entries[index].replace(" ", "")
+
 
         # order diff data after length
         all_final_entries.sort(key=lambda x: len(x))
