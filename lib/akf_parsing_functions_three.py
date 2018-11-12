@@ -525,12 +525,16 @@ class AkfParsingFunctionsThree(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
-        entries_adapted = {}
-        current_key = "general"
 
+
+        # finalize content texts
+        entries_adapted = {}
+        current_key = "general_0"
+        current_counter = 0
         # detect if there are lines with only year and no other info (indicator for multiple entries)
         multi_entries = False
         next_key = None
+        emissionsbetrag_index = 0
         for text_index, text in enumerate(content_texts):
             text = text.strip()
             if text == "":
@@ -539,25 +543,41 @@ class AkfParsingFunctionsThree(object):
                 current_key = next_key
                 next_key = None
 
+            match_percentage_dot = regex.search("^[\.\d\s\:]{2,7}\%", text)
+            if match_percentage_dot:
+                current_counter += 1
+                current_key = "general_"+str(current_counter)
+
             match_only_year = regex.search("^([\d\-\/]+)$", text)  # use this as splitter ?
             match_emissionsbetrag, err_number = regu.fuzzy_search("^Emissionsbetrag\s?:", text, err_number=1)
             match_double_dot = regex.search("^.*[^1]+:[^1]*", text)
             if match_emissionsbetrag:
                 result_emissionsbetrag = match_emissionsbetrag.group()
                 text = text.replace(result_emissionsbetrag, "").strip()
-                current_key = "Emissionsbetrag"  # use  a normed key for later recognition
+                emissionsbetrag_index += 1
+                current_key = "Emissionsbetrag"+str(emissionsbetrag_index)  # use  a normed key for later recognition
+
                 if "Umtauschrecht" in text: # special case (2 keys in same line)
                     next_key = "Umtauschrecht"
+
             if not match_emissionsbetrag and match_double_dot:
                 result_double_dot = match_double_dot.group()
-                if "1:1" not in text:
+                if "1:1" not in text and "Emissionsbetrag" not in text:
                     text = text.replace(result_double_dot, "").strip()
                     current_key = result_double_dot
+            if "Emissionsbetrag" in current_key:
+                if current_key not in entries_adapted.keys():
+                    entries_adapted[current_key] = ""
+                entries_adapted[current_key] += " "+ text
+                continue
             if match_only_year and text_index != len(content_texts)-1:
                 multi_entries = True
                 #current_entry = (current_entry + " " + text).strip()
                 #current_key = text.strip()
                 #entries_adapted[current_key] = text.strip()
+                if current_key not in entries_adapted.keys():
+                    entries_adapted[current_key] = ""
+
                 entries_adapted[current_key] = (entries_adapted[current_key] + " " + text).strip()
 
                 #entries_adapted.append(current_entry)
@@ -574,13 +594,15 @@ class AkfParsingFunctionsThree(object):
         #if current_entry != "":
         #    entries_adapted[current_key] = current_entry
 
-
         for key in entries_adapted:
             value = entries_adapted[key]
             if key == "general":
                 value_parsed_simple, value_parsed = cf.parse_anleihe(value)
             elif key == "Emissionsbetrag":
-                value_parsed_simple, value_parsed = cf.parse_emissionsbetrag(value)
+                value_parsed = []
+                for extra_value in value:
+                    value_parsed_simple, value_parsed_once = cf.parse_emissionsbetrag(extra_value)
+                    value_parsed.append(value_parsed_once)
             else:
                 value_parsed = value
 
