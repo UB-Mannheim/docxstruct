@@ -332,8 +332,8 @@ class AkfParsingFunctionsOne(object):
                                                 current_key_initial_value="General_Info")
 
         for key in final_items.keys():
-            value = final_items[key].strip()
-            if value is None or value == "":
+            value = final_items[key]
+            if value is None or len(value) == 0:
                 continue
             self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=True)
             element_counter += 1

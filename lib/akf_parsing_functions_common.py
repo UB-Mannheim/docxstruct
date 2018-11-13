@@ -41,36 +41,63 @@ class AKFCommonParsingFunctions(object):
                 starts_with_abc = regex.search("^\w\s?\)", text)
                 if starts_with_abc:
                     current_key = starts_with_abc[0]
+                    if current_key.strip() != "":
+                        # if there is a multikey give it an additional counter
+                        key_count = list(final_items.keys()).count(current_key)
 
-                    # if there is a multikey give it an additional counter
-                    key_count = list(final_items.keys()).count(current_key)
+                        # remove current key from text
+                        text = text.replace(current_key, "", 1).strip()
+                        abc_found = True
 
-                    # remove current key from text
-                    text = text.replace(current_key, "", 1).strip()
-                    abc_found = True
-
-                    if key_count >= 1:
-                        current_key = current_key + "_" + str(key_count + 1)
+                        if key_count >= 1:
+                            current_key = current_key + "_" + str(key_count + 1)
 
             if ":" in text and abc_found is False:
                 # find out if there is a new category
-                current_key = text.split(":")[0]
-                # if there is a multikey give it an additional counter
-                key_count = list(final_items.keys()).count(current_key)
+                #current_key = text.split(":")[0]
+                text_with_tag = regex.sub(":", "┇┇:", text)
+                current_key_sp = regex.split(r";|:", text_with_tag)
+                new_key_found = None
+                for key_to_check in current_key_sp:
+                    if "┇┇" in key_to_check:
+                        new_key_found = key_to_check.replace("┇┇", "")
+                        # if there is a multikey give it an additional counter
+                        keys_list = list(final_items.keys())
+                        key_count = 0
+                        for listkey in keys_list:
+                            if new_key_found in listkey:
+                                key_count += 1
 
-                # remove current key from text
-                #text = text.replace(current_key, "").replace(":", "") # can lead to errors (double replacement in sth like  Lokomotive: Dampf-Lokomotive)
-                text = regex.sub(regex.escape(current_key)+"\s?"+":", "", text)
+                        # key_count = list(final_items.keys()).count(new_key_found)
 
-                if key_count >= 1:
-                    current_key = current_key+"_"+str(key_count+1)
+                        # remove current key from text
+                        # text = text.replace(current_key, "").replace(":", "") # can lead to errors (double replacement in sth like  Lokomotive: Dampf-Lokomotive)
+                        new_key_found = regex.sub(regex.escape(new_key_found) + "\s?" + ":", "", new_key_found)
+                        if new_key_found.strip() == "":
+                            continue
 
+                        if key_count >= 1:
+                            current_key = (new_key_found + "_" + str(key_count + 1)).strip()
+                        else:
+                            current_key = new_key_found.strip()
+
+                    else:
+                        key_to_check_stripped = key_to_check.strip()
+                        if key_to_check == "":
+                            continue
+                        if key_to_check_stripped not in final_items.keys():
+                            final_items[current_key]=[]
+                            final_items[current_key].append(key_to_check_stripped)
+                        else:
+                            final_items[current_key].append(key_to_check_stripped)
+
+                continue
 
             text = text.strip()
 
             # add key entry if it doesn't exist
             if current_key not in final_items.keys():
-                final_items[current_key] = ""
+                final_items[current_key] = []
 
             # join separated words if there are some
             if join_separated_lines:
@@ -80,18 +107,19 @@ class AKFCommonParsingFunctions(object):
                         # separated Name like "Jan-Philipp")
                         if not next_text[0].isupper():
                             text = text[0:len(text)-1]
+                        if text != "":
+                            # add the text without space separator cause next line will directly be directly joined
+                            final_items[current_key].append(text)
+                            continue
 
-                        # add the text without space separator cause next line will directly be directly joined
-                        final_items[current_key] += text
-                        continue
-
-            add_space = " "
+            #add_space = " "
             # remove space added on last line
-            if text_index >= len_content_texts-1:
-                add_space = ""
+            #if text_index >= len_content_texts-1:
+            #    add_space = ""
 
             # add line to final items
-            final_items[current_key] += text.strip()+add_space
+            if text != "":
+                final_items[current_key].append(text)
 
         return final_items
 

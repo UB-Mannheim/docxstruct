@@ -244,7 +244,7 @@ class AkfParsingFunctionsThree(object):
         only_add_if_value = True
         # parse each value to the result if filled
         for key in my_keys:
-            value = my_keys[key].strip()
+            value = my_keys[key]
             # value_split = regex.split(r",|;", value) # don't split not really structured through that
             if value == "":
                 continue
@@ -270,17 +270,18 @@ class AkfParsingFunctionsThree(object):
         only_add_if_value = True
         # parse each value to the result if filled
         for key in my_keys:
-            value = my_keys[key].strip()
-            value_split = regex.split(r",|;|und", value) # don't split not really structured through that
-            entry_counter = 0
-            for entry in value_split:
-                entry = entry.strip()
-                if entry == "":
-                    continue
-                self.ef.add_to_my_obj(key+"_"+str(entry_counter), entry,
-                                      object_number=element_counter, only_filled=only_add_if_value)
-                element_counter += 1
-                entry_counter += 1
+            value = my_keys[key]
+            for value_sub in value:
+                value_split = regex.split(r",|;|und", value_sub) # don't split not really structured through that
+                entry_counter = 0
+                for entry in value_split:
+                    entry = entry.strip()
+                    if entry == "":
+                        continue
+                    self.ef.add_to_my_obj(key+"_"+str(entry_counter), entry,
+                                          object_number=element_counter, only_filled=only_add_if_value)
+                    element_counter += 1
+                    entry_counter += 1
 
         return True
 
@@ -300,7 +301,7 @@ class AkfParsingFunctionsThree(object):
         only_add_if_value = True
         # parse each value to the result if filled
         for key in my_keys:
-            value = my_keys[key].strip()
+            value = my_keys[key]
             # value_split = regex.split(r",|;", value) # don't split not really structured through that
             if value == "":
                 continue
@@ -326,7 +327,7 @@ class AkfParsingFunctionsThree(object):
         only_add_if_value = True
         # parse each value to the result if filled
         for key in my_keys:
-            value = my_keys[key].strip()
+            value = my_keys[key]
             # value_split = regex.split(r",|;", value) # don't split not really structured through that
             if value == "":
                 continue
@@ -352,7 +353,7 @@ class AkfParsingFunctionsThree(object):
         only_add_if_value = True
         # parse each value to the result if filled
         for key in my_keys:
-            value = my_keys[key].strip()
+            value = my_keys[key]
             # value_split = regex.split(r",|;", value) # don't split not really structured through that
             if value == "":
                 continue
@@ -379,7 +380,7 @@ class AkfParsingFunctionsThree(object):
         only_add_if_value = True
         # parse each value to the result if filled
         for key in my_keys:
-            value = my_keys[key].strip()
+            value = my_keys[key]
             # value_split = regex.split(r",|;", value) # don't split not really structured through that
             if value == "":
                 continue
@@ -405,7 +406,7 @@ class AkfParsingFunctionsThree(object):
         only_add_if_value = True
         # parse each value to the result if filled
         for key in my_keys:
-            value = my_keys[key].strip()
+            value = my_keys[key]
             # value_split = regex.split(r",|;", value) # don't split not really structured through that
             if value == "":
                 continue
@@ -471,7 +472,7 @@ class AkfParsingFunctionsThree(object):
         only_add_if_value = True
         # parse each value to the result if filled
         for key in my_keys:
-            value = my_keys[key].strip()
+            value = my_keys[key]
             # value_split = regex.split(r",|;", value) # don't split not really structured through that
             if value == "":
                 continue
@@ -505,7 +506,7 @@ class AkfParsingFunctionsThree(object):
         only_add_if_value = True
         # parse each value to the result if filled
         for key in my_keys:
-            value = my_keys[key].strip()
+            value = my_keys[key]
             # value_split = regex.split(r",|;", value) # don't split not really structured through that
             if value == "":
                 continue
