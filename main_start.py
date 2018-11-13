@@ -53,7 +53,7 @@ for key in hocr_files:
         # only check files which are relevant (comment out if not used)
         # Sitz ok:     72, 207,671, 731, 733
         # Sitz faulty: 270,454
-        #if ctr_test not in [31]:
+        #if ctr_test not in [532, 538, 545]:
         #    ctr_test += 1
         #    continue
 
@@ -91,8 +91,8 @@ for key in hocr_files:
         accumulated_diff_info = output_analyzer.accumulate_diff_info(ocromore_data, diff_info, accumulated_diff_info)
         ctr_test += 1
 
-        #if ctr_test >= 70:
-        #    break
+        if ctr_test >= 70:
+            break
 
         # clear the current result in segment_parser cache to parse the next one
         segment_parser.clear_result(output_analyzer)

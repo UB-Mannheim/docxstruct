@@ -87,26 +87,51 @@ class AkfParsingFunctionsThree(object):
         reduced_entry = None
 
         for entry in split_post:
+            found_pretext = False
+            entry_strip = entry.strip()
+            if entry_strip == "":
+                continue
+
+            pre_text_match = regex.search("[^\d]*", entry_strip) # todo check condition
+            if pre_text_match:
+                pretext = pre_text_match.group().strip()
+                entry_strip = entry_strip.replace(pretext, "", 1).strip()
+                #found_pretext = True
+
             # number_match = regex.search("\d*\s?\/?\-?\d*\s?\d*?", entry)  # search numbers
-            number_match = regex.search("[\d\s?\/?\-?]*", entry)  # search numbers
+            number_match = regex.search("[\d\s?\/?\-?]*", entry_strip)  # search numbers
 
             if number_match is not None and number_match.end() > 0:
                 number = number_match.group().strip()
-                reduced_entry = entry.replace(number, "").strip(".,; ")
+                reduced_entry = entry_strip.replace(number, "").strip(".,; ")
+                if found_pretext:
+                    reduced_entry = reduced_entry.replace(pretext,"").strip()
+
+                if reduced_entry.strip() == "":
+                    reduced_entry = pretext
+                else:
+                    self.ef.add_to_my_obj("additional_info", pretext, object_number=element_counter,
+                                          only_filled=only_add_if_value)
+
                 self.ef.add_to_my_obj("number", number, object_number=element_counter,
                                       only_filled=only_add_if_value)
                 self.ef.add_to_my_obj("location", reduced_entry, object_number=element_counter,
                                       only_filled=only_add_if_value)
                 element_counter += 1
             else:
-                reduced_addition = entry.strip(".,; ")
+                reduced_addition = entry_strip.strip(".,; ")
                 if number is not None and reduced_addition!="": # number was in previous post
                     reduced_entry += " "+reduced_addition
                     self.ef.add_to_my_obj("location", reduced_entry.strip(), object_number=element_counter,
                                           only_filled=only_add_if_value)
                     element_counter += 1
                 else:
-                    self.cpr.printw("unexpected case during parsing of fernschreiber")
+                    # just save additional info
+                    self.ef.add_to_my_obj("additional_info", pretext, object_number=element_counter,
+                                          only_filled=only_add_if_value)
+                    #element_counter += 1
+
+                    # self.cpr.printw("unexpected case during parsing of fernschreiber")
 
         return True
 
