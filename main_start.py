@@ -53,8 +53,8 @@ for key in hocr_files:
         # only check files which are relevant (comment out if not used)
         # Sitz ok:     72, 207,671, 731, 733
         # Sitz faulty: 270,454
-        #if ctr_test not in [388]:
-        #    ctr_test += 1
+        #if ctr_test not in [678]:
+        #   ctr_test += 1
         #    continue
 
         #if not "0064_1" in file.name and not "0142_1" in file.name:

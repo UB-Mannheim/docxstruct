@@ -35,6 +35,8 @@ class AKFCommonParsingFunctions(object):
             next_text = None
             if text_index < len_content_texts-1:
                 next_text = content_texts[text_index+1].strip()
+            if "Altona" in text:
+                print("asd")
 
             abc_found = False
             if abc_sections:
@@ -56,7 +58,7 @@ class AKFCommonParsingFunctions(object):
                 # find out if there is a new category
                 #current_key = text.split(":")[0]
                 text_with_tag = regex.sub(":", "┇┇:", text)
-                current_key_sp = regex.split(r";|:", text_with_tag)
+                current_key_sp = regex.split(r",|;|:", text_with_tag)
                 new_key_found = None
                 for key_to_check in current_key_sp:
                     if "┇┇" in key_to_check:
@@ -75,6 +77,12 @@ class AKFCommonParsingFunctions(object):
                         new_key_found = regex.sub(regex.escape(new_key_found) + "\s?" + ":", "", new_key_found)
                         if new_key_found.strip() == "":
                             continue
+                        starts_with_und = regex.search("^und\s", new_key_found.strip())
+                        trails_with_und = regex.search("\sund$", new_key_found.strip())
+                        if starts_with_und:
+                            new_key_found = new_key_found.replace(starts_with_und.group(), "", 1).strip()
+                        if trails_with_und:
+                            new_key_found = new_key_found.replace(trails_with_und.group(), "", 1).strip()
 
                         if key_count >= 1:
                             current_key = (new_key_found + "_" + str(key_count + 1)).strip()
@@ -85,7 +93,7 @@ class AKFCommonParsingFunctions(object):
                         key_to_check_stripped = key_to_check.strip()
                         if key_to_check == "":
                             continue
-                        if key_to_check_stripped not in final_items.keys():
+                        if current_key not in final_items.keys():
                             final_items[current_key]=[]
                             final_items[current_key].append(key_to_check_stripped)
                         else:
