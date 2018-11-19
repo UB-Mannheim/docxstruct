@@ -188,8 +188,8 @@ class EndobjectFactory(object):
         if key not in self.my_object.keys():
             return None
 
-        #if key == "Beteiligungen":
-        #   print("todo remove debug")
+        if key == "KursVonZuteilungsrechten":
+           print("todo remove debug")
 
 
         my_data = self.my_object[key]
@@ -244,6 +244,11 @@ class EndobjectFactory(object):
         # order diff data after length
         final_keys.sort(key=lambda x: len(x))
         final_keys.reverse()
+
+        # also remove spaces in keys
+        if self.config.REMOVE_SPACES_IN_ORIGIN_DIFF is True:
+            for index in range(0, len(final_keys)):
+                final_keys[index] = final_keys[index].replace(" ", "")
 
         # subtract keys
         for key in final_keys:

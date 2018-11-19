@@ -551,8 +551,6 @@ class AkfParsingFunctionsThree(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
-
-
         # finalize content texts
         entries_adapted = {}
         current_key = "general_0"
@@ -658,6 +656,12 @@ class AkfParsingFunctionsThree(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
+        """ todo 
+        final_entries_new = cf.parse_general_and_keys(content_texts,
+                                            join_separated_lines=True, current_key_initial_value="general_info",
+                                            abc_sections=True)
+        """
+
         # create segments for results
         final_entries = {}
         current_key = 1  # numeric key for simplicity at first
@@ -672,22 +676,31 @@ class AkfParsingFunctionsThree(object):
                 current_key += 1
 
             if current_key not in final_entries.keys():
-                final_entries[current_key] = text_stripped
+                final_entries[current_key] = []
+                final_entries[current_key].append(text_stripped)
             else:
-                final_entries[current_key] = final_entries[current_key] + text_stripped
+                final_entries[current_key].append(text_stripped)
 
             append_ctr += 1
 
         # add results to final json
         for key in final_entries:
             value = final_entries[key]
-            value_parsed_simple, value_parsed = cf.parse_kurs_von_zuteilungsrechten(value)
-            for key_parsed in value_parsed:
-                value_of_key = value_parsed[key_parsed]
-                self.ef.add_to_my_obj(key_parsed, value_of_key, object_number=element_counter, only_filled=only_add_if_value)
-            element_counter += 1
+            for value_sub in value:
+                value_parsed_simple, value_parsed = cf.parse_kurs_von_zuteilungsrechten(value_sub)
+                change = False
+                for key_subsub in value_parsed:
+                    value_pp = value_parsed[key_subsub]
+
+                    self.ef.add_to_my_obj(key_subsub, value_pp, object_number=element_counter,
+                                        only_filled=only_add_if_value)
+                    change = True
+                if change is True:
+                    element_counter += 1
 
 
+
+        return True
 
     def parse_emissionsbetrag(self, real_start_tag, content_texts,
                                         content_lines, feature_lines, segmentation_class):

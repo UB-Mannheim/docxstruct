@@ -605,14 +605,92 @@ class AKFCommonParsingFunctions(object):
         #  Inh.-Akt. 6.10.1955 NGS: 249 DM /n Nam.-Akt. 10.10.1955 NGS: 239 DM.
         #  68,18 % Einz.: NGS am 10.10.1955: \n 20 DM (Berlin)
         #  Berlin am 10.10.1955 NGS: \n Nam.-St.-Akt.Lit.A : 12 DM \n Berlin am 10.10.1955 NGS: \n Nam.-St.-Akt.Lit.B: 7 DM
+        # 'St.-Akt.: Berlin, 10.10.1955 NGS: 32 %'
 
         if complex_parsing is False:
             # possible to add some simple parsing here
             return input_text, None
 
         current_text = input_text
-        match_percentag = regex.search("(NGS\s?:\s?|:\s?)[\d\,\.\-\/]*\s?%?", current_text)
+        text_generic = AKFCommonParsingFunctions.parse_general_and_keys([current_text],
+                                            join_separated_lines=True, current_key_initial_value="general_info",
+                                            abc_sections=True)
+        final_info = {}
+
+        for entry_key in text_generic:
+            values_at_key = text_generic[entry_key]
+            final_info[entry_key] = {
+                     'perc': [],
+                     'year': [],
+                     'rest': []
+                    }
+            for value in values_at_key:
+                match_percentag = regex.search("[\d\,\.\-\/]*\s?%?", value)
+                perc = None
+                if match_percentag:
+                    perc = match_percentag.group()
+                    value = value.replace(perc, "", 1).strip()
+
+                match_year = regex.search("am.*\d\d\d\d", value)
+                year = None
+                if match_year:
+                    year = match_year.group()
+                    value = value.replace(year, "", 1).strip()
+
+                rest = value.strip()
+
+                final_info[entry_key]['perc'].append(perc)
+                final_info[entry_key]['year'].append(year)
+                final_info[entry_key]['rest'].append(rest)
+
+        endobject = {}
+        for key_parsed in final_info:
+            value_of_key = final_info[key_parsed]
+            length_of_key = len(value_of_key['perc'])
+            final_object = []
+            current_sub_object = {}
+
+            last_is_append = False
+            there_is_new_values = False
+            for index in range(0, length_of_key):
+                perc = value_of_key['perc'][index]
+                year = value_of_key['year'][index]
+                rest = value_of_key['rest'][index]
+                last_is_append = False
+
+                for key_inner in value_of_key:
+                    last_is_append = False
+                    value_inner = value_of_key[key_inner][index]
+                    if key_inner not in current_sub_object.keys():
+                        if value_inner is not None and value_inner != '':
+                            current_sub_object[key_inner] = value_inner
+                            there_is_new_values = True
+
+                    else:
+                        last_is_append = True
+                        there_is_new_values = False
+                        final_object.append(current_sub_object)
+                        current_sub_object = {}
+                if not last_is_append and there_is_new_values:
+                    final_object.append(current_sub_object)
+            endobject[key_parsed] = final_object
+        """
+        match_tags = regex.findall("(?P<tag>[^\s]:)(?P<pattern>.*)", current_text)
+        if match_tags:
+            for entry in match_tags:
+                tag = entry.group('tag')
+                pattern = entry.group('pattern')
+                print("asd")
+
+
+        match_percentag = regex.search("(?P<lead>(NGS\s?:\s?|:\s?))(?P<perc>[\d\,\.\-\/]*\s?%?)", current_text)
+        match_percentag2 = regex.search("(NGS)[\d\,\.\-\/]*\s?%?", current_text)
+
         match_year = regex.search("am.*\d\d\d\d", current_text)
+        if match_percentag:
+            perc = match_percentag.group('perc')
+            lead = match_percentag.group('lead')
+            print("asd")
         percentage = match_percentag.group() if match_percentag else ""
         year = match_year.group() if match_year else ""
         current_text = current_text.replace(percentage, "").replace(year, "").strip()
@@ -621,7 +699,7 @@ class AKFCommonParsingFunctions(object):
         return_object['percentage'] = percentage.strip(',. ')
         return_object['year'] = year.strip(',. ')
         return_object['city_and_rest'] = current_text.strip(',. ')
-
+        """
         # complex parsing here
-        return input_text, return_object
+        return input_text, endobject
 
