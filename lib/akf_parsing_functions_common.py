@@ -35,8 +35,8 @@ class AKFCommonParsingFunctions(object):
             next_text = None
             if text_index < len_content_texts-1:
                 next_text = content_texts[text_index+1].strip()
-            if "Altona" in text:
-                print("asd")
+            #if "Altona" in text:
+            #    print("asd")
 
             abc_found = False
             if abc_sections:
@@ -629,15 +629,23 @@ class AKFCommonParsingFunctions(object):
                 perc = None
                 if match_percentag:
                     perc = match_percentag.group()
-                    value = value.replace(perc, "", 1).strip()
+                    value = value.replace(perc, "¦", 1).strip()
 
                 match_year = regex.search("am.*\d\d\d\d", value)
                 year = None
                 if match_year:
                     year = match_year.group()
-                    value = value.replace(year, "", 1).strip()
+                    value = value.replace(year, "¦", 1).strip()
 
-                rest = value.strip()
+                value_split = value.split('¦')
+                values_final = []
+                for val in value_split:
+                    val_strip = val.strip()
+                    if val_strip == "":
+                        continue
+                    values_final.append(val_strip)
+
+                rest = values_final
 
                 final_info[entry_key]['perc'].append(perc)
                 final_info[entry_key]['year'].append(year)
