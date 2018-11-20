@@ -87,6 +87,27 @@ class OutputAnalysis(object):
                 rest_text += "\n"  # delimiters are optional
 
         # get the segmented data
+        start_overall = None
+        stop_overall = None
+        for inst_class in ocromore_data['segmentation'].my_classes:
+            if not inst_class.is_start_segmented():
+                continue
+            start_line_index = inst_class.start_line_index
+            stop_line_index = inst_class.stop_line_index
+            if start_overall is None or start_line_index < start_overall:
+                start_overall = start_line_index
+            if stop_overall is None or stop_line_index > stop_overall:
+                stop_overall = stop_line_index
+
+        texts_to_process = []
+
+        for line in ocromore_data['lines']:
+            texts_to_process.append(line['text'])
+
+        # final reduced array for further processing ( removes separators e.g. )
+
+
+
         segmented_texts = []
         complete_text = ""
         for inst_class in ocromore_data['segmentation'].my_classes:
@@ -95,10 +116,19 @@ class OutputAnalysis(object):
             start_line_index = inst_class.start_line_index
             stop_line_index = inst_class.stop_line_index
 
-            for index in range(start_line_index,stop_line_index+1):
+            final_segment_texts = []
+            for index in range(start_line_index, stop_line_index+1):
                 text = ocromore_data['lines'][index]['text']
-                segmented_texts.append(text)
+                final_segment_texts.append(text)
                 complete_text += text
+
+            # joined segmented texts
+            if self.config.JOIN_SEGMENTED_TEXTS_IN_ORIG_DIFF_PER_CATEGORY:
+                final_segment_texts_joined = dh.join_separated_lines(final_segment_texts)
+                segmented_texts.extend(final_segment_texts_joined)
+            else:
+                segmented_texts.extend(final_segment_texts)
+
 
         # sort segmented texts after length
         segmented_texts.sort(key=lambda s: len(s))
