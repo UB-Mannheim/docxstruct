@@ -208,16 +208,16 @@ class AKFCommonParsingFunctions(object):
             name = ""
             city = ""
             title = ""
-            rest_info = ""
+            rest_info = []
             for fragment_index, fragment in enumerate(entry_split):
                 if fragment_index == 0:
-                    name = fragment
+                    name = fragment.strip()
                 elif fragment_index == 1:
-                    city = fragment
+                    city = fragment.strip()
                 elif fragment_index == 2:
-                    title = fragment
+                    title = fragment.strip()
                 elif fragment_index >= 3:
-                    rest_info += fragment
+                    rest_info.append(fragment.strip())
 
             final_entries.append((name, city, title, rest_info))
         return final_entries
