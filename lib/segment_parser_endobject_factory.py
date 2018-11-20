@@ -188,9 +188,8 @@ class EndobjectFactory(object):
         if key not in self.my_object.keys():
             return None
 
-        if key == "KursVonZuteilungsrechten":
-           print("todo remove debug")
-
+        #if key == "KursVonZuteilungsrechten":
+        #   print("todo remove debug")
 
         my_data = self.my_object[key]
 
@@ -206,56 +205,55 @@ class EndobjectFactory(object):
         rest_text = original_text
 
         # fetch parsed entries for diff
-        all_final_entries = []  # array of final entries
+        pool_entries = []  # array of final entries
         for index in range(1, len(my_data)):
             entry = my_data[index]
             final_entries = fetch_subentries_recursive(entry)
-            all_final_entries.extend(final_entries)
+            pool_entries.extend(final_entries)
 
         if self.config.REMOVE_SPACES_IN_ORIGIN_DIFF is True:
             # removes all spaces from rest and comparison values because spaces are often
             # a problem in subtracting the rests
             rest_text = rest_text.replace(" ", "")
-            for index in range(0,len(all_final_entries)):
-                all_final_entries[index] = all_final_entries[index].replace(" ", "")
+            for index in range(0,len(pool_entries)):
+                pool_entries[index] = pool_entries[index].replace(" ", "")
 
+        all_final_entries = []
+
+        # add the entries to the complete subtraction and tag them with '1'
+        for pentry in pool_entries:
+            all_final_entries.append((pentry, 1))
+
+        # if keys shall be subracted also add them also
+        if self.config.REMOVE_TAGS_IN_ORIG_DIFF:
+            pool_keys = []  # gets multiple of the same key for later 1 by 1 subtraction
+            for index in range(1, len(my_data)):
+                pool_keys = fetch_keys_recusive(my_data[index], pool_keys, create_multiple=True)
+
+            # also remove spaces in keys
+            if self.config.REMOVE_SPACES_IN_ORIGIN_DIFF is True:
+                for index in range(0, len(pool_keys)):
+                    pool_keys[index] = pool_keys[index].replace(" ", "")
+
+            final_keys = []
+            for pkey in pool_keys:
+                final_keys.append((pkey, 2))
+
+            all_final_entries.extend(final_keys)
 
         # order diff data after length
-        all_final_entries.sort(key=lambda x: len(x))
+        all_final_entries.sort(key=lambda x: len(x[0]))
         all_final_entries.reverse()
 
-        #if key == "Sitz" and "Zement" in rest_text:
-        #    print("debugging check")
-
         # subtract
-        for text in all_final_entries:
+        for entry in all_final_entries:
+            text = entry[0]
+            text_or_key = entry[1]
+            if text_or_key == 2:
+                if text in self.known_uc.unkeys:
+                    continue
             text_stripped = text.strip()  # remove spaces so texts better fit in
             rest_text = rest_text.replace(text_stripped, "", 1)
-            rest_text = rest_text.strip()
-
-        if not self.config.REMOVE_TAGS_IN_ORIG_DIFF:
-            return rest_text, original_text
-
-        # otherwise continue with keys here
-        final_keys = [] # gets multiple of the same key for later 1 by 1 subtraction
-        for index in range(1, len(my_data)):
-            final_keys = fetch_keys_recusive(my_data[index], final_keys, create_multiple=True)
-
-        # order diff data after length
-        final_keys.sort(key=lambda x: len(x))
-        final_keys.reverse()
-
-        # also remove spaces in keys
-        if self.config.REMOVE_SPACES_IN_ORIGIN_DIFF is True:
-            for index in range(0, len(final_keys)):
-                final_keys[index] = final_keys[index].replace(" ", "")
-
-        # subtract keys
-        for key in final_keys:
-            key_stripped = key.strip()
-            if key_stripped in self.known_uc.unkeys:
-                continue
-            rest_text = rest_text.replace(key_stripped, "", 1)
             rest_text = rest_text.strip()
 
         return rest_text, original_text
