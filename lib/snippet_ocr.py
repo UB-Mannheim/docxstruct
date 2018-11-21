@@ -113,7 +113,7 @@ class Snippet(object):
                         line += 1
                         self.result.append({"text":"","words":[],"charconf":[],"bbox":[]})
                         self.result[line]["text"] = r.GetUTF8Text(RIL.TEXTLINE)
-                        print(r.GetUTF8Text(RIL.TEXTLINE))
+                        #print(r.GetUTF8Text(RIL.TEXTLINE))
                     if r.IsAtFinalElement(RIL.WORD,RIL.SYMBOL):
                         self.result[line]["words"].append(r.GetUTF8Text(RIL.WORD))
                         self.result[line]["bbox"].append(r.BoundingBoxInternal(RIL.WORD))
