@@ -441,7 +441,7 @@ class SegmentHolder(object):
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
             # reduced error number to prevent confusion with "Beteiligung:"
-            match_sitz, errors = regu.fuzzy_search(r"(((?:Namhafte|Wesentliche|Maßgebliche)\s?Beteiligung(en)?)|\s?Beteiligungen)\s?:", line_text, err_number=1)
+            match_sitz, errors = regu.fuzzy_search(r"(((?:Namhafte|Wesentliche|Maßgebliche)\s?Beteiligung(en)?)|\s?Beteiligungen)\s?:", line_text, err_number=0)
             if match_sitz is not None:
                 self.do_match_work(True, match_sitz, line_index, errors)
                 return True
@@ -699,6 +699,8 @@ class SegmentHolder(object):
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
             # matches ss or ß (group is not capturing)
+            #match_start, errors = regu.fuzzy_search(r"Aktienkurse\s?.*:", "Aktienkurse (Düsseldorf):")
+
             match_start, errors = regu.fuzzy_search(r"Aktienkurse\s?.*:", line_text)
 
             if match_start is not None:
