@@ -53,17 +53,25 @@ class Table(object):
                 self.info.dictionary = json.load(file)
         return
 
-    def var_occurence(self):
-        with open('./logs/var_occurences.json') as f:
-            data = json.load(f)
-            for type in self.content:
-                if not isinstance(self.content[type][0], str):
-                    for content_keys in self.content[type][0].keys():
-                        if content_keys in data.keys():
-                            data[content_keys] += 1
-                        else:
-                            data[content_keys] = 0
-        with open('./logs/var_occurences.json', 'w') as outfile:
+    def var_occurence(self,template):
+        if self.info.config.OCCURENCES_TABLETYPE == "all":
+            addition = "_"+template
+        else:
+            addition = ""
+        from os import path
+        if path.isfile(f'./logs/var_occurences{addition}.json'):
+            with open(f'./logs/var_occurences{addition}.json') as f:
+                data = json.load(f)
+        else:
+            data = {}
+        for type in self.content:
+            if not isinstance(self.content[type][0], str):
+                for content_keys in self.content[type][0].keys():
+                    if content_keys in data.keys():
+                        data[content_keys] += 1
+                    else:
+                        data[content_keys] = 0
+        with open(f'./logs/var_occurences{addition}.json', 'w') as outfile:
             json.dump(data, outfile,indent=4,ensure_ascii=False)
         return
 
@@ -298,13 +306,14 @@ class Datatable(Table):
                 if self.info.config.USE_SNIPPET:
                     self.info.separator = self._imgseparator(content_lines, startidx, next_date)
                 # Beware of second statement (RLY GOOD CHOICE ONLY FOR "AKTIENFÜHRER")
-                if not self.info.separator or (self.info.separator < 600 and 600< int(np.median([val for val in self.structure["separator"][startidx:next_date] if val > -1])) <800):
+                separr = [val for val in self.structure["separator"][startidx:next_date] if val > -1]
+                if separr and (not self.info.separator or (self.info.separator < 600 and 600< int(np.median(separr)) <800)):
                     self.info.separator = int(np.median([val for val in self.structure["separator"][startidx:next_date] if val > -1]))
             else:
                 self.info.separator = int(np.median(self.structure["rborder"]))
         else:
             separatorlist = [val for val in self.structure["separator"][startidx:next_date] if val > -1]
-            if separatorlist and  abs(self.info.separator-int(np.median(separatorlist))) > 250:
+            if separatorlist and abs(self.info.separator-int(np.median(separatorlist))) > 250:
                 self.info.separator = self._imgseparator(content_lines, startidx, next_date)
         # Extract content of each line
         for lidx, [entry, features] in enumerate(zip(content_lines, feature_lines)):
@@ -369,8 +378,9 @@ class Datatable(Table):
                 self.info.row = ""
 
         # Get all var names
-        if self.info.config.STORE_OCCURENCES and template == self.info.config.OCCURENCES_TABLETYPE:
-            self.var_occurence()
+        if self.info.config.STORE_OCCURENCES and \
+                (template == self.info.config.OCCURENCES_TABLETYPE or "all" == self.info.config.OCCURENCES_TABLETYPE):
+            self.var_occurence(template)
         return
 
     def _columnheader(self, content_lines) -> int:
@@ -427,14 +437,14 @@ class Datatable(Table):
                 if content_lines[lidx]['text'] == "":
                     counter += 1
                     lidx += 1
-                amount = self.info.regex.amount.findall(content_lines[lidx]['text'])
+                amount = self.info.regex.amount.search(content_lines[lidx]['text'])
                 if amount:
-                    infotext = ("in 1 000 " + "".join([char for char in content_lines[lidx]['text'].replace(amount[0], "").replace("8","$").replace("\n","") if not char.isdigit()])).replace("  "," ")
+                    infotext = ("in 1 000 " + "".join([char for char in content_lines[lidx]['text'][amount.regs[0][1]:].replace("8","$").replace("\n","") if not char.isdigit()])).replace("  "," ")
                     offset += counter
                     break
-                amountmio = self.info.regex.amountmio.findall(content_lines[lidx]['text'])
+                amountmio = self.info.regex.amountmio.search(content_lines[lidx]['text'])
                 if amountmio:
-                    infotext = ("in Mio " + "".join([char for char in content_lines[lidx]['text'].replace(amountmio[0], "").replace("8","$").replace("\n","") if not char.isdigit()])).replace("  "," ")
+                    infotext = ("in Mio " + "".join([char for char in content_lines[lidx]['text'][amountmio.regs[0][1]:].replace("8","$").replace("\n","") if not char.isdigit()])).replace("  "," ")
                     offset += counter
                     break
             else:
@@ -443,12 +453,12 @@ class Datatable(Table):
             if infotext == "" and len(lidxs) > 1:
                 # Try to catch amount info with reocr
                 reinfo = self._reocr(list(content_lines[lidxs[1]]["hocr_coordinates"]))
-                amount = self.info.regex.amount.findall(reinfo)
+                amount = self.info.regex.amount.search(reinfo)
                 if amount:
-                    infotext = ("in 1 000 " + "".join([char for char in content_lines[lidx]['text'].replace(amount[0], "").replace("8","$").replace("\n","") if not char.isdigit()])).replace("  "," ")
-                amountmio = self.info.regex.amountmio.findall(reinfo)
+                    infotext = ("in 1 000 " + "".join([char for char in content_lines[lidx]['text'][amount.regs[0][1]:].replace("8","$").replace("\n","") if not char.isdigit()])).replace("  "," ")
+                amountmio = self.info.regex.amountmio.search(reinfo)
                 if amountmio:
-                    infotext = ("in Mio " + "".join([char for char in content_lines[lidx]['text'].replace(amountmio[0], "").replace("8","$").replace("\n", "") if not char.isdigit()])).replace("  ", " ")
+                    infotext = ("in Mio " + "".join([char for char in content_lines[lidx]['text'][amountmio.regs[0][1]:].replace("8","$").replace("\n", "") if not char.isdigit()])).replace("  ", " ")
         for type in set(self.structure["type"]):
             self.content[type] = {}
             for col in range(0, len(self.info.col)):
@@ -498,6 +508,9 @@ class Datatable(Table):
         numbers = ''.join([i for i in entry['text'] if i.isdigit() or i == " "]).strip()
         # If one column just parse
         if len(self.info.col) == 1:
+            #if self.info.row == "Bilanzsumme":
+            #    self.content["Bilanzsumme"][0] = " ".join(numbers)
+            #else:
             self.content[self.structure["type"][self.info.lidx]][0][self.info.row] = " ".join(numbers)
             return True
 
