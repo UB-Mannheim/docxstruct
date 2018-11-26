@@ -22,6 +22,7 @@ class SegmentClassifier(object):
     def classify_file_segments(self, ocromore_data):
         lines = ocromore_data['lines']
         feats = ocromore_data['line_features']
+        file_info = ocromore_data['file_info']
         all_file_segments = AllSegments(len(lines), self.cpr, self.config)
 
         prev_line = None
@@ -55,7 +56,7 @@ class SegmentClassifier(object):
 
 
         # does the last steps in segment matching
-        all_file_segments.finish_segment_matching(lines, feats)
+        all_file_segments.finish_segment_matching(lines, feats, file_info)
 
         # do again after final step
         if self.config.MATCH_UNTIL_NEXT_START_THEN_STOP_CONDITION:
@@ -260,15 +261,22 @@ class AllSegments(object):
                 my_instance = value()
                 self.my_classes.append(my_instance)
 
-    def finish_segment_matching(self, lines, feats):
-
+    def finish_segment_matching(self, lines, feats, file_info):
+        """
+        Final step in segmentation, covers special segmentation cases which i.e. can be done
+        after everything else is segmented.
+        :param lines:
+        :param feats:
+        :param file_info:
+        :return:
+        """
 
         # special case: in end match firmenname
         for segment_class_index, segment_class in enumerate(self.my_classes):
             if not isinstance(segment_class, SegmentHolder.SegmentFirmenname):
                 continue  # skip firmenname at firsthand, this will be matched in the end
 
-            start_updated = segment_class.match_start_condition(lines, lines, self.index_field, feats, len(lines),None,None)
+            start_updated = segment_class.match_start_condition(lines, lines, self.index_field, feats, len(lines), file_info,None)
 
             start_updated = False       #                                                     self.number_of_lines, prev_line, combined_line)
             if start_updated:

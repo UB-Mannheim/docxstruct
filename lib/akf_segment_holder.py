@@ -30,38 +30,31 @@ class SegmentHolder(object):
 
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
-            # this function get's hopped later
+            # this function get's hopped and called later
             # Attention: This is a special case which get's called like:
-            # lines, lines, self.index_field, feats, len(lines),None,None
+            # lines, lines, self.index_field, feats, len(lines), file_info,None
+            file_info = prev_line
+            dbname = file_info.dbname
+            current_year = int(dbname)
+            selected_start_index = None
 
-            # get the first lines which can resemble the title
-            selected_start_index_start = None
-            for index, value in enumerate(line_index):
-                if value is not False:
-                    break
-                selected_line = line_text[index]
-                selected_text = selected_line['text'].strip(",.; ")
-                if selected_text != "":
-                    selected_start_index_start = index
-                    break
+            if current_year >= 1960:
+                # get the first lines which can resemble the title
+                for index, value in enumerate(line_index):
+                    if value is not False:
+                        break
+                    selected_line = line_text[index]
+                    selected_text = selected_line['text'].strip(",.; ")
+                    if selected_text != "":
+                        selected_start_index = index
+                        break
+            else:
+                # just take last line in early years
+                selected_start_index = len(line_index)-1
 
-            #
-            selected_start_index_end = None
-            r_line_text = list(reversed(line_text))
-            r_line_index = list(reversed(line_index))
-            for index, value in enumerate(r_line_index):
-                if value is not False:
-                    break
-                selected_start_index_end = True
-
-            if selected_start_index_start is not None:
+            if selected_start_index is not None:
                 placeholder_match, errors = regu.fuzzy_search(r"", "")
-                self.do_match_work(True, placeholder_match, selected_start_index_start, 0)
-                return True
-
-            if selected_start_index_end is not None:
-                placeholder_match, errors = regu.fuzzy_search(r"", "")
-                self.do_match_work(True, placeholder_match, selected_start_index_end, 0)
+                self.do_match_work(True, placeholder_match, selected_start_index, 0)
                 return True
 
             return False
@@ -77,7 +70,7 @@ class SegmentHolder(object):
 
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
-            match_start, errors = regu.fuzzy_search(r"^Sitz\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"^Hauptsitz\s?:|^Sitz\s?:", line_text)
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
                 return True

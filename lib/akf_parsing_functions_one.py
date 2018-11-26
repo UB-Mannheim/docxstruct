@@ -33,6 +33,7 @@ class AkfParsingFunctionsOne(object):
             accumulated_text += " " + text
 
         only_add_if_value = False
+        accumulated_text = accumulated_text.strip()
         self.ef.add_to_my_obj("Firmenname", accumulated_text, object_number=element_counter, only_filled=only_add_if_value)
 
 
