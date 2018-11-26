@@ -34,6 +34,7 @@ class FunctionMapAKF(object):
         # for the keys use the keys from 'akf_segment_holder' or similar
 
         self.function_map = {
+            "Firmenname": self.akf_one.parse_firmenname,
             "Sitz": self.akf_one.parse_sitz,
             "Verwaltung": self.akf_one.parse_verwaltung,
             "Telefon/Fernruf": self.akf_one.parse_telefon_fernruf,

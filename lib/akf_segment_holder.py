@@ -16,6 +16,56 @@ class SegmentHolder(object):
     usage in segment_classifier.
     """
 
+
+
+    class SegmentFirmenname(Segment):
+        # example recognition line:
+        # Voigt & Haeffner Aktiengesellschaft
+        # Nord-Deutsche Versicherungs-Gesellschaft
+
+        def __init__(self):
+            super().__init__("Firmenname")
+            # self.disable()  # comment out to disable a segment
+            # self.set_only()  # comment out to segment this segments and other segments with that tag exclusively
+
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
+            # this function get's hopped later
+            # Attention: This is a special case which get's called like:
+            # lines, lines, self.index_field, feats, len(lines),None,None
+
+            # get the first lines which can resemble the title
+            selected_start_index_start = None
+            for index, value in enumerate(line_index):
+                if value is not False:
+                    break
+                selected_line = line_text[index]
+                selected_text = selected_line['text'].strip(",.; ")
+                if selected_text != "":
+                    selected_start_index_start = index
+                    break
+
+            #
+            selected_start_index_end = None
+            r_line_text = list(reversed(line_text))
+            r_line_index = list(reversed(line_index))
+            for index, value in enumerate(r_line_index):
+                if value is not False:
+                    break
+                selected_start_index_end = True
+
+            if selected_start_index_start is not None:
+                placeholder_match, errors = regu.fuzzy_search(r"", "")
+                self.do_match_work(True, placeholder_match, selected_start_index_start, 0)
+                return True
+
+            if selected_start_index_end is not None:
+                placeholder_match, errors = regu.fuzzy_search(r"", "")
+                self.do_match_work(True, placeholder_match, selected_start_index_end, 0)
+                return True
+
+            return False
+
     class SegmentSitz(Segment):
         # example recognition line:
         # Sitz: (20a) Peine, Gerhardstr. 10.

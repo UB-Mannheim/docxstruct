@@ -20,6 +20,21 @@ class AkfParsingFunctionsOne(object):
         self.ef = endobject_factory
         self.output_analyzer = output_analyzer
 
+    def parse_firmenname(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # get relevant info
+        accumulated_text = ""
+        for text in content_texts:
+            accumulated_text += " " + text
+
+        only_add_if_value = False
+        self.ef.add_to_my_obj("Firmenname", accumulated_text, object_number=element_counter, only_filled=only_add_if_value)
+
 
     def parse_sitz(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         """
