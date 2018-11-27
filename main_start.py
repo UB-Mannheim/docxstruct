@@ -35,8 +35,8 @@ hocr_files = dh.get_files()
 
 # main iteration loop
 for key in hocr_files:
-    #if "1970" not in key:
-    #    continue
+    #if "1963" not in key:
+    ##    continue
 
     accumulated_diff_info = output_analyzer.AccumulatedInfo()
     accumulated_diff_info_categories = {}
@@ -55,7 +55,7 @@ for key in hocr_files:
         # Sitz faulty: 270,454
         #if ctr_test not in [223, 604, 609, 706]:
         #  ctr_test += 1
-        #   continue
+        #  continue
 
         #if not "0064_1" in file.name and not "0142_1" in file.name:
         #    continue
@@ -91,7 +91,7 @@ for key in hocr_files:
         accumulated_diff_info = output_analyzer.accumulate_diff_info(ocromore_data, diff_info, accumulated_diff_info)
         ctr_test += 1
 
-        if ctr_test >= 3:
+        if ctr_test >= 10:
             break
 
         # clear the current result in segment_parser cache to parse the next one
