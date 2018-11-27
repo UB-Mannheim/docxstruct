@@ -1,8 +1,24 @@
 from akf_corelib.conditional_print import ConditionalPrint
 from akf_corelib.configuration_handler import ConfigurationHandler
 from .akf_parsing_functions_common import AKFCommonParsingFunctions as cf
-from lib.table_parser import Table
+from lib.table_parser import Datatable, Sharetable
+import time
 
+def timeit(method):
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()
+
+        if 'log_time' in kw:
+            name = kw.get('log_name', method.__name__.upper())
+            kw['log_time'][name] = int((te - ts) * 1000)
+        else:
+            print('%r  %2.2f ms' % \
+                  (method.__name__, (te - ts) * 1000))
+        return result
+
+    return timed
 
 class AkfParsingFunctionsJK(object):
 
@@ -37,7 +53,7 @@ class AkfParsingFunctionsJK(object):
             self.ef.add_to_my_obj("balances", geschaeftslage, object_number=element_counter,only_filled=only_add_if_string)
             return True
         #parsing
-        table = Table(snippet=segmentation_class.snippet)
+        table = Datatable(snippet=segmentation_class.snippet)
         table.analyse_structure(content_lines,feature_lines, template="datatable_balance")
         table.extract_content(content_lines, feature_lines, template="datatable_balance")
 
@@ -68,16 +84,9 @@ class AkfParsingFunctionsJK(object):
             #parsing
             self.ef.add_to_my_obj("income", geschaeftslage, object_number=element_counter,only_filled=only_add_if_string)
             return True
-        # Clear firmname information
-        #if isinstance(feature_lines[-1],bool) or feature_lines[-1].counter_numbers < 1:
-        #    del feature_lines[-1]
-        #    del content_lines[-1]
-        #    del content_texts[-1]
-
-
 
         # parsing
-        table = Table(snippet=segmentation_class.snippet)
+        table = Datatable(snippet=segmentation_class.snippet)
         table.analyse_structure(content_lines, feature_lines, template="datatable_income")
         if segmentation_class.info_handler and "income" in set(segmentation_class.info_handler.keys()):
             table.info.col = segmentation_class.info_handler["income"]["col"]
@@ -91,7 +100,7 @@ class AkfParsingFunctionsJK(object):
         self.ef.add_to_my_obj("income", table.content, object_number=element_counter,
                               only_filled=only_add_if_string)
 
-    def parse_bezugsrechte(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+    def parse_aktienkurse(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
         element_counter = 0
         origpost, origpost_red, element_counter, content_texts = \
@@ -102,25 +111,22 @@ class AkfParsingFunctionsJK(object):
 
         # init
         only_add_if_string = True
-        geschaeftslage = origpost_red.replace("- ", "")
+        #self.config.LOG_SIMPLE = True
+        if self.config.LOG_SIMPLE:
+        #    self.config.LOG_SIMPLE = False
+            skip = origpost_red.replace("- ", "")
 
-        #parsing
-        self.ef.add_to_my_obj("business situation", geschaeftslage, object_number=element_counter,
-                              only_filled=only_add_if_string)
+            # parsing
+            self.ef.add_to_my_obj("shares", skip, object_number=element_counter,
+                                  only_filled=only_add_if_string)
+            return True
 
-    def parse_geschaeftslage(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
-        # get basic data
-        element_counter = 0
-        origpost, origpost_red, element_counter, content_texts = \
-            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
-
-        # logme
-        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
-
-        # init
-        only_add_if_string = True
-        geschaeftslage = origpost_red.replace("- ", "")
-
-        #parsing
-        self.ef.add_to_my_obj("business situation", geschaeftslage, object_number=element_counter,
+        # parsing
+        table = Sharetable(snippet=segmentation_class.snippet)
+        table.analyse_structure(content_lines, feature_lines)
+        table.extract_content(content_lines, feature_lines)
+        #from timeit import timeit
+        #print(timeit(test))
+        # parsing
+        self.ef.add_to_my_obj("shares", table.content, object_number=element_counter,
                               only_filled=only_add_if_string)
