@@ -178,6 +178,15 @@ class AkfParsingFunctionsOne(object):
         #only_num_check = origpost_red.replace("und", "").replace(",", "").replace(" ", "")
         test_split = regex.split("\su\.|\sund\s|,|;", origpost_red)
         for number in test_split:
+            # additional parenthesis block
+            match_parenthesis = regex.search("\(.*\)", number)
+            parenthesis = None
+            if match_parenthesis:
+                parenthesis = match_parenthesis.group()
+                number = number.replace(parenthesis,"") # remove number
+                self.ef.add_to_my_obj("vorwahl", parenthesis, object_number=element_counter, only_filled=True)
+
+
             match_word_num = regex.search("(?<word>[^\d]*)(?<num>[\d\s\-/]*)", number)
             if match_word_num is None:
                 continue
@@ -191,8 +200,8 @@ class AkfParsingFunctionsOne(object):
                 origpost_red_new = origpost_red_new.replace(number, "")  # remove number
                 origpost_red_new = origpost_red_new.replace(word, "")    # remove word found
 
-                change1 = self.ef.add_to_my_obj("number_Sa.-Nr.", num, object_number=element_counter, only_filled=True)
-                change2 = self.ef.add_to_my_obj("location", word, object_number=element_counter, only_filled=True)
+                change1 = self.ef.add_to_my_obj("number_Sa.-Nr.", num.strip(), object_number=element_counter, only_filled=True)
+                change2 = self.ef.add_to_my_obj("location", word.strip(), object_number=element_counter, only_filled=True)
                 if change1 or change2:
                     element_counter += 1
 
@@ -206,13 +215,22 @@ class AkfParsingFunctionsOne(object):
         # do  further matches (sc-separated)
         split_post.extend(regex.split(';|~~~~|\su\.', origpost_red))
 
-
         for index, entry in enumerate(split_post):
             if entry is None:
                 continue
             entry_stripped = entry.strip()
             if entry_stripped == "":
                 continue
+
+            # additional parenthesis block
+            match_parenthesis = regex.search("\(.*\)", entry_stripped)
+            parenthesis = None
+            if match_parenthesis:
+                parenthesis = match_parenthesis.group()
+                entry_stripped = entry_stripped.replace(parenthesis, "") # remove entry
+                self.ef.add_to_my_obj("vorwahl", parenthesis, object_number=element_counter, only_filled=True)
+
+
 
             match_word = regex.match(r"(?<Tag>\D*)"
                                      r"(?<Numbers>[\d\s\W]*)"
@@ -240,10 +258,10 @@ class AkfParsingFunctionsOne(object):
                     location = regex.sub("[^\w]und[^\w]", "", location)
 
                 number = dh.strip_if_not_none(numbers_match, "., ")
-                self.ef.add_to_my_obj("number_Sa.-Nr.", number, object_number=element_counter, only_filled=True)
-                self.ef.add_to_my_obj("location", location, object_number=element_counter, only_filled=True)
+                self.ef.add_to_my_obj("number_Sa.-Nr.", number.strip(), object_number=element_counter, only_filled=True)
+                self.ef.add_to_my_obj("location", location.strip(), object_number=element_counter, only_filled=True)
                 additional_info_entry_level = dh.strip_if_not_none(rest_from_entry_str, ",. ")
-                self.ef.add_to_my_obj("additional_info", additional_info_entry_level,
+                self.ef.add_to_my_obj("additional_info", additional_info_entry_level.strip(),
                                       object_number=element_counter, only_filled=True)
                 element_counter += 1
 
@@ -254,7 +272,7 @@ class AkfParsingFunctionsOne(object):
         origpost_red_end = dh.remove_multiple_outbound_chars(origpost_red)
 
         if len(origpost_red_end) > 3:
-            self.ef.add_to_my_obj("additional_info_unparsed", origpost_red_end, object_number=element_counter)
+            self.ef.add_to_my_obj("additional_info_unparsed", origpost_red_end.strip(), object_number=element_counter)
 
     def parse_vorstand(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
 
