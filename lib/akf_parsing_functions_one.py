@@ -159,6 +159,20 @@ class AkfParsingFunctionsOne(object):
             split_post.append(ferngespr)
 
 
+
+        # do special match: Ortsverkehr and Fernverkehr
+
+        match_special3 = regex.match(r"(?<ov>Ortsverkehr.*)"
+                                     r"(?<fv>Fernverkehr.*)"
+                                     , origpost_red)
+        if match_special3:
+            ortsverkehr = match_special3.group("ov")
+            fernverkehr = match_special3.group("fv")
+            origpost_red = origpost_red.replace(ortsverkehr, "")
+            origpost_red = origpost_red.replace(fernverkehr, "")
+            split_post.append(ortsverkehr)
+            split_post.append(fernverkehr)
+
         # do special match: check if only numbers
         origpost_red_new = origpost_red
         #only_num_check = origpost_red.replace("und", "").replace(",", "").replace(" ", "")
@@ -204,7 +218,13 @@ class AkfParsingFunctionsOne(object):
                                      r"(?<Numbers>[\d\s\W]*)"
                                      ,entry_stripped)
             if match_word is not None:
-                tag = dh.strip_if_not_none(match_word.group("Tag"), "")
+                # fetch match results
+                tag_match = match_word.group("Tag")
+                numbers_match = match_word.group("Numbers")
+                rest_from_entry_str = entry_stripped.replace(tag_match, "", 1)
+                rest_from_entry_str = rest_from_entry_str.replace(numbers_match, "", 1)
+
+                tag = dh.strip_if_not_none(tag_match, "")
                 match_tag = regex.match(r"(?<rest_bef>.*)(?<sanr>Sa\.?\-Nr\.?)(?<rest_end>.*)", tag)
                 location = ""
                 if match_tag is not None:
@@ -219,13 +239,16 @@ class AkfParsingFunctionsOne(object):
                 if "und" in location:
                     location = regex.sub("[^\w]und[^\w]", "", location)
 
-                number = dh.strip_if_not_none(match_word.group("Numbers"), "., ")
-                self.ef.add_to_my_obj("number_Sa.-Nr.", number, object_number=element_counter)
-                self.ef.add_to_my_obj("location", location, object_number=element_counter)
+                number = dh.strip_if_not_none(numbers_match, "., ")
+                self.ef.add_to_my_obj("number_Sa.-Nr.", number, object_number=element_counter, only_filled=True)
+                self.ef.add_to_my_obj("location", location, object_number=element_counter, only_filled=True)
+                additional_info_entry_level = dh.strip_if_not_none(rest_from_entry_str, ",. ")
+                self.ef.add_to_my_obj("additional_info", additional_info_entry_level,
+                                      object_number=element_counter, only_filled=True)
                 element_counter += 1
 
-                origpost_red = origpost_red.replace(number, "")
-                origpost_red = origpost_red.replace(location, "")
+                origpost_red = origpost_red.replace(number, "", 1)
+                origpost_red = origpost_red.replace(location, "", 1)
 
         origpost_red = origpost_red.replace("Sa.-Nr", "").replace("~~~~", "")
         origpost_red_end = dh.remove_multiple_outbound_chars(origpost_red)

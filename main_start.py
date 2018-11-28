@@ -35,8 +35,8 @@ hocr_files = dh.get_files()
 
 # main iteration loop
 for key in hocr_files:
-    #if "1963" not in key:
-    ##    continue
+    if "1956" not in key:
+        continue
 
     accumulated_diff_info = output_analyzer.AccumulatedInfo()
     accumulated_diff_info_categories = {}
@@ -53,7 +53,7 @@ for key in hocr_files:
         # only check files which are relevant (comment out if not used)
         # Sitz ok:     72, 207,671, 731, 733
         # Sitz faulty: 270,454
-        #if ctr_test not in [223, 604, 609, 706]:
+        #if ctr_test not in [36, 56]:
         #  ctr_test += 1
         #  continue
 
