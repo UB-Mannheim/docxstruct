@@ -275,14 +275,21 @@ class AKFCommonParsingFunctions(object):
         """
 
         text_reduced = text.replace(rec_tag, "").strip()
-
+        #text_reduced = 'DM 2 500 000, - (100 %).' # erronous case 2 500
+        #text_reduced = '40 532 400.-'
         # if not activated detailed parsing just return simple solution
         if not detailed_parsing:
             return text_reduced, None
 
         # continue with detailed parsing here
         match_currency = regex.search(r"^[a-zA-Z\p{Sc}\.]+", text_reduced)
-        match_numbers = regex.search(r"[\d\s]+[\.\s\-]+", text_reduced)
+        #match_numbers = regex.search(r"[\d\s]+(\.\s\-|\.\-|,\s-)", text_reduced) # old numbers match
+
+        match_numbers = regex.search(r"[\d\s]+", text_reduced)
+        #match_numbers_addendum = regex.search(r"[\d\s]+", text_reduced)   # could be tested if addendum needed
+
+
+        #match_numbers = regex.search(r"[\b\s*\d+]*", text_reduced)
         match_parenthesis = regex.search(r"\(.+\)", text_reduced)
 
         return_object = {}
@@ -296,6 +303,9 @@ class AKFCommonParsingFunctions(object):
         if match_parenthesis:
             res_parenthesis = match_parenthesis.group().strip()
             return_object['add_info'] = res_parenthesis
+
+        #print("orig:", text_reduced)
+        #print("prsd:", return_object)
 
         # return a simple and more sophisticated parsing
         return text_reduced, return_object
