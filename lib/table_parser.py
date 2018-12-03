@@ -702,9 +702,9 @@ class SharetableRegex(object):
         self.sharetypereg = regex.compile(
             r"(?:(aktien|akt\.|\s[a-z]*\.a\.|Genußscheine|lit\.[\s][a-g]|sch\.|gr\.st\.|kl\.st\.|gruppe\s[a-z]){e<=1}|(\srm\s\d\d\d|\salt\s|\sjung))")
         self.numbergrpreg = regex.compile(r"(?:(\s\d*\s))")
-        self.greptable = regex.compile(r"((?P<year>19\d\d|[4-7]\d)\s*"
+        self.greptable = regex.compile(r"((?P<year>19\d\d|[4-7]\d|19\d\d|[4-7]\d/\d\d)\s*"
                                     r"(?P<amount>\d*[,?|\.?|/?]?\d*|-)[\s]?"
-                                    r"(?P<currency>%|DM))")
+                                    r"(?P<currency>%|DM)?)")
         self.greptable2col = regex.compile(r"((?P<year>19\d\d|[4-7]\d)\s*"
                                     r"(?P<amount1>\d*[,?|\.?|/?]?\d*|-)[\s]?"
                                     r"(?P<currency1>%|DM)\s"
@@ -933,6 +933,8 @@ class Sharetable(Table):
                     self.content = {}
                     return False
             else:
+                content["text"] = content["text"].replace(":","").replace(" . ","")
+                print(content["text"])
                 self._extract_regexlvl(content["text"].strip(),lidx)
         if self.info.snippet and visual:
             if self.info.subtables == 1:
