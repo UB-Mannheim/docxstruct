@@ -354,6 +354,7 @@ class AKFCommonParsingFunctions(object):
     def add_check_element(topclass, content_texts, real_start_tag, segmentation_class, element_counter):
 
         joined_texts = dh.join_separated_lines(content_texts)  # join dash separated texts
+        joined_texts = dh.join_separated_lines_parenthesis(joined_texts) # join divided parenthesis blocks
         origpost, origpost_red = dh.create_stringified_linearray(joined_texts)   # final reduced array for further processing
 
         if topclass.config.ADD_INFO_ENTRY_TO_OUTPUT:
