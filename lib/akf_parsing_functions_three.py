@@ -482,13 +482,56 @@ class AkfParsingFunctionsThree(object):
         return True
 
     def parse_wertpapier_kenn_nr(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+
+        # cases:
+        # 820000
+        # 840140 (voll eingezahlt) 840141 (mit 76 % eingezahlt)
+        # 500900 (St. -Akt.); 500903 (Vorz.-Akt.)
+        # 576300
+
         # get basic data
         element_counter = 0
         origpost, origpost_red, element_counter, content_texts = \
             cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
 
+
+        #origpost_red = '500900 (St. -Akt.); 500903 (Vorz.-Akt.)'
+
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # split the origpost_red to elements which are lead by a wkn to easify parsing
+        separator = "~~~¦¦¦"
+        results_decimals = regex.findall("\d{4,}", origpost_red)
+        substituted = regex.sub("\d{4,}", separator, origpost_red)
+        separator_2 = "~~~"
+        separator_3 = "¦¦¦"
+
+        split_done = []
+        split_undone = regex.split(separator_2, substituted)
+        ctr_replace = 0
+        for ctr_current, split_element in enumerate(split_undone):
+            if split_element.strip()== "":
+                continue
+            rest = split_element.replace(separator_3, "")
+            rest_strip = rest.strip()
+            current_decimal = None
+            if len(results_decimals) > ctr_replace:
+                current_decimal = results_decimals[ctr_replace]
+            if (current_decimal is not None) or (rest_strip != ""):
+                split_done.append((current_decimal, rest_strip))
+                #split_done.append(current_decimal+" **** " + rest_strip)
+            ctr_replace += 1
+
+        only_add_if_value = True
+
+        # add the entries to final object -> todo mind if int-cast is ok here
+        for entry in split_done:
+            number, rest = entry
+            self.ef.add_to_my_obj("number", int(number), object_number=element_counter, only_filled=only_add_if_value)
+            self.ef.add_to_my_obj("rest", rest, object_number=element_counter, only_filled=only_add_if_value)
+            element_counter += 1
+
 
     def parse_rechte_und_vorzugsaktien(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
