@@ -35,7 +35,7 @@ hocr_files = dh.get_files()
 
 # main iteration loop
 for key in hocr_files:
-    #if "1962" not in key:
+    #if "1970" not in key:
     #    continue
 
     accumulated_diff_info = output_analyzer.AccumulatedInfo()
