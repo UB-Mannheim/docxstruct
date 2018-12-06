@@ -85,7 +85,7 @@ class FunctionMapAKF(object):
             "AusDenBilanzen": self.akf_jk.parse_bilanzen,                               # table
             "Konsolid.Gewinn-u.Verlustrechnungen": self.akf_jk.parse_gewinn_und_verlust,          # table
             "AusGewinnVerlustrechnungen": self.akf_jk.parse_gewinn_und_verlust,                   # @jk last element works now
-            "Bezugsrechte": self.akf_three.parse_something,
+            "Bezugsrechte": self.akf_three.parse_bezugsrechte,
             "ZurGeschäftslage": self.akf_three.parse_geschaeftslage
         }
 
