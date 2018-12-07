@@ -829,6 +829,7 @@ class Sharetable(Table):
                     markerflag = True
                 elif lastwidx<widx-2 or all(False for char in word["text"] if char.isdigit()):
                     markerflag = False
+                if not word["text"] or len(word["text"]) <2: continue
                 if word["text"] in ["DM","%"] or word["text"][-1] in ["%"] or word["text"][-2:] in ["DM"]:
                     if markerflag and lastwidx+2==widx:
                         bbox_separator.append([int(np.mean([content["words"][widx-2]["hocr_coordinates"][2],
@@ -914,7 +915,9 @@ class Sharetable(Table):
         self.content = {"Regexdata":{},"Vbboxdata":{},"Sharedata":{},"additional_info":[]}
         self.info.datagroups = [idx+1 for idx, number in enumerate(self.structure["data"][1:]) if number!=self.structure["data"][idx]]
         self.info.datagroups.append(len(self.structure["data"]))
-
+        if len(self.info.datagroups) == 1:
+            self.info.datagroups.append(2)
+            self.info.datagroups.sort()
         # Get the columnheader information based on date lines
         if self.info.subtables == 0 and self.info.snippet:
             reocr_text = self._reocr(list(content_lines[self.info.datagroups[0]]["hocr_coordinates"])).strip()
@@ -987,6 +990,8 @@ class Sharetable(Table):
                 for lidx, content in enumerate(content_lines):
                     if self.info.sharetypes and lidx in self.info.sharetypes.keys():
                         sharetypeidx =lidx
+                    elif self.info.sharetypes:
+                        sharetypeidx = list(self.info.sharetypes.keys())[0]
                     if self.structure["data"][lidx]:
                         year_findings = self.info.regex.date.search(content["text"])
                         if not year_findings:
@@ -1124,6 +1129,8 @@ class Sharetable(Table):
             self.combine_datasets()
         elif not self.content["Regexdata"]:
             self.content["Regexdata"] = self.content["Vbboxdata"]
+        if not self.content["Regexdata"] and not self.content["Vbboxdata"]:
+            return False
         self.create_sharedataset()
         # Delete useless content
         del self.content["Regexdata"]
