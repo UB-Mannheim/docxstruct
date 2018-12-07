@@ -153,7 +153,20 @@ class AkfParsingFunctionsThree(object):
 
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+        type = real_start_tag
 
+        my_persons = cf.parse_persons(origpost_red)
+
+        only_add_if_filed = True
+        for entry in my_persons:
+            name, city, title, rest_info = entry
+            self.ef.add_to_my_obj("type", type, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
+            element_counter += 1
+        return True
 
 
     def parse_geschaeftsleitung(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
@@ -165,6 +178,37 @@ class AkfParsingFunctionsThree(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
+        its_an_adress = False
+        for featline in feature_lines:
+            numbers_ratio = featline.numbers_ratio
+            if numbers_ratio >= 0.01:
+                its_an_adress = True
+
+        if its_an_adress:
+            for entry in content_texts:
+                entry_stripped = entry.strip()
+                if entry_stripped == "":
+                    continue
+
+                #num_id, city, street, street_number, additional_info = cf.parse_id_location(entry_stripped)
+
+                # add stuff to ef
+                 #self.ef.add_to_my_obj("numID", num_id, object_number=element_counter, only_filled=only_add_if_value)
+                self.ef.add_to_my_obj("location", entry_stripped, object_number=element_counter, only_filled=True)
+                element_counter += 1
+        else:
+            my_persons = cf.parse_persons(origpost_red)
+            # todo this is testwise solution check if ok
+            only_add_if_filed = True
+            for entry in my_persons:
+                name, city, title, rest_info = entry
+                self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
+                self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
+                self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
+                self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
+                element_counter += 1
+            return True
+
     def parse_generaldirektion(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
         element_counter = 0
@@ -173,6 +217,57 @@ class AkfParsingFunctionsThree(object):
 
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        my_persons = cf.parse_persons(origpost_red)
+        # todo this is testwise solution check if ok
+        only_add_if_filed = True
+        for entry in my_persons:
+            name, city, title, rest_info = entry
+            self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
+            element_counter += 1
+        return True
+
+    def parse_direktionskomitee(self, real_start_tag, content_texts,
+                                        content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        my_persons = cf.parse_persons(origpost_red)
+        # todo this is testwise solution check if ok
+        only_add_if_filed = True
+        for entry in my_persons:
+            name, city, title, rest_info = entry
+            self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
+            element_counter += 1
+        return True
+
+
+    def parse_vizegeneraldirektoren(self, real_start_tag, content_texts,
+                                        content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        my_persons = cf.parse_persons(origpost_red)
+        # todo this is testwise solution check if ok
+        only_add_if_filed = True
+        for entry in my_persons:
+            name, city, title, rest_info = entry
+            self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
+            element_counter += 1
+        return True
 
     def parse_fernschreiber(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
@@ -914,21 +1009,3 @@ class AkfParsingFunctionsThree(object):
 
 
 
-    def parse_direktionskomitee(self, real_start_tag, content_texts,
-                                        content_lines, feature_lines, segmentation_class):
-        # get basic data
-        element_counter = 0
-        origpost, origpost_red, element_counter, content_texts = \
-            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
-
-        only_add_if_value = True
-
-
-    def parse_vizegeneraldirektoren(self, real_start_tag, content_texts,
-                                        content_lines, feature_lines, segmentation_class):
-        # get basic data
-        element_counter = 0
-        origpost, origpost_red, element_counter, content_texts = \
-            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
-
-        only_add_if_value = True

@@ -114,7 +114,7 @@ class SegmentHolder(object):
             super().__init__("Sekretäre")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
-            match_start, errors = regu.fuzzy_search(r"^Sekretäre\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"^(Sekretär des Verwaltungsrates|Sekretäre)\s?:", line_text)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
@@ -128,7 +128,7 @@ class SegmentHolder(object):
             super().__init__("Geschäftsleitung")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
-            match_start, errors = regu.fuzzy_search(r"^Geschäftsleitung\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"^(Geschäftsführung|Geschäftsleitung)\s?:", line_text)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
@@ -143,7 +143,7 @@ class SegmentHolder(object):
             super().__init__("Generaldirektion")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
-            match_start, errors = regu.fuzzy_search(r"^Generaldirektion\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"^(Generaldirektorium|Generaldirektion|Direktion)\s?:", line_text)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
