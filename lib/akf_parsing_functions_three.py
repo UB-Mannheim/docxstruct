@@ -133,6 +133,17 @@ class AkfParsingFunctionsThree(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
+        my_persons = cf.parse_persons(origpost_red)
+
+        only_add_if_filed = True
+        for entry in my_persons:
+            name, city, title, rest_info = entry
+            self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
+            element_counter += 1
+        return True
 
     def parse_sekretaere(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
