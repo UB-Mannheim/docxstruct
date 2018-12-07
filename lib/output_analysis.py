@@ -105,9 +105,6 @@ class OutputAnalysis(object):
             texts_to_process.append(line['text'])
 
         # final reduced array for further processing ( removes separators e.g. )
-
-
-
         segmented_texts = []
         complete_text = ""
         for inst_class in ocromore_data['segmentation'].my_classes:

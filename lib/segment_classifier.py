@@ -22,6 +22,7 @@ class SegmentClassifier(object):
     def classify_file_segments(self, ocromore_data):
         lines = ocromore_data['lines']
         feats = ocromore_data['line_features']
+        file_info = ocromore_data['file_info']
         all_file_segments = AllSegments(len(lines), self.cpr, self.config)
 
         prev_line = None
@@ -43,6 +44,9 @@ class SegmentClassifier(object):
             prev_line = current_line
             prev_text = current_text
 
+
+
+
         if self.config.MATCH_UNTIL_NEXT_START_THEN_STOP_CONDITION:
             self.adapt_non_explicit_indices(all_file_segments)
         else:
@@ -50,7 +54,23 @@ class SegmentClassifier(object):
 
         self.adapt_stop_index_in_last_segment(all_file_segments)
 
+
+        # does the last steps in segment matching
+        all_file_segments.finish_segment_matching(lines, feats, file_info)
+
+        # do again after final step
+        if self.config.MATCH_UNTIL_NEXT_START_THEN_STOP_CONDITION:
+            self.adapt_non_explicit_indices(all_file_segments)
+        else:
+            all_file_segments.correct_overlaps_index_field(only_start_tags=True)
+
+        self.adapt_stop_index_in_last_segment(all_file_segments)
+
+
+
+
         ocromore_data['segmentation'] = all_file_segments
+
         return ocromore_data
 
 
@@ -80,7 +100,7 @@ class SegmentClassifier(object):
 
         # adapt the last stop index of last segment
         saved_last_segment.stop_line_index = all_file_segments.number_of_lines-1
-        saved_last_segment.stop_was_segmented = True # todo think about if this is necessary?
+        saved_last_segment.stop_was_segmented = True  # todo think about if this is necessary?
 
 
 
@@ -241,6 +261,31 @@ class AllSegments(object):
                 my_instance = value()
                 self.my_classes.append(my_instance)
 
+    def finish_segment_matching(self, lines, feats, file_info):
+        """
+        Final step in segmentation, covers special segmentation cases which i.e. can be done
+        after everything else is segmented.
+        :param lines:
+        :param feats:
+        :param file_info:
+        :return:
+        """
+
+        # special case: in end match firmenname
+        for segment_class_index, segment_class in enumerate(self.my_classes):
+            if not isinstance(segment_class, SegmentHolder.SegmentFirmenname):
+                continue  # skip firmenname at firsthand, this will be matched in the end
+
+            start_updated = segment_class.match_start_condition(lines, lines, self.index_field, feats, len(lines), file_info,None)
+
+            start_updated = False       #                                                     self.number_of_lines, prev_line, combined_line)
+            if start_updated:
+                # there was a change -> update the indices fields
+                self.update_index_field(segment_class)
+
+            break  # this only occurs once 
+
+
     # overall function for iterating over all matches
     def match_my_segments(self, line, line_text, line_index, features, prev_line, combined_line):
 
@@ -258,6 +303,11 @@ class AllSegments(object):
                 # if at least one class was tagged only, skip all other classes who are only tagged
                 if segment_class_index not in self.my_only_indices:
                     continue
+
+
+            if isinstance(segment_class, SegmentHolder.SegmentFirmenname) :
+                continue  # skip firmenname at firsthand, this will be matched in the end
+
 
             start_updated = False
             stop_updated = False
@@ -295,5 +345,6 @@ class AllSegments(object):
             if start_updated or stop_updated:
                 # there was a change -> update the indices fields
                 self.update_index_field(segment_class)
+
 
 

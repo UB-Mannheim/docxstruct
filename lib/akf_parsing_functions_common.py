@@ -143,10 +143,12 @@ class AKFCommonParsingFunctions(object):
         """
         #if "Zementfabrik" in origpost_red or "Rheinfelden" in origpost_red or "Bietigheim" in origpost_red:
             #print("asd")
-            # todo cases
+
             # (17b) Rheinfelden (Baden);
             # (22c) Zementfabrik bei Ober- kassel (Siegkr.)
             # (14a) Bietigheim uWürtt (Württ.).
+            # 648 Wächtersbach (Hessen), Postfach 20   ## resembles case from 1963 on
+            # 648 Wächtersbach (Hessen) 22, Postfach 20   ## resembles case from 1963 on
 
         # Sometimes the text contains an additional Sitz-preamble although segmented ok
         origpost_red = regex.sub("^Sitz", "", origpost_red.strip()).strip()
@@ -156,6 +158,41 @@ class AKFCommonParsingFunctions(object):
                             r"(?<Rest>.*+)",                     # just get the rest which is usually streetname and number, but has other possibilities
                             origpost_red)
         if match is None:
+            if len(origpost_red) >= 3:
+                # special case from years 1963 on regex isn't triggered
+                op_r_split = origpost_red.split(',')
+                found_ctr = 0
+                found_nums = ""
+                num_found = False
+                found_city = ""
+                found_street = []
+                found_rest = []
+                for element in op_r_split:
+                    element_strip = element.strip()
+                    if element_strip == "":
+                        continue
+                    if found_ctr == 0:
+                        # it's ordnumber city and some other number optionally '51 Aachen 2' or smth
+                        element_split = element.split(' ')
+                        for els in element_split:
+                            els_strip = els.strip()
+                            if els_strip.isnumeric() and num_found is False:
+                                found_nums = els_strip
+                                num_found = True
+                            else:
+                                found_city += " " + els_strip
+
+                    elif found_ctr == 1:
+                        # it's smth
+                        found_street = element_strip
+                    else:
+                        # rest
+                        found_rest.append(element_strip)
+                    found_ctr += 1
+                city = dh.strip_if_not_none(found_city, ", ")
+
+                return found_nums, city, found_street, None, found_rest
+
             return None, None, None, None, None
 
         numID = dh.strip_if_not_none(match.group("NumID"), ", ")
@@ -238,14 +275,21 @@ class AKFCommonParsingFunctions(object):
         """
 
         text_reduced = text.replace(rec_tag, "").strip()
-
+        #text_reduced = 'DM 2 500 000, - (100 %).' # erronous case 2 500
+        #text_reduced = '40 532 400.-'
         # if not activated detailed parsing just return simple solution
         if not detailed_parsing:
             return text_reduced, None
 
         # continue with detailed parsing here
         match_currency = regex.search(r"^[a-zA-Z\p{Sc}\.]+", text_reduced)
-        match_numbers = regex.search(r"[\d\s]+[\.\s\-]+", text_reduced)
+        #match_numbers = regex.search(r"[\d\s]+(\.\s\-|\.\-|,\s-)", text_reduced) # old numbers match
+
+        match_numbers = regex.search(r"[\d\s]+", text_reduced)
+        #match_numbers_addendum = regex.search(r"[\d\s]+", text_reduced)   # could be tested if addendum needed
+
+
+        #match_numbers = regex.search(r"[\b\s*\d+]*", text_reduced)
         match_parenthesis = regex.search(r"\(.+\)", text_reduced)
 
         return_object = {}
@@ -259,6 +303,9 @@ class AKFCommonParsingFunctions(object):
         if match_parenthesis:
             res_parenthesis = match_parenthesis.group().strip()
             return_object['add_info'] = res_parenthesis
+
+        #print("orig:", text_reduced)
+        #print("prsd:", return_object)
 
         # return a simple and more sophisticated parsing
         return text_reduced, return_object
@@ -307,6 +354,7 @@ class AKFCommonParsingFunctions(object):
     def add_check_element(topclass, content_texts, real_start_tag, segmentation_class, element_counter):
 
         joined_texts = dh.join_separated_lines(content_texts)  # join dash separated texts
+        joined_texts = dh.join_separated_lines_parenthesis(joined_texts) # join divided parenthesis blocks
         origpost, origpost_red = dh.create_stringified_linearray(joined_texts)   # final reduced array for further processing
 
         if topclass.config.ADD_INFO_ENTRY_TO_OUTPUT:

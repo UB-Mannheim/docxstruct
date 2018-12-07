@@ -21,7 +21,7 @@ class AkfParsingFunctionsThree(object):
         self.ef = endobject_factory
         self.output_analyzer = output_analyzer
 
-    def parse_something(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+    def parse_bezugsrechte(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
         element_counter = 0
         origpost, origpost_red, element_counter, content_texts = \
@@ -30,6 +30,98 @@ class AkfParsingFunctionsThree(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
+
+        only_add_if_value = True
+        # recognize start tags
+        berichtigigungsaktien = False       # some start tag like 'Bezugsrechte und Berichtigungsaktien:'
+        bezugsrechtsabschlaege = False       # some start tag like 'Bezugsrechtabschläge insgesamt:'
+        bezugsrechte_only = False           # some start tag like 'Bezugsrechte' sometimes 'Bezugsrechtsbedingungen'
+
+        if "Bezugsrechtabschläge" in real_start_tag:
+            bezugsrechtsabschlaege = True
+        else:
+            for text_index, text in enumerate(content_texts):
+                if text_index <= 1 and "Berichtigungsaktien" in text:
+                    berichtigigungsaktien = True
+                    content_texts = content_texts[text_index+1:]  # remove start stuff
+            if berichtigigungsaktien is False:
+                bezugsrechte_only = True
+
+        #parse the specific categories
+        if bezugsrechtsabschlaege:
+            split_orig = origpost_red.split(":")
+            date = split_orig[0]
+            endobject = None
+            match_dm = regex.search(r"^(?P<currency>\D{1,4})(?P<amount>[\d\.\-\s]*)", split_orig[1].strip())
+            if match_dm:
+                currency = match_dm.group("currency").strip(",. ")
+                amount = match_dm.group("amount")
+                endobject = {
+                    "date": date,
+                    "currency": currency,
+                    "amount": amount
+                }
+
+            match_percentage = regex.search(r"\d+\s?%", split_orig[1].strip())
+            if match_percentage:
+                percentage = match_percentage.group(0).strip()
+                endobject = {
+                    "date": date,
+                    "percentage": percentage
+                }
+
+            self.ef.add_to_my_obj("bezugsrechtsabschlaege", endobject, object_number=element_counter,
+                                  only_filled=only_add_if_value)
+
+            return  True # categories are mutually exclusive
+
+        info_key = None
+        if berichtigigungsaktien:
+            info_key = "berichtigungsaktien"
+        if bezugsrechte_only:
+            info_key = "bezugsrechte"
+
+
+        final_texts = {}
+        key = "general_info"
+        ctr_help = 2
+        for text in content_texts:
+            text_stripped = text.strip()
+            match_starts_with_year = regex.match("^\d\d\d\d", text_stripped)
+            match_starts_with_grundkapital = regex.match("^[Gg]rundkapital\s?:", text_stripped)
+            if match_starts_with_year:
+                key = match_starts_with_year.group(0)
+                if key in final_texts.keys():
+                    final_key = key+"_"+str(ctr_help)
+                    final_texts[final_key] = text_stripped.replace(key, "").strip(": ")
+                    key = final_key
+                    ctr_help += 1  # one counter multiple keys, just to guarantee uniqueness
+                else:
+                    final_texts[key] = text_stripped.replace(key, "").strip(": ")
+
+            elif match_starts_with_grundkapital:
+                key = match_starts_with_grundkapital.group(0)
+                final_texts[key]  = text_stripped.replace(key, "").strip(": ")
+            else:
+                if text_stripped != "":
+                    if key not in final_texts:
+                        final_texts[key] = ""
+
+                    final_texts[key] += " "+text_stripped
+                    final_texts[key] = final_texts[key].strip(": ")
+
+        self.ef.add_to_my_obj(info_key, final_texts, object_number=element_counter,
+                              only_filled=only_add_if_value)
+        return True
+
+    def parse_something(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
 
     def parse_beratende_mitglieder(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
@@ -41,6 +133,17 @@ class AkfParsingFunctionsThree(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
+        my_persons = cf.parse_persons(origpost_red)
+
+        only_add_if_filed = True
+        for entry in my_persons:
+            name, city, title, rest_info = entry
+            self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
+            element_counter += 1
+        return True
 
     def parse_sekretaere(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
@@ -482,13 +585,56 @@ class AkfParsingFunctionsThree(object):
         return True
 
     def parse_wertpapier_kenn_nr(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+
+        # cases:
+        # 820000
+        # 840140 (voll eingezahlt) 840141 (mit 76 % eingezahlt)
+        # 500900 (St. -Akt.); 500903 (Vorz.-Akt.)
+        # 576300
+
         # get basic data
         element_counter = 0
         origpost, origpost_red, element_counter, content_texts = \
             cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
 
+
+        #origpost_red = '500900 (St. -Akt.); 500903 (Vorz.-Akt.)'
+
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # split the origpost_red to elements which are lead by a wkn to easify parsing
+        separator = "~~~¦¦¦"
+        results_decimals = regex.findall("\d{4,}", origpost_red)
+        substituted = regex.sub("\d{4,}", separator, origpost_red)
+        separator_2 = "~~~"
+        separator_3 = "¦¦¦"
+
+        split_done = []
+        split_undone = regex.split(separator_2, substituted)
+        ctr_replace = 0
+        for ctr_current, split_element in enumerate(split_undone):
+            if split_element.strip()== "":
+                continue
+            rest = split_element.replace(separator_3, "")
+            rest_strip = rest.strip()
+            current_decimal = None
+            if len(results_decimals) > ctr_replace:
+                current_decimal = results_decimals[ctr_replace]
+            if (current_decimal is not None) or (rest_strip != ""):
+                split_done.append((current_decimal, rest_strip))
+                #split_done.append(current_decimal+" **** " + rest_strip)
+            ctr_replace += 1
+
+        only_add_if_value = True
+
+        # add the entries to final object -> todo mind if int-cast is ok here
+        for entry in split_done:
+            number, rest = entry
+            self.ef.add_to_my_obj("number", int(number), object_number=element_counter, only_filled=only_add_if_value)
+            self.ef.add_to_my_obj("rest", rest, object_number=element_counter, only_filled=only_add_if_value)
+            element_counter += 1
+
 
     def parse_rechte_und_vorzugsaktien(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
@@ -765,3 +911,24 @@ class AkfParsingFunctionsThree(object):
 
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+
+
+    def parse_direktionskomitee(self, real_start_tag, content_texts,
+                                        content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        only_add_if_value = True
+
+
+    def parse_vizegeneraldirektoren(self, real_start_tag, content_texts,
+                                        content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        only_add_if_value = True

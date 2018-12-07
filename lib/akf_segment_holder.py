@@ -16,6 +16,49 @@ class SegmentHolder(object):
     usage in segment_classifier.
     """
 
+
+
+    class SegmentFirmenname(Segment):
+        # example recognition line:
+        # Voigt & Haeffner Aktiengesellschaft
+        # Nord-Deutsche Versicherungs-Gesellschaft
+
+        def __init__(self):
+            super().__init__("Firmenname")
+            # self.disable()  # comment out to disable a segment
+            # self.set_only()  # comment out to segment this segments and other segments with that tag exclusively
+
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
+            # this function get's hopped and called later
+            # Attention: This is a special case which get's called like:
+            # lines, lines, self.index_field, feats, len(lines), file_info,None
+            file_info = prev_line
+            dbname = file_info.dbname
+            current_year = int(dbname)
+            selected_start_index = None
+
+            if current_year >= 1960:
+                # get the first lines which can resemble the title
+                for index, value in enumerate(line_index):
+                    if value is not False:
+                        break
+                    selected_line = line_text[index]
+                    selected_text = selected_line['text'].strip(",.; ")
+                    if selected_text != "":
+                        selected_start_index = index
+                        break
+            else:
+                # just take last line in early years
+                selected_start_index = len(line_index)-1
+
+            if selected_start_index is not None:
+                placeholder_match, errors = regu.fuzzy_search(r"", "")
+                self.do_match_work(True, placeholder_match, selected_start_index, 0)
+                return True
+
+            return False
+
     class SegmentSitz(Segment):
         # example recognition line:
         # Sitz: (20a) Peine, Gerhardstr. 10.
@@ -27,7 +70,7 @@ class SegmentHolder(object):
 
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
-            match_start, errors = regu.fuzzy_search(r"^Sitz\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"^Hauptsitz\s?:|^Sitz\s?:", line_text)
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
@@ -440,10 +483,11 @@ class SegmentHolder(object):
             super().__init__("Beteiligungen")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
+
             # reduced error number to prevent confusion with "Beteiligung:"
-            match_sitz, errors = regu.fuzzy_search(r"(((?:Namhafte|Wesentliche|Maßgebliche)\s?Beteiligung(en)?)|\s?Beteiligungen)\s?:", line_text, err_number=0)
-            if match_sitz is not None:
-                self.do_match_work(True, match_sitz, line_index, errors)
+            match_bet, errors = regu.fuzzy_search(r"(((?:Namhafte|Wesentliche|Maßgebliche)\s?Beteiligung(en)?)|\s?Beteiligungen)\s?:", line_text, err_number=0)
+            if match_bet is not None:
+                self.do_match_work(True, match_bet, line_index, errors)
                 return True
 
     class SegmentHaupterzeugnisse(Segment):
@@ -542,9 +586,13 @@ class SegmentHolder(object):
             super().__init__("Grundkapital")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
-            match_start, errors = regu.fuzzy_search(r"^Grundkapital\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"^Grundkapital\s?:", line_text, err_number=0)
 
             if match_start is not None:
+                if "Bezugsrechte:" in combined_texts:
+                    return False # this is a special case
+
+
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 
@@ -814,10 +862,25 @@ class SegmentHolder(object):
             super().__init__("Bezugsrechte")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
-            match_start, errors = regu.fuzzy_search(r"^Bezugsrechte\s?:", line_text)
+            #if "Bezugsrechtabschläge insgesamt" in line_text:
+            #   return False # false positive, abort
+            # nd Berichtigungsaktien
+            regex_string = r"(^Bezugsrechtabschläge insgesamt\s?:|^Bezugsrechte und Berichtigungsaktien\s?:|^Bezugsrechte\s?:)"
+            match_start, errors = regu.fuzzy_search(regex_string, combined_texts)
 
             if match_start is not None:
-                self.do_match_work(True, match_start, line_index, errors)
+                match_line, errors_2 = regu.fuzzy_search(
+                    regex_string,
+                    line_text)
+
+                # if the current line contains match index current line
+                if match_line:
+                    pass_index = line_index
+                else:
+                    # if combination with previous text contains info match previous index
+                    pass_index = line_index-1
+
+                self.do_match_work(True, match_start, pass_index, errors)
                 return True
 
     class SegmentZurGeschaeftslage(Segment):

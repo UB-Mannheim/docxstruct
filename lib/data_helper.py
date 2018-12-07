@@ -230,6 +230,9 @@ class DataHelper(object):
 
         len_content_texts = len(content_texts)
 
+        if len_content_texts == 42:
+            print("asd")
+
         # iterate the given texts
         for text_index, text in enumerate(content_texts):
             if text is None:
@@ -297,6 +300,79 @@ class DataHelper(object):
 
         # return the modified list
         return joined_texts
+
+    @staticmethod
+    def join_separated_lines_parenthesis(content_texts):
+        next_lines_is_ending_parenthesis = False    # indicator -
+        next_closing_ordinal = -1                   # indicator - the n-th closing parenthesis closes the previous block
+        change = False
+        final_entries = []
+
+        len_content_texts = len(content_texts)
+        for text_index, text in enumerate(content_texts):
+
+            # if there was a case detect add this line to the previous one instead of appending as new line
+            if next_lines_is_ending_parenthesis:
+
+                text_split = text.split(')')
+                text_to_add = ""
+                rest_text = ""
+                # define next closing ordinal, sometimes overflow todo this is not 100% accurate
+                used_closing_ordinal = 0
+                if next_closing_ordinal > 0:
+                    used_closing_ordinal = next_closing_ordinal
+                for tf_index, text_fragment in enumerate(text_split):
+                    if tf_index <= used_closing_ordinal:
+                        text_to_add += " " + text_fragment+")"
+                    else:
+                        if text_fragment.strip != "":
+                            # only add delimiters if not at end of split
+                            if tf_index == len(text_split)-1:
+                                rest_text += " " + text_fragment
+                            else:
+                                rest_text += " " + text_fragment+")"
+
+                final_entries[-1] += " " + text_to_add.strip() # add until parenthesis end then go on
+                next_lines_is_ending_parenthesis = False
+                change = True # change debugging indicator
+                # change current text to only rest
+                text = rest_text.strip()
+                print(final_entries)
+                if text == ")":
+                    continue
+
+            # check if there is more opening parenthesis
+            opening_parenthesis = text.count("(")
+            closing_parenthesis = text.count(")")
+
+            if opening_parenthesis <= closing_parenthesis:
+                final_entries.append(text)
+                continue
+
+            # assign next text otherwise continue
+            next_text = None
+            if text_index+1 < len_content_texts:
+                next_text = content_texts[text_index + 1]
+            else:
+                final_entries.append(text)
+                continue
+
+            next_opening_parentesis = next_text.count("(")
+            next_closing_parenthesis = next_text.count(")")
+
+            if next_closing_parenthesis == 0:
+                final_entries.append(text)
+                continue
+
+            # if code ran until here the lines are a concat case
+            final_entries.append(text)
+            next_lines_is_ending_parenthesis = True
+            next_closing_ordinal = opening_parenthesis-closing_parenthesis - next_closing_parenthesis
+
+        #if change:
+        #    print("debug")
+
+        return final_entries
 
     @staticmethod
     def filter_special_chars(text, remove_spaces=True):
