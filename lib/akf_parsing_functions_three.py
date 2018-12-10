@@ -267,16 +267,34 @@ class AkfParsingFunctionsThree(object):
         origpost, origpost_red, element_counter, content_texts = \
             cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
 
-        my_persons = cf.parse_persons(origpost_red)
-        # todo this is testwise solution check if ok
-        only_add_if_filed = True
-        for entry in my_persons:
-            name, city, title, rest_info = entry
-            self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
-            self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
-            self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
-            self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
+        headline = ""
+        ctr_headline = 0
+        only_add_if_filled = True
+        for text in content_texts:
+            text_stripped = text.strip()
+            headline += text_stripped
+            ctr_headline += 1
+            if text_stripped == "":
+                continue
+            if ":" in text_stripped[-1] or ":" in text_stripped[-2]:
+                break
+        # add headline element if there is one
+        self.ef.add_to_my_obj("headline", headline.strip(": "), object_number=element_counter, only_filled=only_add_if_filled)
+        element_counter += 1
+
+        new_texts = content_texts[ctr_headline:]
+        final_text = ""
+        for text in new_texts:
+            final_text += " " + text
+        res_entries = cf.parse_persons(final_text)
+        for res_entry in res_entries:
+            name, city, title, rest_info = res_entry
+            self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filled)
+            self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filled)
+            self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filled)
+            self.ef.add_to_my_obj("rest_info", rest_info, object_number=element_counter, only_filled=only_add_if_filled)
             element_counter += 1
+
         return True
 
 
