@@ -217,17 +217,47 @@ class AkfParsingFunctionsThree(object):
 
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+        current_key = "general_info"
+        only_add_if_filled = True
+        entries_sorted = {}   # entries sorted by key
+        entries_sorted[current_key] = []
+        for text in content_texts:
+            text_stripped = text.strip()
+            if text_stripped == "":
+                continue
+            if ":" in text_stripped[-1] or ":" in text_stripped[-2]:
+                current_key = text_stripped.strip(":")
+                entries_sorted[current_key] = []
+                continue
+            entries_sorted[current_key].append(text)
 
-        my_persons = cf.parse_persons(origpost_red)
-        # todo this is testwise solution check if ok
-        only_add_if_filed = True
-        for entry in my_persons:
-            name, city, title, rest_info = entry
-            self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
-            self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
-            self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
-            self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
-            element_counter += 1
+        for key in entries_sorted:
+            entry = entries_sorted[key]
+            final_text = ""
+            for text in entry:
+                final_text += " " + text
+            res_entries = cf.parse_persons(final_text)
+            for res_entry in res_entries:
+                name, city, title, rest_info = res_entry
+                endobject = {}
+                change = False
+                if name != "" and name is not None:
+                    endobject["name"] = name
+                    change = True
+                if city != "" and city is not None:
+                    endobject["city"] = city
+                    change = True
+                if title != "" and title is not None:
+                    change = True
+                    endobject["title"] = title
+                if rest_info is not None and len(rest_info) > 0:
+                    change = True
+                    endobject["rest_info"] = rest_info
+
+                if change:
+                    self.ef.add_to_my_obj(key, endobject, object_number=element_counter, only_filled=only_add_if_filled)
+                    element_counter += 1
+
         return True
 
     def parse_direktionskomitee(self, real_start_tag, content_texts,

@@ -146,6 +146,12 @@ class SegmentHolder(object):
             match_start, errors = regu.fuzzy_search(r"^(Generaldirektorium|Generaldirektion|Direktion)\s?:", line_text)
 
             if match_start is not None:
+                if "Generaldirektion in" in line_text:
+                    return False
+                found_match = match_start.group(0)
+                subgroup = found_match[-2:]
+                if ":" not in subgroup:
+                    return False
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 
