@@ -134,6 +134,11 @@ class SegmentParser(object):
             all_texts = self.get_all_text(ocromore_data)
             self.ef.set_current_main_list("overall_info")
             self.ef.add_to_my_obj("fulltexts",all_texts)
+        # add additional info to result
+        if self.config.ADDITIONAL_INFORMATION and self.config.ADD_ADDITIONAL_INFO:
+            if not self.config.ADD_FULLTEXT_ENTRY:
+                self.ef.set_current_main_list("Information")
+            self.ef.add_to_my_obj("additionals", ocromore_data["additional_info"])
         # add a duplicate of the original text from which in the below analysis case the files get subtracted
         if self.config.LOG_SEGMENTED_TO_ORIG_DIFF_PER_FILE:
             if self.config.ADD_FULLTEXT_ENTRY:
