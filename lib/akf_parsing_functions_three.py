@@ -306,7 +306,7 @@ class AkfParsingFunctionsThree(object):
             cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
 
         my_persons = cf.parse_persons(origpost_red)
-        # todo this is testwise solution check if ok
+        # todo this occurs seemingly once -> should be combined
         only_add_if_filed = True
         for entry in my_persons:
             name, city, title, rest_info = entry
