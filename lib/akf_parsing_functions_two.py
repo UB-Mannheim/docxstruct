@@ -392,36 +392,71 @@ class AkfParsingFunctionsTwo(object):
 
         final_lines = []
         only_add_if_value = True
-
+        skip = False
+        final_text = ""
         for text_index, text in enumerate(content_texts):
             if text.strip() == "":
                 continue
-            match_akt = regex.search(r"\.\s?\-\s?Akt", text)
-            match_saemtlsakt, err_saemtlsakt = regu.fuzzy_search(r"([Ss]ämtliche [Ss]tammaktien.*|[Ss]ämtliche [Aa]ktien.*)", text, err_number=1)
-
-            if match_saemtlsakt is not None and match_akt is not None:
-                saemtl_res = match_saemtlsakt.group()
-                self.ef.add_to_my_obj("additional_info", saemtl_res, object_number=element_counter, only_filled=only_add_if_value)
-                reduced_text = text.replace(saemtl_res, "")
-                final_lines.append(reduced_text)
-                element_counter += 1
+            if skip:
+                skip = False
                 continue
+            parse_stck = regex.compile(r"(?P<amount>[\d\s\.]*)\s*(?P<kind>[^\d]*?)[\s]?(?P<nominal>zu je|zuje|zu|je)[\s]?(?P<currency>[^\d\s]*)?[\s]?(?P<value>[\d\s]*)?")
+            finding = parse_stck.findall(text.replace(" Stücke "," Aktien ").replace(" Stück "," Aktie ").replace("DM"," DM").replace("RM"," RM"))
+            if not finding or finding[0][0]+finding[0][1] == "":
+                match_akt = regex.search(r"\.\s?\-\s?Akt", text)
+                match_saemtlsakt, err_saemtlsakt = regu.fuzzy_search(
+                    r"([Ss]ämtliche [Ss]tammaktien.*|[Ss]ämtliche [Aa]ktien.*)", text, err_number=1)
+                if match_saemtlsakt is not None and match_akt is not None:
+                    saemtl_res = match_saemtlsakt.group()
+                    self.ef.add_to_my_obj("additional_info", saemtl_res, object_number=element_counter,
+                                          only_filled=only_add_if_value)
+                    reduced_text = text.replace(saemtl_res, "")
+                    final_lines.append(reduced_text)
+                if match_saemtlsakt:
+                    self.ef.add_to_my_obj("additional_info", "".join(content_texts[text_index:]), object_number=element_counter,
+                                          only_filled=only_add_if_value)
+                    element_counter += 1
+                    break
+                if "(" in text:
+                    self.ef.add_to_my_obj("additional_info", text, object_number=element_counter-1,
+                                          only_filled=only_add_if_value)
+                else:
+                    final_text += text
+                continue
+            finding_next = None
+            if finding[0][2] == "" or finding[0][2] == "zu":
+                #test =  '2 638 514 Inh. - bzw. Namensaktien zuje FF 75.-'
+                if text_index == len(content_lines) - 1:
+                    self.ef.add_to_my_obj("additional_info", text, object_number=element_counter,
+                                          only_filled=only_add_if_value)
+                    continue
+                else:
+                    finding_next = parse_stck.findall(text +" "+ content_texts[text_index + 1])
+            if finding[0][3]+finding[0][4] == "":
+                if text_index == len(content_lines) - 1:
+                    self.ef.add_to_my_obj("additional_info", text, object_number=element_counter,
+                                          only_filled=only_add_if_value)
+                    continue
+                else:
+                    finding_next = parse_stck.findall(text +" "+ content_texts[text_index + 1])
+            if finding_next:
+                skip = True
+                finding = finding_next
+            stck = {"amount": finding[0][0].replace("."," ").strip(),
+                     "kind": finding[0][1].replace(" ","").strip(),
+                     "nominal": "zu je",
+                     "currency": finding[0][3],
+                     "value": finding[0][4]}
+            self.ef.add_to_my_obj(element_counter, stck, object_number=element_counter, only_filled=only_add_if_value)
+            element_counter += 1
+           # match_akt = regex.search(r"\.\s?\-\s?Akt", text)
             #if match_saemtlsakt is not None:
             #    self.ef.add_to_my_obj("additional_info", text, object_number=element_counter, only_filled=only_add_if_value)
             #    element_counter += 1
             #    continue
-            if match_akt is not None:
-                final_lines.append(text)
-            else:
-                if len(final_lines) == 0:
-                    final_lines.append(text)
-                    continue
-                final_lines[-1] = final_lines[-1] + " " + text.strip()
-
-        for line in final_lines:
-            self.ef.add_to_my_obj("entry", line, object_number=element_counter, only_filled=only_add_if_value)
-            element_counter += 1
-
+        if final_text != "":
+            self.ef.add_to_my_obj("additional_info", final_text, object_number=element_counter,
+                                  only_filled=only_add_if_value)
         return True
 
 
