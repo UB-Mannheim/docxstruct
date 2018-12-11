@@ -303,7 +303,7 @@ class SegmentHolder(object):
 
         def __init__(self):
             super().__init__("Filialen")
-            self.disable()  # this segment is disabled, because it's not really a common segmentation in 1956,
+            #self.disable()  # this segment is disabled, because it's not really a common segmentation in 1956,
             # maybe activate later
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):

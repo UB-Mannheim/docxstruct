@@ -230,8 +230,8 @@ class DataHelper(object):
 
         len_content_texts = len(content_texts)
 
-        if len_content_texts == 42:
-            print("asd")
+        #if len_content_texts == 42:
+        #    print("asd")
 
         # iterate the given texts
         for text_index, text in enumerate(content_texts):
@@ -337,7 +337,7 @@ class DataHelper(object):
                 change = True # change debugging indicator
                 # change current text to only rest
                 text = rest_text.strip()
-                print(final_entries)
+                #print(final_entries)
                 if text == ")":
                     continue
 
