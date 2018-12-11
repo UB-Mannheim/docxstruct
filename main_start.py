@@ -32,6 +32,7 @@ dh.fetch_files(config.INPUT_FILEGLOB, config.INPUT_FILETYPES)
 # get files-list
 hocr_files = dh.get_files()
 
+accumulated_tags = {}
 
 # main iteration loop
 for key in hocr_files:
@@ -89,9 +90,10 @@ for key in hocr_files:
             output_analyzer.accumulate_diff_info_orig_to_segmentation(diff_info_orig_to_segment, accumulated_diff_info_orig_to_segment)
 
         accumulated_diff_info = output_analyzer.accumulate_diff_info(ocromore_data, diff_info, accumulated_diff_info)
+        accumulated_tags = output_analyzer.log_tags(ocromore_data, accumulated_tags)
         ctr_test += 1
 
-        if ctr_test >= 20:
+        if ctr_test >= 3:
             break
 
         # clear the current result in segment_parser cache to parse the next one
@@ -106,4 +108,4 @@ for key in hocr_files:
     output_analyzer.log_accumulated_orig_to_segment(accumulated_diff_info_orig_to_segment, ocromore_data)
 
 
-
+output_analyzer.log_accumulated_tags(accumulated_tags)

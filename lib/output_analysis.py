@@ -159,6 +159,59 @@ class OutputAnalysis(object):
 
         return diff_info
 
+    def log_tags(self, ocromore_data, accumulated_tags):
+        """
+        Gets the all tags from the current result object in ocromore data
+        and the adds them (counted) in the accumulated tags segment
+        :param ocromore_data: data block with results
+        :param accumulated_tags: dictionary to collect accumulated taglist
+        :return: accumulated_tags -> input object + added tags
+        """
+
+        my_results = ocromore_data['results']
+        res_object = my_results.my_object
+        final_tags = {}
+
+        # get the occurences
+        for key in res_object:
+            my_keys = []
+            if "overall_info" in key:
+                continue
+            my_entry = res_object[key]
+
+            my_keys = my_results.fetch_keys_recusive_check(my_entry, my_keys, create_multiple=True)
+
+            if key not in final_tags.keys():
+                final_tags[key] = []
+
+            final_tags[key].extend(my_keys)
+
+        # add to the accumulated object
+        for key in final_tags:
+            if key not in accumulated_tags.keys():
+                accumulated_tags[key] = {}
+            list_of_entries = final_tags[key]
+            for text in list_of_entries:
+                # increment of set the occurence in final list
+                if text not in accumulated_tags[key]:
+                    accumulated_tags[key][text] = 1
+                else:
+                    accumulated_tags[key][text] += 1
+
+        return accumulated_tags
+
+    def log_accumulated_tags(self, accumulated_tags):
+        print("asd")
+        final_text_lines = []
+
+        for tag in accumulated_tags:
+            counter = accumulated_tags[tag]
+            final_line_text = ('%-30s%-30s' % (tag, counter))
+            final_text_lines.append(final_line_text)
+
+        dh.write_array_to_root_simple("all_tags", "all_files",
+                                      final_text_lines, self.analysis_root, append_mode=True)
+
     def log_segmentation_diff_orig_to_parsed_output(self, ocromore_data):
         """
         Takes the current ocromore_data for a table and for each

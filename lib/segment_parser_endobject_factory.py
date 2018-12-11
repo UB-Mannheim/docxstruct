@@ -88,6 +88,48 @@ class EndobjectFactory(object):
         my_obj_json = json.dumps(my_obj, indent=5, ensure_ascii=False)
         return my_obj_json
 
+    @staticmethod
+    def fetch_subentries_recursive_check(entry):
+        final_texts = []
+
+        for item in entry:
+            if isinstance(entry, list):
+                value = item
+            else:
+                # item is a key
+                value = entry[item]
+            if isinstance(value, str):
+                final_texts.append(value)
+            elif isinstance(value, int):
+                final_texts.append(str(value))
+            elif isinstance(value, object):
+                obj_size = len(value)
+                if obj_size > 0:
+                    recursive_texts = EndobjectFactory.fetch_subentries_recursive_check(value)
+                    final_texts.extend(recursive_texts)
+
+        return final_texts
+
+    @staticmethod
+    def fetch_keys_recusive_check(entry, final_keys, create_multiple=True):
+
+        if isinstance(entry, list):
+            for item in entry:
+                final_keys = EndobjectFactory.fetch_keys_recusive_check(item, final_keys, create_multiple)
+            return final_keys
+        elif not isinstance(entry, dict):
+            # just return if there are no keys (cause no dictionary)
+            return final_keys
+
+        for key in entry:
+            value = entry[key]
+            if create_multiple or key not in final_keys:
+                if isinstance(key, int):
+                    continue
+                final_keys.append(key)
+            final_keys = EndobjectFactory.fetch_keys_recusive_check(value, final_keys)
+        return final_keys
+
     def diff_seg_to_orig_at_key(self, key):
 
         def fetch_subentries_recursive(entry):
