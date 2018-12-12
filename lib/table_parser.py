@@ -937,7 +937,7 @@ class Sharetable(Table):
                     return False
             else:
                 content["text"] = content["text"].replace(":","").replace(" . ","")
-                print(content["text"])
+                #print(content["text"])
                 self._extract_regexlvl(content["text"].strip(),lidx)
         if self.info.snippet and visual:
             if self.info.subtables == 1:
@@ -1053,7 +1053,7 @@ class Sharetable(Table):
                 if visual_fast:
                     for lidx, content in enumerate(content_lines):
                         if self.structure["data"][lidx]:
-                            print(lidx)
+                            #print(lidx)
                             bbox = list(content["words"][0]["hocr_coordinates"])
                             bbox[2] = content["words"][-1]["hocr_coordinates"][2]
                             textline = self._reocr(bbox[:]).strip()
@@ -1272,7 +1272,7 @@ class Sharetable(Table):
                          "Comment": sharetype}
                     cidx += 1
                     offset = 2
-                    print(gtable)
+                    #print(gtable)
                 self.info.closing_date = ""
         except Exception as e:
             self.logger(f"Sharetable_{type}").log(level=20,msg=e)
