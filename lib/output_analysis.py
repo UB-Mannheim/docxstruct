@@ -201,7 +201,11 @@ class OutputAnalysis(object):
         return accumulated_tags
 
     def log_accumulated_tags(self, accumulated_tags):
-        print("asd")
+        """
+        Log the list of all found tags to file
+        :param accumulated_tags: all found tags
+        :return: - 
+        """
         final_text_lines = []
 
         for tag in accumulated_tags:
