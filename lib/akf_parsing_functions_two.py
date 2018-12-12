@@ -334,7 +334,7 @@ class AkfParsingFunctionsTwo(object):
         for text_index, text in enumerate(content_texts):
             if text == "":
                 continue
-            text = text.replace("DM =", "DM 1 =").replace("DM=", "DM 1 =").replace("eine DM", "DM 1")
+            text = text.replace("DM =", "DM 1 =").replace("DM=", "DM 1 =").replace("eine DM", "DM 1.-")
             if element_counter == 0 and "je nom" not in text.lower():
                 self.ef.add_to_my_obj("additional_info", "".join(content_texts[text_index:]),
                                       object_number=element_counter,
@@ -527,7 +527,7 @@ class AkfParsingFunctionsTwo(object):
                                           only_filled=only_add_if_value)
                     reduced_text = text.replace(saemtl_res, "")
                     final_lines.append(reduced_text)
-                if match_saemtlsakt or "Börse" in text[:10]:
+                if match_saemtlsakt or "Börse" in text or "Besondere" in text:
                     self.ef.add_to_my_obj("additional_info", "".join(content_texts[text_index:]), object_number=element_counter,
                                           only_filled=only_add_if_value)
                     element_counter += 1
