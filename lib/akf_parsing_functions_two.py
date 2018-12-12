@@ -318,6 +318,122 @@ class AkfParsingFunctionsTwo(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
+        # find last parenthesis and filter
+        match_parenth = regex.findall(r"(\(.*?\))", origpost_red)
+        found_parenth = None
+        origpost_used = origpost_red
+        # find additional info in  each line and subtract it
+        if match_parenth:
+            found_parenth = match_parenth[-1].strip("., ")  # find the last parenthesis grounp
+            origpost_used = origpost_red.replace(found_parenth, "")  # update the orignpost used
+
+        final_lines = []
+        only_add_if_value = True
+        skip = False
+        final_text = ""
+        for text_index, text in enumerate(content_texts):
+            if text == "":
+                continue
+            text = text.replace("DM =", "DM 1 =").replace("DM=", "DM 1 =").replace("eine DM", "DM 1")
+            if element_counter == 0 and "je nom" not in text.lower():
+                self.ef.add_to_my_obj("additional_info", "".join(content_texts[text_index:]),
+                                      object_number=element_counter,
+                                      only_filled=only_add_if_value)
+                break
+            if skip:
+                skip = False
+                continue
+            parse_aktie = regex.compile(r"(?P<nominal>[Jj]e[de]*?\s?(?P<nomvalue>[\d\s]*?)\s?[Aa]ktie[n]?)[^\d]*(?P<vote>[\d\s]*?)\s*?(?P<voteend>Stimme[n]*)")
+            finding = parse_aktie.findall(text.replace("Stamm",""))
+            if finding != []:
+                finding = list(finding[0])
+                if finding[1] == "":
+                    finding[1] = "1"
+                stck = {"kind": "Aktie",
+                        "amount": finding[1],
+                        "vote": finding[2].replace(" ", "").strip(),
+                        "value": "",
+                        "currency": ""}
+                self.ef.add_to_my_obj(element_counter, stck, object_number=element_counter,
+                                      only_filled=only_add_if_value)
+                element_counter += 1
+                continue
+            #text = 'Je nom. DM 50.- =1 Stimme.'
+            parse_stimmrecht = regex.compile(r"(?P<nominal>[Jj]e[de]*?\s?(?P<nomvalue>[\d\s]*?)\s?nom\.)\s*?(?P<currency>[^\d]*)\s?(?P<value>[\d\s]*)\s*?(?P<waste>[^\dA-Za-z]*)\s{0,}(?P<kind>[A-Za-z.,\-\s]*)?[^\d\s]*\s{0,}(?P<vote>[\d]*)?\s{0,}(?P<voteend>Stimme[n]*)?")
+            finding = parse_stimmrecht.findall(text.replace("DM", " DM").replace("RM"," RM"))
+            # Special case "bzw."
+            if finding and "bzw." in text:
+                if "Stimm" not in text:
+                    skip = True
+                    text += content_texts[text_index+1]
+                parse_bzw = regex.compile(r"(?P<nominal>[Jj]e[de]*?\s?(?P<nomvalue>[\d\s]*?)\s?nom\.)\s*?(?P<currency>[^\d]*)\s?(?P<value>[\d\s]*)\s*?[^\d]*\s*?(?P<value2>[\d\s]*)[^\dA-Za-z]*(?P<kind>[A-Za-z][A-Za-z.,\-\s]*)?[^\d\s]*\s{0,}(?P<vote>[\d]*)?\s{0,}[^\d]*\s{0,}(?P<vote2>[\d]*)\s{0,}(?P<voteend>Stimme[n]*)?")
+                finding = parse_bzw.findall(text)
+                finding = finding[0]
+                if finding:
+                    stck = {"kind": finding[5].strip(),
+                            "amount": "1",
+                            "vote": finding[6].replace(" ", "").strip(),
+                            "value": finding[3].strip(),
+                            "currency": finding[2].strip()}
+                    self.ef.add_to_my_obj(element_counter, stck, object_number=element_counter,
+                                          only_filled=only_add_if_value)
+                    element_counter += 1
+                    stck = {"kind": finding[5].strip(),
+                            "amount": "1",
+                            "vote": finding[7].replace(" ", "").strip(),
+                            "value": finding[4].strip(),
+                            "currency": finding[2].strip()}
+                    self.ef.add_to_my_obj(element_counter, stck, object_number=element_counter,
+                                          only_filled=only_add_if_value)
+                    continue
+            if not finding or finding[0][0] + finding[0][1] == "":
+                final_text += text
+                continue
+            if final_text != "":
+                self.ef.add_to_my_obj("additional_info", final_text, object_number=element_counter-1,
+                                      only_filled=only_add_if_value)
+                final_text = ""
+            finding_next = None
+            if finding[0][6] + finding[0][7] == "":
+                if text_index == len(content_lines) - 1:
+                    self.ef.add_to_my_obj("additional_info", text, object_number=element_counter,
+                                          only_filled=only_add_if_value)
+                    continue
+                else:
+                    finding_next = parse_stimmrecht.findall(text + " " + content_texts[text_index + 1])
+            if finding_next:
+                skip = True
+                finding = finding_next
+            finding = list(finding[0])
+            if finding[5] == "":
+                finding[5] = "nom."
+            if finding[1] == "":
+                finding[1] = "1"
+            stck = {"kind": finding[5].strip(),
+                    "amount": finding[1].strip(),
+                    "vote": finding[6].replace(" ", "").strip(),
+                    "value": finding[3].strip(),
+                    "currency": finding[2].strip()}
+            self.ef.add_to_my_obj(element_counter, stck, object_number=element_counter, only_filled=only_add_if_value)
+            element_counter += 1
+        # match_akt = regex.search(r"\.\s?\-\s?Akt", text)
+        # if match_saemtlsakt is not None:
+        #    self.ef.add_to_my_obj("additional_info", text, object_number=element_counter, only_filled=only_add_if_value)
+        #    element_counter += 1
+        #    continue
+        if final_text != "":
+            self.ef.add_to_my_obj("additional_info", final_text, object_number=element_counter,
+                                  only_filled=only_add_if_value)
+        return True
+        """
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
         # add extra splitting elements to each 'je' or 'Je'
         origpost_red_se = regex.sub(r"(Je |je )", r"~~~\1", origpost_red)
 
@@ -338,8 +454,7 @@ class AkfParsingFunctionsTwo(object):
             self.ef.add_to_my_obj("entry", entry, object_number=element_counter ,only_filled=only_add_if_value)
             self.ef.add_to_my_obj("Stimmrechtsbeschränkung", sbe, object_number=element_counter ,only_filled=only_add_if_value)
             element_counter += 1
-
-        return True
+        """
 
     def parse_boersennotiz(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
@@ -400,9 +515,9 @@ class AkfParsingFunctionsTwo(object):
             if skip:
                 skip = False
                 continue
-            parse_stck = regex.compile(r"(?P<amount>[\d\s\.]*)\s*(?P<kind>[^\d]*?)[\s]?(?P<nominal>zu je|zuje|zu|je)[\s]?(?P<currency>[^\d\s]*)?[\s]?(?P<value>[\d\s]*)?")
-            finding = parse_stck.findall(text.replace(" Stücke "," Aktien ").replace(" Stück "," Aktie ").replace("DM"," DM").replace("RM"," RM"))
-            if not finding or finding[0][0]+finding[0][1] == "":
+            parse_stck = regex.compile(r"(?P<amount>[\d\s\.]*)\s*(?P<kind>[^\d]*?)[\s]?(?P<nominal>zu je|zuje|zu|je)\s{0,}(?P<currency>[^\d\s]*)\s{0,}(?P<value>[\d\s]*)")
+            finding = parse_stck.findall(text.replace(" Stücke "," Aktien ").replace(" Stück "," Aktie ").replace("DM"," DM").replace("RM"," RM").replace("hfl"," hfl"))
+            if not finding or finding[0][0]+finding[0][1] == "" or finding[0][0]+finding[0][4] == "":
                 match_akt = regex.search(r"\.\s?\-\s?Akt", text)
                 match_saemtlsakt, err_saemtlsakt = regu.fuzzy_search(
                     r"([Ss]ämtliche [Ss]tammaktien.*|[Ss]ämtliche [Aa]ktien.*)", text, err_number=1)
@@ -412,7 +527,7 @@ class AkfParsingFunctionsTwo(object):
                                           only_filled=only_add_if_value)
                     reduced_text = text.replace(saemtl_res, "")
                     final_lines.append(reduced_text)
-                if match_saemtlsakt:
+                if match_saemtlsakt or "Börse" in text[:10]:
                     self.ef.add_to_my_obj("additional_info", "".join(content_texts[text_index:]), object_number=element_counter,
                                           only_filled=only_add_if_value)
                     element_counter += 1
@@ -424,7 +539,7 @@ class AkfParsingFunctionsTwo(object):
                     final_text += text
                 continue
             finding_next = None
-            if finding[0][2] == "" or finding[0][2] == "zu":
+            if finding[0][2] == "" or (finding[0][2] == "zu" and finding[0][3] == ""):
                 #test =  '2 638 514 Inh. - bzw. Namensaktien zuje FF 75.-'
                 if text_index == len(content_lines) - 1:
                     self.ef.add_to_my_obj("additional_info", text, object_number=element_counter,
