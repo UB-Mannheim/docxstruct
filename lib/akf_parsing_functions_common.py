@@ -94,7 +94,7 @@ class AKFCommonParsingFunctions(object):
                         if key_to_check == "":
                             continue
                         if current_key not in final_items.keys():
-                            final_items[current_key]=[]
+                            final_items[current_key] = []
                             final_items[current_key].append(key_to_check_stripped)
                         else:
                             final_items[current_key].append(key_to_check_stripped)

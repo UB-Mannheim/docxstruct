@@ -88,8 +88,66 @@ class EndobjectFactory(object):
         my_obj_json = json.dumps(my_obj, indent=5, ensure_ascii=False)
         return my_obj_json
 
-    def diff_seg_to_orig_at_key(self, key):
+    @staticmethod
+    def fetch_subentries_recursive_check(entry):
+        """
+        Fetches all subentries (values) from an entry and writes them to a list of texts
+        This get's called recursively within the function until all subentries
+        are found
+        :param entry: entry to fetch the subentries from
+        :return: list of subentries
+        """
+        final_texts = []
 
+        for item in entry:
+            if isinstance(entry, list):
+                value = item
+            else:
+                # item is a key
+                value = entry[item]
+            if isinstance(value, str):
+                final_texts.append(value)
+            elif isinstance(value, int):
+                final_texts.append(str(value))
+            elif isinstance(value, object):
+                obj_size = len(value)
+                if obj_size > 0:
+                    recursive_texts = EndobjectFactory.fetch_subentries_recursive_check(value)
+                    final_texts.extend(recursive_texts)
+
+        return final_texts
+
+    @staticmethod
+    def fetch_keys_recusive_check(entry, final_keys, create_multiple=True):
+        """
+        Fetches all keys in an object and it's sub-objects
+        calls itself recursively until all keys are found
+        writes final keys to final_keys array and returns this
+        :param entry: object to fetch the sub-keys from
+        :param final_keys: list of final keys (initial state)
+        :param create_multiple: if the same key occurs multiple times it still gets added
+        :return: final_keys with added keys from object
+        """
+
+        if isinstance(entry, list):
+            for item in entry:
+                final_keys = EndobjectFactory.fetch_keys_recusive_check(item, final_keys, create_multiple)
+            return final_keys
+        elif not isinstance(entry, dict):
+            # just return if there are no keys (cause no dictionary)
+            return final_keys
+
+        for key in entry:
+            value = entry[key]
+            if create_multiple or key not in final_keys:
+                if isinstance(key, int):
+                    continue
+                final_keys.append(key)
+            final_keys = EndobjectFactory.fetch_keys_recusive_check(value, final_keys)
+        return final_keys
+
+    def diff_seg_to_orig_at_key(self, key):
+        """
         def fetch_subentries_recursive(entry):
             final_texts = []
 
@@ -110,7 +168,7 @@ class EndobjectFactory(object):
                         final_texts.extend(recursive_texts)
 
             return final_texts
-
+        """
         if key not in self.my_object.keys():
             return None
 
@@ -149,7 +207,7 @@ class EndobjectFactory(object):
         return rest_text, original_text
 
     def diff_parsed_to_orig_at_key(self, key):
-
+        """
         def fetch_subentries_recursive(entry):
             final_texts = []
 
@@ -184,7 +242,7 @@ class EndobjectFactory(object):
                     final_keys.append(key)
                 final_keys = fetch_keys_recusive(value, final_keys)
             return final_keys
-
+        """
         if key not in self.my_object.keys():
             return None
 
@@ -208,7 +266,7 @@ class EndobjectFactory(object):
         pool_entries = []  # array of final entries
         for index in range(1, len(my_data)):
             entry = my_data[index]
-            final_entries = fetch_subentries_recursive(entry)
+            final_entries = EndobjectFactory.fetch_subentries_recursive_check(entry)
             pool_entries.extend(final_entries)
 
         if self.config.REMOVE_SPACES_IN_ORIGIN_DIFF is True:
@@ -228,7 +286,7 @@ class EndobjectFactory(object):
         if self.config.REMOVE_TAGS_IN_ORIG_DIFF:
             pool_keys = []  # gets multiple of the same key for later 1 by 1 subtraction
             for index in range(1, len(my_data)):
-                pool_keys = fetch_keys_recusive(my_data[index], pool_keys, create_multiple=True)
+                pool_keys = EndobjectFactory.fetch_keys_recusive_check(my_data[index], pool_keys, create_multiple=True)
 
             # also remove spaces in keys
             if self.config.REMOVE_SPACES_IN_ORIGIN_DIFF is True:

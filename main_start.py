@@ -32,10 +32,11 @@ dh.fetch_files(config.INPUT_FILEGLOB, config.INPUT_FILETYPES)
 # get files-list
 hocr_files = dh.get_files()
 
+accumulated_tags = {}
 
 # main iteration loop
 for key in hocr_files:
-    if "1972" not in key:
+    if "1956" not in key:
         continue
 
     accumulated_diff_info = output_analyzer.AccumulatedInfo()
@@ -53,9 +54,9 @@ for key in hocr_files:
         # only check files which are relevant (comment out if not used)
         # Sitz ok:     72, 207,671, 731, 733
         # Sitz faulty: 270,454
-        if ctr_test not in [554]:
-          ctr_test += 1
-          continue
+        #if ctr_test not in [19]:
+        #  ctr_test += 1
+        #  continue
 
         #if not "0064_1" in file.name and not "0142_1" in file.name:
         #    continue
@@ -89,10 +90,11 @@ for key in hocr_files:
             output_analyzer.accumulate_diff_info_orig_to_segmentation(diff_info_orig_to_segment, accumulated_diff_info_orig_to_segment)
 
         accumulated_diff_info = output_analyzer.accumulate_diff_info(ocromore_data, diff_info, accumulated_diff_info)
+        accumulated_tags = output_analyzer.log_tags(ocromore_data, accumulated_tags)
         ctr_test += 1
 
-        if ctr_test >= 10:
-            break
+        #if ctr_test >= 3:
+        #    break
 
         # clear the current result in segment_parser cache to parse the next one
         segment_parser.clear_result(output_analyzer)
@@ -106,4 +108,4 @@ for key in hocr_files:
     output_analyzer.log_accumulated_orig_to_segment(accumulated_diff_info_orig_to_segment, ocromore_data)
 
 
-
+output_analyzer.log_accumulated_tags(accumulated_tags)

@@ -114,7 +114,7 @@ class SegmentHolder(object):
             super().__init__("Sekretäre")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
-            match_start, errors = regu.fuzzy_search(r"^Sekretäre\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"^(Sekretär des Verwaltungsrates|Sekretäre)\s?:", line_text)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
@@ -128,7 +128,7 @@ class SegmentHolder(object):
             super().__init__("Geschäftsleitung")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
-            match_start, errors = regu.fuzzy_search(r"^Geschäftsleitung\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"^(Geschäftsführung|Geschäftsleitung)\s?:", line_text)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
@@ -143,9 +143,15 @@ class SegmentHolder(object):
             super().__init__("Generaldirektion")
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
-            match_start, errors = regu.fuzzy_search(r"^Generaldirektion\s?:", line_text)
+            match_start, errors = regu.fuzzy_search(r"^(Generaldirektorium|Generaldirektion|Direktion)\s?:", line_text)
 
             if match_start is not None:
+                if "Generaldirektion in" in line_text:
+                    return False
+                found_match = match_start.group(0)
+                subgroup = found_match[-2:]
+                if ":" not in subgroup:
+                    return False
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 
@@ -297,7 +303,7 @@ class SegmentHolder(object):
 
         def __init__(self):
             super().__init__("Filialen")
-            self.disable()  # this segment is disabled, because it's not really a common segmentation in 1956,
+            #self.disable()  # this segment is disabled, because it's not really a common segmentation in 1956,
             # maybe activate later
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
@@ -490,6 +496,13 @@ class SegmentHolder(object):
                 self.do_match_work(True, match_bet, line_index, errors)
                 return True
 
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
+            match_stop, errors = regu.fuzzy_search(r"^Geschäftsjahr\s?:", line_text)
+
+            if match_stop is not None:
+                self.do_match_work(False, match_stop, line_index, errors)
+                return True
+
     class SegmentHaupterzeugnisse(Segment):
         # example recognition:
         # Haupterzeugnisse: \n Form- und Stabstahl.
@@ -504,6 +517,8 @@ class SegmentHolder(object):
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
+
+
 
     class SegmentSpezialitaeten(Segment):
         # example recognition:
@@ -784,7 +799,7 @@ class SegmentHolder(object):
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
             match_start, errors = regu.fuzzy_search \
-                (r"^Dividenden\s?:", line_text)
+                (r"^Dividenden\s?:", line_text, err_number=0)
                 #(r"^(Dividenden ab (\d{4}\/\d{2})?(\-\d{4}\/\d{2})?|Dividenden)s?:", line_text)
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
