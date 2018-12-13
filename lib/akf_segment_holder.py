@@ -496,6 +496,13 @@ class SegmentHolder(object):
                 self.do_match_work(True, match_bet, line_index, errors)
                 return True
 
+        def match_stop_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
+            match_stop, errors = regu.fuzzy_search(r"^Geschäftsjahr\s?:", line_text)
+
+            if match_stop is not None:
+                self.do_match_work(False, match_stop, line_index, errors)
+                return True
+
     class SegmentHaupterzeugnisse(Segment):
         # example recognition:
         # Haupterzeugnisse: \n Form- und Stabstahl.
@@ -510,6 +517,8 @@ class SegmentHolder(object):
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
+
+
 
     class SegmentSpezialitaeten(Segment):
         # example recognition:
@@ -790,7 +799,7 @@ class SegmentHolder(object):
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
             match_start, errors = regu.fuzzy_search \
-                (r"^Dividenden\s?:", line_text)
+                (r"^Dividenden\s?:", line_text, err_number=0)
                 #(r"^(Dividenden ab (\d{4}\/\d{2})?(\-\d{4}\/\d{2})?|Dividenden)s?:", line_text)
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)

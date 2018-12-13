@@ -13,8 +13,8 @@ class Segment(object):
     def __init__(self, segment_tag):
         self.start_was_segmented = False
         self.stop_was_segmented = False
-        self.start_error_number = 0
-        self.stop_error_number = 0
+        self.start_error_number = 1000   # initialized very high to trigger potential update
+        self.stop_error_number = 1000    # initialized very high to trigger potential update
 
         self.enabled = True
         self.only = False

@@ -204,7 +204,7 @@ class OutputAnalysis(object):
         """
         Log the list of all found tags to file
         :param accumulated_tags: all found tags
-        :return: - 
+        :return: -
         """
         final_text_lines = []
 

@@ -164,7 +164,7 @@ class AllSegments(object):
         for segment_class_index, segment_class in enumerate(self.my_classes):
             if not segment_class.enabled:
                 continue
-
+            # todo check here ok ?
             self.update_index_field(segment_class, only_start_tags=True)
 
         if only_start_tags is True:
@@ -343,6 +343,24 @@ class AllSegments(object):
                                                                       self.number_of_lines, prev_line, combined_line)
 
             if start_updated or stop_updated:
+
+                if stop_updated:
+                    start_line_index = segment_class.start_line_index
+                    stop_line_index = segment_class.stop_line_index
+                    for segment in self.my_classes:
+                        if type(segment) == type(segment_class):
+                            continue
+                        current_start_line_index = segment.start_line_index
+                        current_stop_line_index = segment.stop_line_index
+
+                        if current_start_line_index != -1 and (current_start_line_index >= start_line_index and current_start_line_index <=stop_line_index):
+                            segment.set_start_segmented(-1)
+                            segment.start_was_segmented = False
+                        if current_stop_line_index != -1 and (current_stop_line_index >= start_line_index and current_stop_line_index <=stop_line_index):
+                            segment.set_stop_segmented(-1)
+                            segment.stop_was_segmented = False
+
+
                 # there was a change -> update the indices fields
                 self.update_index_field(segment_class)
 
