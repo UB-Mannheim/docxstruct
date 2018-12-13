@@ -1095,7 +1095,7 @@ class Sharetable(Table):
                             bbox = list(content["words"][0]["hocr_coordinates"])
                             for cidx,subtable in enumerate(self.info.separator):
                                 subtable = sorted(subtable)
-                                if bbox[0] >subtable[0]:
+                                if bbox[0] >= subtable[0]:
                                     bbox[0] = min(self.structure["lborder"])
                                 bbox[2] = subtable[0]
                                 year = self._reocr(bbox[:]).strip()
