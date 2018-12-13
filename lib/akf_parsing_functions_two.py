@@ -353,8 +353,9 @@ class AkfParsingFunctionsTwo(object):
                         "amount": finding[1],
                         "vote": finding[2].replace(" ", "").strip(),
                         "value": "",
-                        "currency": ""}
-                self.ef.add_to_my_obj(element_counter, stck, object_number=element_counter,
+                        "currency": "",
+                        "rank": element_counter}
+                self.ef.add_to_my_obj("entry", stck, object_number=element_counter,
                                       only_filled=only_add_if_value)
                 element_counter += 1
                 continue
@@ -374,16 +375,18 @@ class AkfParsingFunctionsTwo(object):
                             "amount": "1",
                             "vote": finding[6].replace(" ", "").strip(),
                             "value": finding[3].strip(),
-                            "currency": finding[2].strip()}
-                    self.ef.add_to_my_obj(element_counter, stck, object_number=element_counter,
+                            "currency": finding[2].strip(),
+                            "rank": element_counter}
+                    self.ef.add_to_my_obj("entry", stck, object_number=element_counter,
                                           only_filled=only_add_if_value)
                     element_counter += 1
                     stck = {"kind": finding[5].strip(),
                             "amount": "1",
                             "vote": finding[7].replace(" ", "").strip(),
                             "value": finding[4].strip(),
-                            "currency": finding[2].strip()}
-                    self.ef.add_to_my_obj(element_counter, stck, object_number=element_counter,
+                            "currency": finding[2].strip(),
+                            "rank": element_counter}
+                    self.ef.add_to_my_obj("entry", stck, object_number=element_counter,
                                           only_filled=only_add_if_value)
                     continue
             if not finding or finding[0][0] + finding[0][1] == "":
@@ -413,8 +416,9 @@ class AkfParsingFunctionsTwo(object):
                     "amount": finding[1].strip(),
                     "vote": finding[6].replace(" ", "").strip(),
                     "value": finding[3].strip(),
-                    "currency": finding[2].strip()}
-            self.ef.add_to_my_obj(element_counter, stck, object_number=element_counter, only_filled=only_add_if_value)
+                    "currency": finding[2].strip(),
+                    "rank": element_counter}
+            self.ef.add_to_my_obj("entry", stck, object_number=element_counter, only_filled=only_add_if_value)
             element_counter += 1
         # match_akt = regex.search(r"\.\s?\-\s?Akt", text)
         # if match_saemtlsakt is not None:
@@ -561,8 +565,9 @@ class AkfParsingFunctionsTwo(object):
                      "kind": finding[0][1].replace(" ","").strip(),
                      "nominal": "zu je",
                      "currency": finding[0][3],
-                     "value": finding[0][4]}
-            self.ef.add_to_my_obj(element_counter, stck, object_number=element_counter, only_filled=only_add_if_value)
+                     "value": finding[0][4],
+                     "rank":element_counter}
+            self.ef.add_to_my_obj("entry", stck, object_number=element_counter, only_filled=only_add_if_value)
             element_counter += 1
            # match_akt = regex.search(r"\.\s?\-\s?Akt", text)
             #if match_saemtlsakt is not None:
