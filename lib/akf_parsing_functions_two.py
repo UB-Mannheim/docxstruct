@@ -398,7 +398,7 @@ class AkfParsingFunctionsTwo(object):
                 final_text = ""
             finding_next = None
             if finding[0][6] + finding[0][7] == "":
-                if text_index == len(content_lines) - 1:
+                if text_index == len(content_texts) - 1:
                     self.ef.add_to_my_obj("additional_info", text, object_number=element_counter,
                                           only_filled=only_add_if_value)
                     continue
@@ -545,14 +545,14 @@ class AkfParsingFunctionsTwo(object):
             finding_next = None
             if finding[0][2] == "" or (finding[0][2] == "zu" and finding[0][3] == ""):
                 #test =  '2 638 514 Inh. - bzw. Namensaktien zuje FF 75.-'
-                if text_index == len(content_lines) - 1:
+                if text_index == len(content_texts) - 1:
                     self.ef.add_to_my_obj("additional_info", text, object_number=element_counter,
                                           only_filled=only_add_if_value)
                     continue
                 else:
                     finding_next = parse_stck.findall(text +" "+ content_texts[text_index + 1])
             if finding[0][3]+finding[0][4] == "":
-                if text_index == len(content_lines) - 1:
+                if text_index == len(content_texts) - 1:
                     self.ef.add_to_my_obj("additional_info", text, object_number=element_counter,
                                           only_filled=only_add_if_value)
                     continue
