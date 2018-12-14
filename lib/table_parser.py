@@ -702,9 +702,9 @@ class SharetableRegex(object):
         self.sharetypereg = regex.compile(
             r"(?:(aktien|akt\.|\s[a-z]*\.a\.|Genußscheine|lit\.[\s][a-g]|sch\.|gr\.st\.|kl\.st\.|gruppe\s[a-z]){e<=1}|(\srm\s\d\d\d|\salt\s|\sjung))")
         self.numbergrpreg = regex.compile(r"(?:(\s\d*\s))")
-        self.greptable = regex.compile(r"((?P<year>19\d\d|[4-7]\d)\s*"
+        self.greptable = regex.compile(r"((?P<year>19\d\d|[4-7]\d|19\d\d|[4-7]\d/\d\d)\s*"
                                     r"(?P<amount>\d*[,?|\.?|/?]?\d*|-)[\s]?"
-                                    r"(?P<currency>%|DM))")
+                                    r"(?P<currency>%|DM)?)")
         self.greptable2col = regex.compile(r"((?P<year>19\d\d|[4-7]\d)\s*"
                                     r"(?P<amount1>\d*[,?|\.?|/?]?\d*|-)[\s]?"
                                     r"(?P<currency1>%|DM)\s"
@@ -829,6 +829,7 @@ class Sharetable(Table):
                     markerflag = True
                 elif lastwidx<widx-2 or all(False for char in word["text"] if char.isdigit()):
                     markerflag = False
+                if not word["text"] or len(word["text"]) <2: continue
                 if word["text"] in ["DM","%"] or word["text"][-1] in ["%"] or word["text"][-2:] in ["DM"]:
                     if markerflag and lastwidx+2==widx:
                         bbox_separator.append([int(np.mean([content["words"][widx-2]["hocr_coordinates"][2],
@@ -914,7 +915,9 @@ class Sharetable(Table):
         self.content = {"Regexdata":{},"Vbboxdata":{},"Sharedata":{},"additional_info":[]}
         self.info.datagroups = [idx+1 for idx, number in enumerate(self.structure["data"][1:]) if number!=self.structure["data"][idx]]
         self.info.datagroups.append(len(self.structure["data"]))
-
+        if len(self.info.datagroups) == 1:
+            self.info.datagroups.append(2)
+            self.info.datagroups.sort()
         # Get the columnheader information based on date lines
         if self.info.subtables == 0 and self.info.snippet:
             reocr_text = self._reocr(list(content_lines[self.info.datagroups[0]]["hocr_coordinates"])).strip()
@@ -933,6 +936,8 @@ class Sharetable(Table):
                     self.content = {}
                     return False
             else:
+                content["text"] = content["text"].replace(":","").replace(" . ","")
+                #print(content["text"])
                 self._extract_regexlvl(content["text"].strip(),lidx)
         if self.info.snippet and visual:
             if self.info.subtables == 1:
@@ -985,6 +990,8 @@ class Sharetable(Table):
                 for lidx, content in enumerate(content_lines):
                     if self.info.sharetypes and lidx in self.info.sharetypes.keys():
                         sharetypeidx =lidx
+                    elif self.info.sharetypes:
+                        sharetypeidx = list(self.info.sharetypes.keys())[0]
                     if self.structure["data"][lidx]:
                         year_findings = self.info.regex.date.search(content["text"])
                         if not year_findings:
@@ -1046,7 +1053,7 @@ class Sharetable(Table):
                 if visual_fast:
                     for lidx, content in enumerate(content_lines):
                         if self.structure["data"][lidx]:
-                            print(lidx)
+                            #print(lidx)
                             bbox = list(content["words"][0]["hocr_coordinates"])
                             bbox[2] = content["words"][-1]["hocr_coordinates"][2]
                             textline = self._reocr(bbox[:]).strip()
@@ -1088,7 +1095,7 @@ class Sharetable(Table):
                             bbox = list(content["words"][0]["hocr_coordinates"])
                             for cidx,subtable in enumerate(self.info.separator):
                                 subtable = sorted(subtable)
-                                if bbox[0] >subtable[0]:
+                                if bbox[0] >= subtable[0]:
                                     bbox[0] = min(self.structure["lborder"])
                                 bbox[2] = subtable[0]
                                 year = self._reocr(bbox[:]).strip()
@@ -1122,6 +1129,8 @@ class Sharetable(Table):
             self.combine_datasets()
         elif not self.content["Regexdata"]:
             self.content["Regexdata"] = self.content["Vbboxdata"]
+        if not self.content["Regexdata"] and not self.content["Vbboxdata"]:
+            return False
         self.create_sharedataset()
         # Delete useless content
         del self.content["Regexdata"]
@@ -1263,7 +1272,7 @@ class Sharetable(Table):
                          "Comment": sharetype}
                     cidx += 1
                     offset = 2
-                    print(gtable)
+                    #print(gtable)
                 self.info.closing_date = ""
         except Exception as e:
             self.logger(f"Sharetable_{type}").log(level=20,msg=e)
