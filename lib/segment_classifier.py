@@ -228,7 +228,7 @@ class AllSegments(object):
             stop_line_index = start_line_index
 
         if start_line_index == stop_line_index:
-            stop_line_index = start_line_index +1
+            stop_line_index = start_line_index + 1
 
         # special option for debugging purposes
         if only_start_tags is True:

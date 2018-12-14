@@ -22,7 +22,7 @@ def timeit(method):
 
 class AkfParsingFunctionsJK(object):
 
-    def __init__(self, endobject_factory, output_analyzer, ocromore_data=None):
+    def __init__(self, endobject_factory, output_analyzer, dictionary_handler, ocromore_data=None):
         config_handler = ConfigurationHandler(first_init=False)
 
         self.config = config_handler.get_config()
@@ -34,6 +34,7 @@ class AkfParsingFunctionsJK(object):
         self.ef = endobject_factory
         self.output_analyzer = output_analyzer
         self.ocromore_data = ocromore_data
+        self.dictionary_handler = dictionary_handler
 
     def parse_bilanzen(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data

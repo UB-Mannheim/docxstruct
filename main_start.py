@@ -2,6 +2,7 @@
 from akf_corelib.configuration_handler import ConfigurationHandler
 from akf_corelib.database_handler import DatabaseHandler
 from akf_corelib.conditional_print import ConditionalPrint
+from lib.dictionary_handler import DictionaryHandler
 from lib.feature_extractor import FeatureExtractor
 from lib.segment_classifier import SegmentClassifier
 from lib.segment_parser import SegmentParser
@@ -19,9 +20,10 @@ cpr = ConditionalPrint(config.PRINT_MAIN, config.PRINT_EXCEPTION_LEVEL,
 # Basic steps:
 feature_extractor = FeatureExtractor()
 add_info_handler = AdditionalInfoHandler()
+dictionary_handler = DictionaryHandler()
 segment_classifier = SegmentClassifier()
 output_analyzer = OutputAnalysis()
-segment_parser = SegmentParser(output_analyzer)
+segment_parser = SegmentParser(output_analyzer, dictionary_handler)
 
 
 dh = DatabaseHandler(dbdir="")

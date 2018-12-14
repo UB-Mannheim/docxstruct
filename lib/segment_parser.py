@@ -22,14 +22,14 @@ class FunctionMapAKF(object):
     can be swapped for other projects
     """
 
-    def __init__(self, endobject_factory, output_analyzer):
+    def __init__(self, endobject_factory, output_analyzer, dictionary_handler):
         self.ef = endobject_factory
-        self.akf_one = AkfParsingFunctionsOne(endobject_factory, output_analyzer)
-        self.akf_two = AkfParsingFunctionsTwo(endobject_factory, output_analyzer)
-        self.akf_three = AkfParsingFunctionsThree(endobject_factory, output_analyzer)
-        self.akf_jk = AkfParsingFunctionsJK(endobject_factory, output_analyzer)
+        self.akf_one = AkfParsingFunctionsOne(endobject_factory, output_analyzer, dictionary_handler)
+        self.akf_two = AkfParsingFunctionsTwo(endobject_factory, output_analyzer, dictionary_handler)
+        self.akf_three = AkfParsingFunctionsThree(endobject_factory, output_analyzer, dictionary_handler)
+        self.akf_jk = AkfParsingFunctionsJK(endobject_factory, output_analyzer, dictionary_handler)
 
-        self.akf_tables_one = AkfParsingFunctionsTablesOne(endobject_factory, output_analyzer)
+        self.akf_tables_one = AkfParsingFunctionsTablesOne(endobject_factory, output_analyzer, dictionary_handler)
 
         # for the keys use the keys from 'akf_segment_holder' or similar
 
@@ -101,11 +101,13 @@ class SegmentParser(object):
     each segment defined code the parser points to.
     """
 
-    def __init__(self, output_analyzer,ocromore_data=None):
+    def __init__(self, output_analyzer, dictionary_handler, ocromore_data=None):
 
         self.ef = EndobjectFactory()
+        self.dictionary_handler = dictionary_handler
+
         # map which maps tags to functions for parsing -> change constuctor for other project
-        fmap = FunctionMapAKF(self.ef, output_analyzer)
+        fmap = FunctionMapAKF(self.ef, output_analyzer, dictionary_handler)
 
         config_handler = ConfigurationHandler(first_init=False)
 

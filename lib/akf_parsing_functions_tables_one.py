@@ -9,7 +9,7 @@ import regex
 
 class AkfParsingFunctionsTablesOne(object):
 
-    def __init__(self, endobject_factory, output_analyzer):
+    def __init__(self, endobject_factory, output_analyzer, dictionary_handler):
         config_handler = ConfigurationHandler(first_init=False)
 
         self.config = config_handler.get_config()
@@ -20,6 +20,7 @@ class AkfParsingFunctionsTablesOne(object):
 
         self.ef = endobject_factory
         self.output_analyzer = output_analyzer
+        self.dictionary_handler = dictionary_handler
 
 
     def parse_aktienkurse(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
