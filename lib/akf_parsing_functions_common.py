@@ -227,7 +227,7 @@ class AKFCommonParsingFunctions(object):
 
 
     @staticmethod
-    def parse_persons(origpost_red):
+    def parse_persons(origpost_red, dictionary_handler, use_dictionary):
         """
         Parses a ';' separated list of persons i.e.
         - Karl Markmann, Kiel-Holtenau, Vorstand, (ehem. direktor);
@@ -240,23 +240,29 @@ class AKFCommonParsingFunctions(object):
         final_entries = []
         for index, entry in enumerate(split_post):
             entry_stripped = entry.strip()
+            if entry_stripped == "":
+                continue
 
+            #print("Person:", entry_stripped)
             entry_split = entry_stripped.split(',')
             name = ""
             city = ""
             title = ""
+            funct = ""
             rest_info = []
             for fragment_index, fragment in enumerate(entry_split):
                 if fragment_index == 0:
-                    name = fragment.strip()
+                    name, title = dictionary_handler.diff_name_title(fragment.strip())
+                    #name = fragment.strip()
                 elif fragment_index == 1:
                     city = fragment.strip()
                 elif fragment_index == 2:
-                    title = fragment.strip()
+                    funct = fragment.strip() # that's probably position
                 elif fragment_index >= 3:
                     rest_info.append(fragment.strip())
+            #print("Parsed:", (name, city, title, funct, rest_info))
 
-            final_entries.append((name, city, title, rest_info))
+            final_entries.append((name, city, title, funct, rest_info))
         return final_entries
 
     @staticmethod

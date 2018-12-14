@@ -134,15 +134,17 @@ class AkfParsingFunctionsThree(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
-        my_persons = cf.parse_persons(origpost_red)
+        my_persons = cf.parse_persons(origpost_red, self.dictionary_handler,self.config.USE_DICTIONARIES_FOR_PERSON_PARSING )
 
         only_add_if_filed = True
         for entry in my_persons:
-            name, city, title, rest_info = entry
+            name, city, title, funct, rest_info = entry
             self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
             self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
             self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
             self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("funct", funct, object_number=element_counter, only_filled=only_add_if_filed)
+
             element_counter += 1
         return True
 
@@ -156,16 +158,18 @@ class AkfParsingFunctionsThree(object):
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
         type = real_start_tag
 
-        my_persons = cf.parse_persons(origpost_red)
+        my_persons = cf.parse_persons(origpost_red, self.dictionary_handler, self.config.USE_DICTIONARIES_FOR_PERSON_PARSING)
 
         only_add_if_filed = True
         for entry in my_persons:
-            name, city, title, rest_info = entry
+            name, city, title, funct, rest_info = entry
             self.ef.add_to_my_obj("type", type, object_number=element_counter, only_filled=only_add_if_filed)
             self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
             self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
             self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
             self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("funct", funct, object_number=element_counter, only_filled=only_add_if_filed)
+
             element_counter += 1
         return True
 
@@ -198,15 +202,16 @@ class AkfParsingFunctionsThree(object):
                 self.ef.add_to_my_obj("location", entry_stripped, object_number=element_counter, only_filled=True)
                 element_counter += 1
         else:
-            my_persons = cf.parse_persons(origpost_red)
+            my_persons = cf.parse_persons(origpost_red, self.dictionary_handler, self.config.USE_DICTIONARIES_FOR_PERSON_PARSING)
             # todo this is testwise solution check if ok
             only_add_if_filed = True
             for entry in my_persons:
-                name, city, title, rest_info = entry
+                name, city, title, funct, rest_info = entry
                 self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
                 self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
                 self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
                 self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
+                self.ef.add_to_my_obj("funct", funct, object_number=element_counter, only_filled=only_add_if_filed)
                 element_counter += 1
             return True
 
@@ -237,9 +242,9 @@ class AkfParsingFunctionsThree(object):
             final_text = ""
             for text in entry:
                 final_text += " " + text
-            res_entries = cf.parse_persons(final_text)
+            res_entries = cf.parse_persons(final_text, self.dictionary_handler, self.config.USE_DICTIONARIES_FOR_PERSON_PARSING)
             for res_entry in res_entries:
-                name, city, title, rest_info = res_entry
+                name, city, title, funct, rest_info = res_entry
                 endobject = {}
                 change = False
                 if name != "" and name is not None:
@@ -287,13 +292,14 @@ class AkfParsingFunctionsThree(object):
         final_text = ""
         for text in new_texts:
             final_text += " " + text
-        res_entries = cf.parse_persons(final_text)
+        res_entries = cf.parse_persons(final_text, self.dictionary_handler, self.config.USE_DICTIONARIES_FOR_PERSON_PARSING)
         for res_entry in res_entries:
-            name, city, title, rest_info = res_entry
+            name, city, title, funct, rest_info = res_entry
             self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filled)
             self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filled)
             self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filled)
             self.ef.add_to_my_obj("rest_info", rest_info, object_number=element_counter, only_filled=only_add_if_filled)
+            self.ef.add_to_my_obj("funct", funct, object_number=element_counter, only_filled=only_add_if_filed)
             element_counter += 1
 
         return True
@@ -306,16 +312,19 @@ class AkfParsingFunctionsThree(object):
         origpost, origpost_red, element_counter, content_texts = \
             cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
 
-        my_persons = cf.parse_persons(origpost_red)
+        my_persons = cf.parse_persons(origpost_red, self.dictionary_handler, self.config.USE_DICTIONARIES_FOR_PERSON_PARSING)
         # todo this occurs seemingly once -> should be combined
         only_add_if_filed = True
         for entry in my_persons:
-            name, city, title, rest_info = entry
+            name, city, title, funct, rest_info = entry
             self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
             self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
             self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
             self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("funct", funct, object_number=element_counter, only_filled=only_add_if_filed)
+
             element_counter += 1
+
         return True
 
     def parse_fernschreiber(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
@@ -852,12 +861,13 @@ class AkfParsingFunctionsThree(object):
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
         if "Aktionärvertreter" in real_start_tag:
 
-            persons_list = cf.parse_persons(origpost_red)
-            for (name, city, title, rest_info) in persons_list:
+            persons_list = cf.parse_persons(origpost_red, self.dictionary_handler, self.config.USE_DICTIONARIES_FOR_PERSON_PARSING)
+            for (name, city, title, funct, rest_info) in persons_list:
                 self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_value)
                 self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_value)
                 self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_value)
                 self.ef.add_to_my_obj("add_info", rest_info, object_number=element_counter, only_filled=only_add_if_value)
+                self.ef.add_to_my_obj("funct", funct, object_number=element_counter, only_filled=only_add_if_value)
                 element_counter += 1
 
         else:

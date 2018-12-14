@@ -118,11 +118,11 @@ class SegmentParser(object):
         self.function_map = fmap.get_function_map()
         self.result_root = self.config.OUTPUT_ROOT_PATH + "/results/"
 
-    def clear_result(self, output_analyzer,ocromore_data=None):
+    def clear_result(self, output_analyzer, dictionary_handler, ocromore_data=None):
         # create a new end object factory, new content
         self.ef = EndobjectFactory()
         # map to the new ef object which has been recreated
-        fmap = FunctionMapAKF(self.ef, output_analyzer)
+        fmap = FunctionMapAKF(self.ef, output_analyzer, dictionary_handler)
         self.function_map = fmap.get_function_map()
 
 

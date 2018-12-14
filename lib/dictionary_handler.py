@@ -6,6 +6,7 @@ import regex
 import json
 import os
 
+
 class DictionaryHandler(object):
 
     def __init__(self):
@@ -24,15 +25,31 @@ class DictionaryHandler(object):
             self.load_dictionaries()
             # get the rows as sorted list of texts longest first
             if self.data_functs is not None:
-                self.texts_functs = self.sort_rows(self.get_rows(self.data_functs)).reverse()
+                check_tf = self.sort_rows(self.get_rows(self.data_functs))
+                self.texts_functs = check_tf
             if self.data_titles is not None:
-                self.text_titles = self.sort_rows(self.get_rows(self.data_titles)).reverse()
+                check_tt = self.sort_rows(self.get_rows(self.data_titles))
+                self.texts_titles = check_tt
 
-    def check_if_has_title(self,text_to_check):
-        print("asd")
+    def diff_name_title(self, text_to_check):
+
+        len_text_to_check = len(text_to_check)
+        name_found = text_to_check
+        title_found = ""
+
+        for entry_index, entry in enumerate(self.texts_titles):
+            title, tlen = entry
+            # accelerate the process, by skipping comparisons which have longer texts
+            if tlen > len_text_to_check:
+                continue
+            # compare the texts
+            if title in text_to_check:
+                name_found = text_to_check.replace(title, "", 1).strip()
+                title_found = title
+                break
 
 
-
+        return name_found, title_found
 
     def load_dictionaries(self):
         base_dict_path = self.get_dict_path()
@@ -60,12 +77,13 @@ class DictionaryHandler(object):
         final_rows = []
         for entry in rows:
             text = entry[0]
-            final_rows.append(text)
+            final_rows.append((text,len(text)))
         return final_rows
 
     def sort_rows(self, rows):
-        sorted_rows = sorted(rows, key=len)
-        return sorted_rows
+        #itemgetter(1),
+        rows.sort(key=lambda t: len(t[0]), reverse=True)
+        return rows
 
     def path(self):
         return os.getcwd()

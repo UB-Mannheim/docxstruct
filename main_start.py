@@ -99,7 +99,7 @@ for key in hocr_files:
         #    break
 
         # clear the current result in segment_parser cache to parse the next one
-        segment_parser.clear_result(output_analyzer)
+        segment_parser.clear_result(output_analyzer, dictionary_handler)
 
     # output analysis:
     # print diff info for this year (accumulated over all tables/year)
