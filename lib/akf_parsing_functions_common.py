@@ -243,9 +243,11 @@ class AKFCommonParsingFunctions(object):
             if entry_stripped == "":
                 continue
 
-            #print("Person:", entry_stripped)
+            print("Person:", entry_stripped)
             entry_split = entry_stripped.split(',')
             name = ""
+            first_name = ""
+            last_name = ""
             city = ""
             title = ""
             funct = ""
@@ -253,7 +255,22 @@ class AKFCommonParsingFunctions(object):
             for fragment_index, fragment in enumerate(entry_split):
                 if fragment_index == 0:
                     name, title = dictionary_handler.diff_name_title(fragment.strip())
+
+                    name_split = name.split(" ")
+                    if " von " in name:
+                        first_name = name_split[0]
+                        last_name = name.replace(first_name,"")
+
+                    else:
+                        # just take the last word as nachname
+                        first_name = name.replace(name_split[-1], "").strip()
+                        last_name = name_split[-1]
+
+
+
+                    #print("vorname", vorname, "name", name)
                     #name = fragment.strip()
+                    #print("asd")
                 elif fragment_index == 1:
                     city = fragment.strip()
                 elif fragment_index == 2:
@@ -262,7 +279,7 @@ class AKFCommonParsingFunctions(object):
                     rest_info.append(fragment.strip())
             #print("Parsed:", (name, city, title, funct, rest_info))
 
-            final_entries.append((name, city, title, funct, rest_info))
+            final_entries.append((name, first_name,last_name, city, title, funct, rest_info))
         return final_entries
 
     @staticmethod

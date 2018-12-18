@@ -138,8 +138,10 @@ class AkfParsingFunctionsThree(object):
 
         only_add_if_filed = True
         for entry in my_persons:
-            name, city, title, funct, rest_info = entry
+            name, first_name, last_name, city, title, funct, rest_info = entry
             self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("first_name", first_name, object_number=element_counter, only_filled= only_add_if_filed)
+            self.ef.add_to_my_obj("last_name", last_name, object_number=element_counter, only_filled= only_add_if_filed)
             self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
             self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
             self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
@@ -162,9 +164,11 @@ class AkfParsingFunctionsThree(object):
 
         only_add_if_filed = True
         for entry in my_persons:
-            name, city, title, funct, rest_info = entry
+            name, first_name, last_name, city, title, funct, rest_info = entry
             self.ef.add_to_my_obj("type", type, object_number=element_counter, only_filled=only_add_if_filed)
             self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("first_name", first_name, object_number=element_counter, only_filled= only_add_if_filed)
+            self.ef.add_to_my_obj("last_name", last_name, object_number=element_counter, only_filled= only_add_if_filed)
             self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
             self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
             self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
@@ -206,8 +210,12 @@ class AkfParsingFunctionsThree(object):
             # todo this is testwise solution check if ok
             only_add_if_filed = True
             for entry in my_persons:
-                name, city, title, funct, rest_info = entry
+                name, first_name, last_name, city, title, funct, rest_info = entry
                 self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
+                self.ef.add_to_my_obj("first_name", first_name, object_number=element_counter,
+                                      only_filled=only_add_if_filed)
+                self.ef.add_to_my_obj("last_name", last_name, object_number=element_counter,
+                                      only_filled=only_add_if_filed)
                 self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
                 self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
                 self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
@@ -244,12 +252,18 @@ class AkfParsingFunctionsThree(object):
                 final_text += " " + text
             res_entries = cf.parse_persons(final_text, self.dictionary_handler, self.config.USE_DICTIONARIES_FOR_PERSON_PARSING)
             for res_entry in res_entries:
-                name, city, title, funct, rest_info = res_entry
+                name, first_name, last_name, city, title, funct, rest_info = res_entry
                 endobject = {}
                 change = False
                 if name != "" and name is not None:
                     endobject["name"] = name
+                    endobject["first_name"] = first_name
+                    endobject["last_name"] = last_name
                     change = True
+
+
+
+
                 if city != "" and city is not None:
                     endobject["city"] = city
                     change = True
@@ -294,12 +308,14 @@ class AkfParsingFunctionsThree(object):
             final_text += " " + text
         res_entries = cf.parse_persons(final_text, self.dictionary_handler, self.config.USE_DICTIONARIES_FOR_PERSON_PARSING)
         for res_entry in res_entries:
-            name, city, title, funct, rest_info = res_entry
+            name, first_name, last_name, city, title, funct, rest_info = res_entry
             self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filled)
+            self.ef.add_to_my_obj("first_name", first_name, object_number=element_counter, only_filled= only_add_if_filled)
+            self.ef.add_to_my_obj("last_name", last_name, object_number=element_counter, only_filled= only_add_if_filled)
             self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filled)
             self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filled)
             self.ef.add_to_my_obj("rest_info", rest_info, object_number=element_counter, only_filled=only_add_if_filled)
-            self.ef.add_to_my_obj("funct", funct, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("funct", funct, object_number=element_counter, only_filled=only_add_if_filled)
             element_counter += 1
 
         return True
@@ -316,8 +332,10 @@ class AkfParsingFunctionsThree(object):
         # todo this occurs seemingly once -> should be combined
         only_add_if_filed = True
         for entry in my_persons:
-            name, city, title, funct, rest_info = entry
+            name, first_name, last_name, city, title, funct, rest_info = entry
             self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("first_name", first_name, object_number=element_counter, only_filled= only_add_if_filed)
+            self.ef.add_to_my_obj("last_name", last_name, object_number=element_counter, only_filled= only_add_if_filed)
             self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
             self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
             self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
@@ -862,8 +880,12 @@ class AkfParsingFunctionsThree(object):
         if "Aktionärvertreter" in real_start_tag:
 
             persons_list = cf.parse_persons(origpost_red, self.dictionary_handler, self.config.USE_DICTIONARIES_FOR_PERSON_PARSING)
-            for (name, city, title, funct, rest_info) in persons_list:
+            for (name, first_name, last_name, city, title, funct, rest_info) in persons_list:
                 self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_value)
+                self.ef.add_to_my_obj("first_name", first_name, object_number=element_counter,
+                                      only_filled=only_add_if_value)
+                self.ef.add_to_my_obj("last_name", last_name, object_number=element_counter,
+                                      only_filled=only_add_if_value)
                 self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_value)
                 self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_value)
                 self.ef.add_to_my_obj("add_info", rest_info, object_number=element_counter, only_filled=only_add_if_value)
