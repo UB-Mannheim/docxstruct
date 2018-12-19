@@ -305,7 +305,25 @@ class AkfParsingFunctionsTwo(object):
         for text in content_texts:
             text_stripped = text.strip("., ")
             if text_stripped != "":
-                final_jahr.append(text_stripped)
+                if "bis" in text_stripped:
+                    split_text = text_stripped.split('bis ')#
+                    # regex.split('\.bis|\sbis\s', text_stripped)
+                    if len(split_text) == 1:
+                        final_jahr.append(split_text[0].strip())
+                        continue
+                    gesch_jahr_start = split_text[0].strip("( ")
+                    gesch_jahr_stop = split_text[1].strip(" )")
+                    self.ef.add_to_my_obj('gesch_jahr_start', gesch_jahr_start, object_number=element_counter,
+                                          only_filled=only_add_if_value)
+                    self.ef.add_to_my_obj('gesch_jahr_stop', gesch_jahr_stop, object_number=element_counter,
+                                          only_filled=only_add_if_value)
+
+                    if len(split_text) >= 3:
+                        for rest in split_text[3:]:
+                            if rest.strip() != "":
+                                final_jahr.append(rest)
+                else:
+                    final_jahr.append(text_stripped)
 
         self.ef.add_to_my_obj('year', final_jahr, object_number=element_counter,only_filled=only_add_if_value)
         return True
