@@ -38,8 +38,8 @@ accumulated_tags = {}
 
 # main iteration loop
 for key in hocr_files:
-    if "1956" not in key:
-        continue
+    #if "1956" not in key:
+    #    continue
 
     accumulated_diff_info = output_analyzer.AccumulatedInfo()
     accumulated_diff_info_categories = {}
@@ -95,7 +95,7 @@ for key in hocr_files:
         accumulated_tags = output_analyzer.log_tags(ocromore_data, accumulated_tags)
         ctr_test += 1
 
-        #if ctr_test >= 3:
+        #if ctr_test >= 30:
         #    break
 
         # clear the current result in segment_parser cache to parse the next one

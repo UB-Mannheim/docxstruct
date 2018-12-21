@@ -50,9 +50,12 @@ class AkfParsingFunctionsThree(object):
 
         #parse the specific categories
         if bezugsrechtsabschlaege:
-            split_orig = origpost_red.split(":")
+            split_orig = regex.split(origpost_red, ";") #sometimes ; is confused with :
             date = split_orig[0]
             endobject = None
+            if len(split_orig) <= 1:
+                split_orig.append("") # just apppend empty fill
+
             match_dm = regex.search(r"^(?P<currency>\D{1,4})(?P<amount>[\d\.\-\s]*)", split_orig[1].strip())
             if match_dm:
                 currency = match_dm.group("currency").strip(",. ")
@@ -237,7 +240,7 @@ class AkfParsingFunctionsThree(object):
         entries_sorted[current_key] = []
         for text in content_texts:
             text_stripped = text.strip()
-            if text_stripped == "":
+            if text_stripped == None or text_stripped == "" or len(text_stripped) <= 1:
                 continue
             if ":" in text_stripped[-1] or ":" in text_stripped[-2]:
                 current_key = text_stripped.strip(":")
@@ -837,8 +840,10 @@ class AkfParsingFunctionsThree(object):
         # add the entries to final object -> todo mind if int-cast is ok here
         for entry in split_done:
             number, rest = entry
-            self.ef.add_to_my_obj("number", int(number), object_number=element_counter, only_filled=only_add_if_value)
-            self.ef.add_to_my_obj("rest", rest, object_number=element_counter, only_filled=only_add_if_value)
+            if number is not None:
+                self.ef.add_to_my_obj("number", int(number), object_number=element_counter, only_filled=only_add_if_value)
+            if rest is not None:
+                self.ef.add_to_my_obj("rest", rest, object_number=element_counter, only_filled=only_add_if_value)
             element_counter += 1
 
 
