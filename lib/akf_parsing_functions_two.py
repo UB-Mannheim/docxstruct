@@ -258,8 +258,50 @@ class AkfParsingFunctionsTwo(object):
         for line in lines_split:
             # testline
             # line = "Société Sidérurgique de Participations et d’ Approvisionnement en Charbons, par abréviation (Sidechar), Paris (ca.60,2 %)."
+            findings = regex.finditer(r"\([a-zü0-9\s\,\.]*%\).?",line)
+            lof = list(findings)
+            #findings = regex.search(r"(?m)a", line)
+            if lof:
+                findings = []
+                for finding in lof:
+                    findings.append(finding.regs[0])
+            else:
+                findings = [(len(line),len(line))]
+            start = 0
+            for idx, finding in enumerate(findings):
+                #shareholder,location, share
+                item = line[start:finding[0]]
+                if ":" in item:
+                    self.ef.add_to_my_obj("additional_information", item[:item.index(":")],
+                                          object_number=element_counter, only_filled=only_add_if_value)
+                    if line.index(":")+2 > finding[0]:
+                        continue
+                    else:
+                        item = item[item.index(":"):]
+                item = item.rsplit(",",1)
+                self.ef.add_to_my_obj("shareholder", item[0].strip(),
+                                      object_number=element_counter, only_filled=only_add_if_value)
+                if len(item) > 1:
+                    if item[1][-1] == ".":
+                        item[1] = item[1][:len(item[1])-1]
+                    if "(" in item[1] and ")" in item[1]:
+                        find = regex.search(r"(\([0-9\s\,]*|maßgeblich|Mehrheit|Majorität)\)", item[1])
+                        if find:
+                            self.ef.add_to_my_obj("share",
+                                              item[1][find.regs[0][0]:find.regs[0][1]-1].strip(), object_number=element_counter,
+                                              only_filled=only_add_if_value)
+                            item[1] = item[1][:find.regs[0][0]-1]
+                    self.ef.add_to_my_obj("location", item[1].strip(),
+                                      object_number=element_counter, only_filled=only_add_if_value)
+                if finding[0] != len(line):
+                    self.ef.add_to_my_obj("share", line[finding[0]:finding[1]].replace(", ",",").replace("(","").replace(").","").replace(")","").strip(), object_number=element_counter,only_filled=only_add_if_value)
 
+                start = finding[1]
+                element_counter += 1
+            #print(self.ef.my_object["Großaktionär"])
+            """
             # find parenthesis with 2 or more characters inside
+            #for item in line.split("%)"):
             match_parenth = regex.findall(r"(\(.{2,}\))", line)
             found_parenth = None
             parenth_is_used = False
@@ -280,13 +322,12 @@ class AkfParsingFunctionsTwo(object):
             else:
                 organization = line.replace(split_line[-1], "", 1).strip("., ")
                 location = split_line[-1].strip("., ")  # town
-
             self.ef.add_to_my_obj("organization", organization, object_number=element_counter,only_filled=only_add_if_value)
             self.ef.add_to_my_obj("location", location, object_number=element_counter,only_filled=only_add_if_value)
             if parenth_is_used:
                 self.ef.add_to_my_obj("additional_info", found_parenth, object_number=element_counter,only_filled=only_add_if_value)
             element_counter += 1
-
+        """
         return True
 
 
