@@ -137,65 +137,16 @@ class AkfParsingFunctionsTwo(object):
         current_ref_index = -1
         found_main_amount = False
         additional_info = []
+        only_add_if_value = True
         for text_index, text in enumerate(content_texts):
-            #match_dm = regex.match(r"^DM.*", text)
-            match_dm = regex.search(r"^(?P<currency>\D{1,4})(?P<amount>[\d\.\-\s]*)",text)
-            if found_main_amount is False and match_dm is not None:
-                currency = match_dm.group("currency").strip(",. ")
-                amount = match_dm.group("amount")
-                self.ef.add_to_my_obj("currency", currency, object_number=element_counter, only_filled=only_add_if_value)
-                self.ef.add_to_my_obj("amount", amount, object_number=element_counter, only_filled=only_add_if_value)
-                found_main_amount = True
-            else:
+            # todo increment element ctr ?
+            my_return_object, found_main_amount, element_counter, only_add_if_value, additional_info = \
+                cf.parse_grundkapital_line(text, found_main_amount, element_counter, only_add_if_value, additional_info)
 
-                # DM34000000. - Inh. - St. - Akt.
-                # DM266000. - Nam. - St. - Akt.
-                # DM1718400. - St. - Akt.
-                # DM21600. - Vorz. - Akt.
-                # DM 2 000 000.- St.-Akt.,
-                # DM 60 000.- Vorz.-Akt. Lit.A,
-                # DM 9 000.- Vorz.-Akt. Lit.B.
+            for key in my_return_object:
+                value = my_return_object[key]
+                self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=only_add_if_value)
 
-                if "Akt." in text:
-                    match_entry = regex.search(r"^(?P<currency>\D{1,4})(?P<amount>[\d\.\-\s]*)(?P<rest_info>.*)", text)
-                    addt_currency = ""
-                    addt_amount = ""
-                    addt_rest_info = ""
-                    final_object = {}
-
-                    if match_entry:
-                        addt_currency = match_entry.group("currency")
-                        addt_amount = match_entry.group("amount")
-                        addt_rest_info = match_entry.group("rest_info")
-                        final_object = {
-                            "currency":addt_currency,
-                            "amount": addt_amount,
-                            "rest_info": addt_rest_info
-                        }
-                    if "Inh." in text and "St." in text:
-                        # Inhaber Stammaktien
-                        self.ef.add_to_my_obj("Inhaber-Stammaktien", final_object, object_number=element_counter,
-                                              only_filled=only_add_if_value)
-
-
-                    elif "Nam." in text and "St." in text:
-                        # Nanhafte Stammaktien
-                        self.ef.add_to_my_obj("Namhafte-Stammaktien", final_object, object_number=element_counter,
-                                              only_filled=only_add_if_value)
-                    elif "St." in text:
-                        # Stammaktien
-                        self.ef.add_to_my_obj("Stammaktien", final_object, object_number=element_counter,
-                                              only_filled=only_add_if_value)
-                    elif "Vorz." in text:
-                        self.ef.add_to_my_obj("Vorzeigeaktien", final_object, object_number=element_counter,
-                                              only_filled=only_add_if_value)
-                    else:
-                        # not recognized just add as additional info
-                        additional_info.append(text)
-                    # element_counter += 1
-                    continue
-                additional_info.append(text)
-                # element_counter += 1
 
         if len(additional_info) >= 1:
             self.ef.add_to_my_obj("additional_info", additional_info, object_number=element_counter,

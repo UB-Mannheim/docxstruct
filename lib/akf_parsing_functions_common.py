@@ -9,6 +9,73 @@ class AKFCommonParsingFunctions(object):
     steps in the akf-context used by akf-parsing-functions-(number)
     """
 
+
+    @staticmethod
+    def parse_grundkapital_line(text, found_main_amount, element_counter, only_add_if_value, additional_info):
+        my_return_object = {}
+        text_stripped = text.strip()
+        match_dm = regex.search(r"^(?P<currency>\D{1,4})(?P<amount>[\d\.\-\s]*)", text)
+        if found_main_amount is False and match_dm is not None and \
+            "Autorisiertes Kapital:" not in text and "Ausgegebenes Kapital:" not in text:
+
+            currency = match_dm.group("currency").strip(",. ")
+            amount = match_dm.group("amount")
+            if (currency is not None and currency != "") or only_add_if_value is False:
+                my_return_object["currency"] = currency
+            if (amount is not None and amount != "") or only_add_if_value is False:
+                my_return_object["amount"] = amount
+            found_main_amount = True
+        else:
+
+            # DM34000000. - Inh. - St. - Akt.
+            # DM266000. - Nam. - St. - Akt.
+            # DM1718400. - St. - Akt.
+            # DM21600. - Vorz. - Akt.
+            # DM 2 000 000.- St.-Akt.,
+            # DM 60 000.- Vorz.-Akt. Lit.A,
+            # DM 9 000.- Vorz.-Akt. Lit.B.
+
+            if "Akt." in text:
+                match_entry = regex.search(r"^(?P<currency>\D{1,4})(?P<amount>[\d\.\-\s]*)(?P<rest_info>.*)", text)
+                addt_currency = ""
+                addt_amount = ""
+                addt_rest_info = ""
+                final_object = {}
+
+                if match_entry:
+                    addt_currency = match_entry.group("currency")
+                    addt_amount = match_entry.group("amount")
+                    addt_rest_info = match_entry.group("rest_info")
+                    final_object = {
+                        "currency": addt_currency,
+                        "amount": addt_amount,
+                        "rest_info": addt_rest_info
+                    }
+                if "Inh." in text and "St." in text:
+                    # Inhaber Stammaktien
+                    my_return_object["Inhaber-Stammaktien"] = final_object
+
+
+                elif "Nam." in text and "St." in text:
+                    # Nanhafte Stammaktien
+                    my_return_object["Namhafte-Stammaktien"] = final_object
+
+                elif "St." in text:
+                    # Stammaktien
+                    my_return_object["Stammaktien"] = final_object
+
+                elif "Vorz." in text:
+                    my_return_object["Vorzeigeaktien"] = final_object
+
+                else:
+                    # not recognized just add as additional info
+                    additional_info.append(text_stripped)
+                # element_counter += 1
+            else:
+                additional_info.append(text_stripped)
+
+        return my_return_object, found_main_amount, element_counter, only_add_if_value, additional_info
+
     @staticmethod
     def parse_general_and_keys(content_texts, join_separated_lines=False, current_key_initial_value=None, abc_sections=False):
         """

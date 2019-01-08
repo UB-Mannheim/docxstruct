@@ -40,6 +40,9 @@ accumulated_tags = {}
 for key in hocr_files:
     #if "1956" not in key:
     #    continue
+    int_key = int(key)
+    if int_key < 1975 or int_key > 1975:  # start from 1971
+        continue
 
     accumulated_diff_info = output_analyzer.AccumulatedInfo()
     accumulated_diff_info_categories = {}
@@ -97,6 +100,7 @@ for key in hocr_files:
 
         #if ctr_test >= 30:
         #    break
+
 
         # clear the current result in segment_parser cache to parse the next one
         segment_parser.clear_result(output_analyzer, dictionary_handler)
