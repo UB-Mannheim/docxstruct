@@ -390,7 +390,10 @@ class Datatable(Table):
         if not lines:
             self.info.col = [0, 1]
             self._additional_columninfo(content_lines, [0, 2])
-            separator_idx = np.argwhere(np.array(self.structure["separator"]) > -1)[0].tolist()
+            if sum(self.structure["separator"]) != len(self.structure["separator"])*-1:
+                separator_idx = np.argwhere(np.array(self.structure["separator"]) > -1)[0].tolist()
+            else:
+                return 3
             if separator_idx is not None and \
                     separator_idx[0] < 5:
                 return separator_idx[0]
