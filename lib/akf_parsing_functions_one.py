@@ -291,6 +291,22 @@ class AkfParsingFunctionsOne(object):
         origpost, origpost_red, element_counter, content_texts = \
             cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
 
+        persons_final = cf.parse_persons(origpost_red, self.dictionary_handler,
+                                         self.config.USE_DICTIONARIES_FOR_PERSON_PARSING)
+
+        only_add_if_filed = True
+        for entry in persons_final:
+            name, first_name, last_name, city, title, funct, rest_info = entry
+            self.ef.add_to_my_obj("name", name, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("first_name", first_name, object_number=element_counter,
+                                  only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("last_name", last_name, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("city", city, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("title", title, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("rest", rest_info, object_number=element_counter, only_filled=only_add_if_filed)
+            self.ef.add_to_my_obj("funct", funct, object_number=element_counter, only_filled=only_add_if_filed)
+            element_counter += 1
+        """
         # do  matches (;-separated)
         split_post = origpost_red.split(';')
 
@@ -327,8 +343,8 @@ class AkfParsingFunctionsOne(object):
             self.ef.add_to_my_obj("name", name, object_number=element_counter)
             self.ef.add_to_my_obj("city", city, object_number=element_counter)
             self.ef.add_to_my_obj("position", position, object_number=element_counter)
-
             element_counter += 1
+            """
 
         return True
 
