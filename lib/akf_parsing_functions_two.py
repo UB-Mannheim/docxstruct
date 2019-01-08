@@ -139,9 +139,13 @@ class AkfParsingFunctionsTwo(object):
         additional_info = []
         only_add_if_value = True
         for text_index, text in enumerate(content_texts):
+            text_stripped = text.strip()
+            if text_stripped == "":
+                continue
+
             # todo increment element ctr ?
             my_return_object, found_main_amount, element_counter, only_add_if_value, additional_info = \
-                cf.parse_grundkapital_line(text, found_main_amount, element_counter, only_add_if_value, additional_info)
+                cf.parse_grundkapital_line(text_stripped, found_main_amount, element_counter, only_add_if_value, additional_info)
 
             for key in my_return_object:
                 value = my_return_object[key]
@@ -149,7 +153,8 @@ class AkfParsingFunctionsTwo(object):
 
 
         if len(additional_info) >= 1:
-            self.ef.add_to_my_obj("additional_info", additional_info, object_number=element_counter,
+            add_lines_parsed = cf.parse_grundkapital_additional_lines(additional_info,element_counter,True, 0)
+            self.ef.add_to_my_obj("additional_info", add_lines_parsed, object_number=element_counter,
                                      only_filled=only_add_if_value)
 
         return True

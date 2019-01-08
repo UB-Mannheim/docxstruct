@@ -9,7 +9,46 @@ class AKFCommonParsingFunctions(object):
     steps in the akf-context used by akf-parsing-functions-(number)
     """
 
+    @staticmethod
+    def parse_grundkapital_additional_lines(content_texts, element_counter, only_add_if_value, ctr_help, key = "general_info"):
+        final_texts = {}
 
+        for text in content_texts:
+            text_stripped = text.strip()
+            match_starts_with_year = regex.match("^\d\d\d\d", text_stripped)
+            match_starts_with_grundkapital = regex.match("^[Gg]rundkapital\s?:", text_stripped)
+            if match_starts_with_year:
+                key = match_starts_with_year.group(0)
+                if key in final_texts.keys():
+                    final_key = key+"_"+str(ctr_help)
+                    final_texts[final_key] = text_stripped.replace(key, "").strip(": ")
+                    key = final_key
+                    ctr_help += 1  # one counter multiple keys, just to guarantee uniqueness
+                else:
+                    final_texts[key] = text_stripped.replace(key, "").strip(": ")
+
+            elif match_starts_with_grundkapital:
+                key = match_starts_with_grundkapital.group(0)
+
+                additional_info = []
+                prep_text = text_stripped.replace(key, "").strip(": ")
+                my_return_object, found_main_amount, element_counter, only_add_if_value, additional_info = \
+                    AKFCommonParsingFunctions.parse_grundkapital_line(prep_text, False, element_counter, only_add_if_value,
+                                               additional_info)
+
+                final_texts[key] = my_return_object
+            else:
+                if text_stripped != "":
+                    if key not in final_texts:
+                        final_texts[key] = ""
+                    if isinstance(final_texts[key], dict):
+                        if 'additional_info' not in final_texts[key].keys():
+                            final_texts[key]['additional_info'] = []
+                        final_texts[key]['additional_info'].append(text_stripped)
+                    else:
+                        final_texts[key] += " "+text_stripped
+
+        return final_texts
     @staticmethod
     def parse_grundkapital_line(text, found_main_amount, element_counter, only_add_if_value, additional_info):
         my_return_object = {}
@@ -57,7 +96,7 @@ class AKFCommonParsingFunctions(object):
 
 
                 elif "Nam." in text and "St." in text:
-                    # Nanhafte Stammaktien
+                    # Namhafte Stammaktien
                     my_return_object["Namhafte-Stammaktien"] = final_object
 
                 elif "St." in text:

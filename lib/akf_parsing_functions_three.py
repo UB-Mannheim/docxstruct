@@ -89,6 +89,9 @@ class AkfParsingFunctionsThree(object):
         final_texts = {}
         key = "general_info"
         ctr_help = 2
+        final_texts = cf.parse_grundkapital_additional_lines(content_texts, element_counter, only_add_if_value,
+                                                             ctr_help, key=key)
+        """
         for text in content_texts:
             text_stripped = text.strip()
             match_starts_with_year = regex.match("^\d\d\d\d", text_stripped)
@@ -123,6 +126,7 @@ class AkfParsingFunctionsThree(object):
                         final_texts[key]['additional_info'].append(text_stripped)
                     else:
                         final_texts[key] += " "+text_stripped
+            """
 
         self.ef.add_to_my_obj(info_key, final_texts, object_number=element_counter,
                               only_filled=only_add_if_value)
