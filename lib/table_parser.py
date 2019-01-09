@@ -1336,3 +1336,126 @@ class Sharetable(Table):
                 self.content["Sharedata"][len(self.content["Sharedata"])-1]["ClosingDate"] = self.info.closing_date
         return
 
+class DividendtableRegex(object):
+    """Compiled regex pattern for TP"""
+
+    def __init__(self):
+        self.date = regex.compile(r"(?:19\d\d)")
+        self.insgesamt = regex.compile(r"insgesamt{e<=" + str(1) + "}")
+        self.bonus = regex.compile(r"([\d\%\sDMhflYen\,\.]*)Bonus{e<=1}")
+        self.currency = regex.compile(r"([a-zA-Z]{2,}|\$)")
+        self.dividend = regex.compile(r"(?:\d[\d\,\.\s]*)")
+        self.talon = regex.compile(r"Talon{e<=" + str(1) + "}")
+        self.divschnr= regex.compile(r"([\d\-]{1,})")
+
+class DividendtableInfo(object):
+    """Helper dataclass - Information storage for TP"""
+
+    def __init__(self, snippet=None):
+        self.snippet = snippet
+        self.regex = DividendtableRegex()
+        self.config = ConfigurationHandler(first_init=False).get_config()
+
+
+class Dividendtable(Table):
+    def __init__(self, snippet=None):
+        Table.__init__(self)
+        self.info = DividendtableInfo(snippet)
+
+    ##### ANALYSE #####
+    def analyse_structure(self, content_lines, feature_lines):
+        """Analyse the structure of table with the help from the template information and extract some necessary parameter"""
+        skip = False
+        self.structure["input"] = []
+        self.structure["data"] = []
+        for lidx, (content, features) in enumerate(zip(content_lines, feature_lines)):
+            if skip: continue
+            text = content["text"]
+            # Append the default values to the structure list
+            if "(" in text and ")" not in text:
+                if "(" not in content_lines[lidx+1]["text"] and ")" in content_lines[lidx+1]["text"]:
+                    skip = True
+                    self.structure["input"].append(text+content_lines[lidx+1]["text"])
+                    if features.alphabetical_ratio > 0.5:
+                        self.structure["data"].append(0)
+                    else:
+                        self.structure["data"].append(1)
+                    continue
+            self.structure["input"].append(text)
+            if features.alphabetical_ratio > 0.5:
+                self.structure["data"].append(0)
+            else:
+                self.structure["data"].append(1)
+
+        return
+
+    ##### ANALYSE #####
+    def extract_content(self,content_lines, feature_lines):
+        """Extract the dividend information"""
+        self.structure["output"] = []
+        comment = ""
+        for valid,line in zip(self.structure["data"],self.structure["input"]):
+            if "Dividend" in line: continue
+            if not valid:
+                comment += line+" "
+                continue
+            content = {}
+            fragments = None
+            #line = line.replace("(+")
+            if "(" in line:
+                fragments = line.rsplit("(",1)
+                if len(fragments) > 1:
+                    self.extract_bracket_info(fragments[1], content)
+                line = fragments[0].strip()
+            if ":" in line:
+                fragments = line.split(":",1)
+            elif self.info.regex.dividend.search(line):
+                    regs = None
+                    #hey = self.info.regex.dividend.finditer(line)
+                    for res in self.info.regex.dividend.finditer(line):
+                        regs = res.regs[0]
+                    if regs:
+                        fragments = [line[:regs[0]],line[regs[0]:]]
+            else:
+                continue
+            if fragments:
+                content["Year"] = fragments[0]
+                self.extract_dividend_info(fragments[1], content)
+            if content:
+                self.content[len(self.content)] = content
+        if comment != "":
+            self.content["Comment"] = comment.strip()
+        return
+
+    def extract_bracket_info(self, data,content):
+        divschnr = self.info.regex.divschnr.findall(data)
+        if divschnr:
+            content["Div_Sch_Nr"] = ",".join(divschnr)
+        if self.info.regex.talon.match(data):
+            content["Div_Sch_Nr"] = content.get("Div_Sch_Nr","")+"Talon"
+        return
+
+    def extract_dividend_info(self,data,content):
+        data = data.replace("je","")
+        if self.info.regex.insgesamt.search(data):
+            content["comment"] = data
+            return
+        #data = data+"+ 50 % Bonus"
+        if self.info.regex.bonus.search(data):
+             result = self.info.regex.bonus.search(data)
+             content["Bonus"] = data[result.regs[1][0]:result.regs[1][1]].strip()
+             data = data.replace(data[result.regs[0][0]:result.regs[0][1]],"").replace("+","").strip()
+        if "%" in data:
+            result = self.info.regex.dividend.findall(data)[0]
+            content["Dividend"] = result.strip()
+        else:
+            if self.info.regex.currency.search(data):
+                result = self.info.regex.currency.search(data)
+                content["Currency"] = data[result.regs[0][0]:result.regs[0][1]].strip()
+                content["St_G"] = self.get_number(data[result.regs[0][1]:])
+            else:
+                content["Dividend"] = self.get_number(data)
+        return
+
+    def get_number(self,data):
+        return "".join([char for char in data if char.isdigit() or char in [".",","]])
