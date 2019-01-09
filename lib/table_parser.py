@@ -1295,7 +1295,8 @@ class Sharetable(Table):
                 array[item].append(convert(num))
                 array["UID"].append(uid)
             except Exception as e:
-                print(f"Couldnt convert {num}")
+                pass
+                #print(f"Couldnt convert {num}")
         return array
 
     def combine_datasets(self):
