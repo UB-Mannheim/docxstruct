@@ -52,8 +52,8 @@ class FunctionMapAKF(object):
             "Börsennotiz": self.akf_two.parse_boersennotiz,
             "Stückelung": self.akf_two.parse_stueckelung,
             "Aktienkurse": self.akf_jk.parse_aktienkurse,
-            "Dividenden": self.akf_tables_one.parse_dividenden, # is table
-            "DividendenAufXYaktien": self.akf_tables_one.parse_dividenden_auf_xyaktien, # is table
+            "Dividenden": self.akf_jk.parse_dividend, # is table
+            "DividendenAufXYaktien": self.akf_jk.parse_dividend, # is table
             "BeratendeMitglieder": self.akf_three.parse_beratende_mitglieder,           # not in first 500 files 1956??
             "Sekretäre": self.akf_three.parse_sekretaere,                               # not in first 500 files 1956??
             "Geschäftsleitung": self.akf_three.parse_geschaeftsleitung,                 # not in first 500 files 1956??
