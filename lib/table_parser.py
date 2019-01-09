@@ -1344,7 +1344,7 @@ class DividendtableRegex(object):
         self.insgesamt = regex.compile(r"insgesamt{e<=" + str(1) + "}")
         self.bonus = regex.compile(r"([\d\%\sDMhflYen\,\.]*)Bonus{e<=1}")
         self.currency = regex.compile(r"([a-zA-Z]{2,}|\$)")
-        self.dividend = regex.compile(r"(?:\d[\d\,\.\s]*)")
+        self.dividend = regex.compile(r"(\d[\d\,\.\s]*)")
         self.talon = regex.compile(r"Talon{e<=" + str(1) + "}")
         self.divschnr= regex.compile(r"([\d\-]{1,})")
 
@@ -1371,6 +1371,8 @@ class Dividendtable(Table):
         for lidx, (content, features) in enumerate(zip(content_lines, feature_lines)):
             if skip: continue
             text = content["text"]
+            if text.strip() == "":
+                continue
             # Append the default values to the structure list
             if "(" in text and ")" not in text:
                 if "(" not in content_lines[lidx+1]["text"] and ")" in content_lines[lidx+1]["text"]:
@@ -1446,8 +1448,11 @@ class Dividendtable(Table):
              content["Bonus"] = data[result.regs[1][0]:result.regs[1][1]].strip()
              data = data.replace(data[result.regs[0][0]:result.regs[0][1]],"").replace("+","").strip()
         if "%" in data:
-            result = self.info.regex.dividend.findall(data)[0]
-            content["Dividend"] = result.strip()
+            if self.info.regex.dividend.search(data):
+                result = self.info.regex.dividend.findall(data)[0]
+                content["Dividend"] = result.strip()
+            else:
+                content["Dividend"] = "NaN"
         else:
             if self.info.regex.currency.search(data):
                 result = self.info.regex.currency.search(data)
