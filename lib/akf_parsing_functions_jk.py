@@ -1,7 +1,7 @@
 from akf_corelib.conditional_print import ConditionalPrint
 from akf_corelib.configuration_handler import ConfigurationHandler
 from .akf_parsing_functions_common import AKFCommonParsingFunctions as cf
-from lib.table_parser import Datatable, Sharetable
+from lib.table_parser import Datatable, Sharetable, Dividendtable
 import time
 
 def timeit(method):
@@ -130,4 +130,35 @@ class AkfParsingFunctionsJK(object):
         #print(timeit(test))
         # parsing
         self.ef.add_to_my_obj("shares", table.content, object_number=element_counter,
+                              only_filled=only_add_if_string)
+
+    def parse_dividend(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
+        # get basic data
+        element_counter = 0
+        origpost, origpost_red, element_counter, content_texts = \
+            cf.add_check_element(self, content_texts, real_start_tag, segmentation_class, element_counter)
+
+        # logme
+        self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
+
+        # init
+        only_add_if_string = True
+        # self.config.LOG_SIMPLE = True
+        if self.config.LOG_SIMPLE:
+            #    self.config.LOG_SIMPLE = False
+            skip = origpost_red.replace("- ", "")
+
+            # parsing
+            self.ef.add_to_my_obj("dividende", skip, object_number=element_counter,
+                                  only_filled=only_add_if_string)
+            return True
+
+        # parsing
+        table = Dividendtable(snippet=segmentation_class.snippet)
+        table.analyse_structure(content_lines, feature_lines)
+        table.extract_content(content_lines, feature_lines)
+        # from timeit import timeit
+        # print(timeit(test))
+        # parsing
+        self.ef.add_to_my_obj("dividende", table.content, object_number=element_counter,
                               only_filled=only_add_if_string)
