@@ -243,7 +243,7 @@ class AKFCommonParsingFunctions(object):
             if entry_stripped == "":
                 continue
 
-            print("Person:", entry_stripped)
+            #print("Person:", entry_stripped)
             entry_split = entry_stripped.split(',')
             name = ""
             first_name = ""
