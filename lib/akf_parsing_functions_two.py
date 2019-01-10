@@ -281,7 +281,7 @@ class AkfParsingFunctionsTwo(object):
                 item = item.rsplit(",",1)
                 self.ef.add_to_my_obj("shareholder", item[0].strip(),
                                       object_number=element_counter, only_filled=only_add_if_value)
-                if len(item) > 1:
+                if len(item) > 1 and item[1] != "":
                     if item[1][-1] == ".":
                         item[1] = item[1][:len(item[1])-1]
                     if "(" in item[1] and ")" in item[1]:
