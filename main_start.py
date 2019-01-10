@@ -10,7 +10,7 @@ from lib.output_analysis import OutputAnalysis
 from lib.additional_info_handler import AdditionalInfoHandler
 
 # load configuration and printer
-CODED_CONFIGURATION_PATH = './configuration/config_parse_hocr_js.conf'
+CODED_CONFIGURATION_PATH = './configuration/config_parse_hocr_jk.conf'
 config_handler = ConfigurationHandler(first_init=True, fill_unkown_args=True, \
                                       coded_configuration_paths=[CODED_CONFIGURATION_PATH])
 config = config_handler.get_config()
@@ -59,8 +59,12 @@ for key in hocr_files:
         #if ctr_test not in [19]:
         #  ctr_test += 1
         #  continue
-
-        #if not "0064_1" in file.name and not "0142_1" in file.name:
+        #split = file.name.split("_")
+        #if int(split[1]) < 1961:
+        #    continue
+        #if int(split[0])!=601:
+        #    continue
+        #if not "_1956" in file.name:
         #    continue
         # fetch additional information for current file (if toggled in info)
         additional_info = add_info_handler.fetch_additional_information_simple(file)
@@ -95,7 +99,7 @@ for key in hocr_files:
         accumulated_tags = output_analyzer.log_tags(ocromore_data, accumulated_tags)
         ctr_test += 1
 
-        #if ctr_test >= 30:
+        #if ctr_test >= 50:
         #    break
 
         # clear the current result in segment_parser cache to parse the next one
