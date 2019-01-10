@@ -1376,14 +1376,15 @@ class Dividendtable(Table):
                 continue
             # Append the default values to the structure list
             if "(" in text and ")" not in text:
-                if "(" not in content_lines[lidx+1]["text"] and ")" in content_lines[lidx+1]["text"]:
-                    skip = True
-                    self.structure["input"].append(text+content_lines[lidx+1]["text"])
-                    if features.alphabetical_ratio > 0.5:
-                        self.structure["data"].append(0)
-                    else:
-                        self.structure["data"].append(1)
-                    continue
+                if lidx != len(content_lines)-1:
+                    if "(" not in content_lines[lidx+1]["text"] and ")" in content_lines[lidx+1]["text"]:
+                        skip = True
+                        self.structure["input"].append(text+content_lines[lidx+1]["text"])
+                        if features.alphabetical_ratio > 0.5:
+                            self.structure["data"].append(0)
+                        else:
+                            self.structure["data"].append(1)
+                        continue
             self.structure["input"].append(text)
             if features.alphabetical_ratio > 0.5:
                 self.structure["data"].append(0)
