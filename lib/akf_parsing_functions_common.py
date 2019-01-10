@@ -163,6 +163,9 @@ class AKFCommonParsingFunctions(object):
             if ":" in text and abc_found is False:
                 # find out if there is a new category
                 #current_key = text.split(":")[0]
+                if regex.search("\d:\d",text):
+                    text = regex.sub("(\d):(\d)", r"\1↑\2", text) # substitute the cases which shouldn't be split
+
                 text_with_tag = regex.sub(":", "┇┇:", text)
                 current_key_sp = regex.split(r",|;|:", text_with_tag)
                 new_key_found = None
@@ -230,6 +233,13 @@ class AKFCommonParsingFunctions(object):
             # remove space added on last line
             #if text_index >= len_content_texts-1:
             #    add_space = ""
+
+            # just refactor the substitution signs
+            for key in final_items:
+                inner_list = final_items[key]
+                for inner_index, entry in enumerate(inner_list):
+                    if "↑" in entry:  # this is substitution symbol for number-divider ('1:2' or '3:4' etc)
+                        final_items[key][inner_index] = entry.replace("↑", ":")
 
             # add line to final items
             if text != "":

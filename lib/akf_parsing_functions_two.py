@@ -133,6 +133,90 @@ class AkfParsingFunctionsTwo(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
+
+
+
+
+        gk = cf.parse_general_and_keys(content_texts,
+                                  join_separated_lines=True,
+                                  current_key_initial_value='start_value',
+                                  abc_sections=True)
+        print(gk)
+        # check start value for 'normal' grundkapital content
+        # if found parse
+        start_value = gk['start_value']
+        if len(start_value) >= 1:
+            print("could be grundkapital")
+            my_return_object, found_main_amount, element_counter, only_add_if_value, additional_info = \
+                cf.parse_grundkapital_line(start_value[0], False, element_counter, only_add_if_value, [])
+            currency = my_return_object['currency'].strip()
+            amount = my_return_object['amount'].strip()
+            if amount != "" and currency != "":
+                self.ef.add_to_my_obj('Grundkapital', my_return_object, object_number=element_counter, only_filled=only_add_if_value)
+            else:
+                gk['additional_info'] = []
+                gk['additional_info'].append(start_value[0])
+
+
+        if len(start_value) >= 2: # get the additional values which are in start_value, but have nothing to do with that
+            if 'additional_info' not in gk.keys():
+                gk['additional_info'] = []
+
+            gk['additional_info'] = []
+            for index in range(1, len(start_value)):
+                val = start_value[index]
+                gk['additional_info'].append(val)
+
+        """
+        if 'additional_info' in gk.keys():
+            gk_ai = cf.parse_general_and_keys(gk['additional_info'],
+                                           join_separated_lines=True,
+                                           current_key_initial_value='start_value_addinfo',
+                                           abc_sections=True)
+
+            print("lemme check")
+        """
+
+
+        for key in gk:
+            if key is "start_value":
+                continue
+            entry = gk[key]
+            # individual parsing here
+            match_year = regex.search("\d\d\d\d", key) # key is year
+            year = None
+            key_rest = ""
+            if match_year:
+                year = match_year.group()
+                key_rest = key.replace(year, "").strip()
+
+            accumulated_text = ""
+            if key_rest != "":
+                accumulated_text += key_rest + " "
+
+            for inner_entry in entry:
+                accumulated_text += inner_entry + " "
+
+            final_entry = None
+            if year is None:
+                final_entry = accumulated_text
+            else:
+                final_entry = {
+                    "year": year,
+                    "text": accumulated_text
+                }
+
+            if final_entry != None and final_entry != "":
+                self.ef.add_to_my_obj(key, final_entry, object_number=element_counter,
+                                      only_filled=only_add_if_value)
+                element_counter += 1
+
+        # check all year lines and parse the
+        return
+
+
+
+        # old parsing style
         final_entries = []
         current_ref_index = -1
         found_main_amount = False
