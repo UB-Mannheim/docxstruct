@@ -112,7 +112,7 @@ class AkfParsingFunctionsJK(object):
 
         # init
         only_add_if_string = True
-        #self.config.LOG_SIMPLE = True
+        #self.config.LOG_SIMPLE = False
         if self.config.LOG_SIMPLE:
         #    self.config.LOG_SIMPLE = False
             skip = origpost_red.replace("- ", "")
