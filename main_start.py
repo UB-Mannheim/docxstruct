@@ -10,7 +10,7 @@ from lib.output_analysis import OutputAnalysis
 from lib.additional_info_handler import AdditionalInfoHandler
 
 # load configuration and printer
-CODED_CONFIGURATION_PATH = './configuration/config_parse_hocr_jk.conf'
+CODED_CONFIGURATION_PATH = './configuration/config_parse_hocr_js.conf'
 config_handler = ConfigurationHandler(first_init=True, fill_unkown_args=True, \
                                       coded_configuration_paths=[CODED_CONFIGURATION_PATH])
 config = config_handler.get_config()
@@ -60,9 +60,9 @@ for key in hocr_files:
         #  ctr_test += 1
         #  continue
         #split = file.name.split("_")
-        #if int(split[1]) < 1961:
+        #if int(split[1]) < 1968:
         #    continue
-        #if int(split[0])!=601:
+        #if int(split[0])<300:
         #    continue
         #if not "_1956" in file.name:
         #    continue
