@@ -1082,7 +1082,7 @@ class Sharetable(Table):
                                     self.structure["separator"][lidx]["visual"]) == self.info.subtables:
                                 self.info.separator = self.structure["separator"][lidx]["visual"]
                     # Calculate mean separator value
-                    if self.info.separator:
+                    if self.info.separator and self.info.separator[0] and self.info.separator[1] and self.info.separator[2]:
                         self.info.separator[0][2] = (self.info.separator[0][2]+calculated_sep[0])//2
                         self.info.separator[1][2] = (self.info.separator[1][2]+calculated_sep[1])//2
                         self.info.separator[2][2] = calculated_sep[2]
