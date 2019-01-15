@@ -216,7 +216,8 @@ class Datatable(Table):
             if wordratio > 0.5:
                 if widx >= 1:
                     if widx != features.counter_words:
-                        if content["words"][features.counter_words - widx - 1]["text"][-1].isdigit():
+                        #test = content["words"][features.counter_words - widx - 1]["text"][-1]
+                        if len(content["words"][features.counter_words - widx - 1]["text"]) > 0 and content["words"][features.counter_words - widx - 1]["text"][-1].isdigit():
                             widx -= 1
                     xgaps = np.append(np.zeros(features.counter_words - widx),
                                       features.x_gaps[features.counter_words - widx:])
@@ -363,7 +364,7 @@ class Datatable(Table):
                     self.info.row = ""
                     continue
                 extractlevel = "bbox"
-                if not (self.structure["separator"][lidx] - self.structure["gapsize"][
+                if not self.info.separator or not (self.structure["separator"][lidx] - self.structure["gapsize"][
                     lidx] / 2) < self.info.separator < (
                                self.structure["separator"][lidx] + self.structure["gapsize"][lidx] / 2):
                     extractlevel = "text"
@@ -473,7 +474,7 @@ class Datatable(Table):
         return infotext, offset
 
     def _extract_content(self, entry, features, extractlevel) -> bool:
-        if extractlevel == "bbox":
+        if extractlevel == "bbox" and len(self.content[self.structure["type"][self.info.lidx]]) >1:
             result = self._extract_bboxlevel(entry)
         else:
             result = self._extract_textlevel(entry, features)
@@ -518,7 +519,7 @@ class Datatable(Table):
             return True
 
         # First try to solve the problem with reocr the bbox
-        if self.info.snippet:
+        if self.info.snippet and self.info.separator:
             if self._extract_reocrlevel(entry, numbers):
                 return True
         if numbers == "" and self.info.lidx == self.info.nrow-1:
@@ -592,8 +593,13 @@ class Datatable(Table):
             snd_section = next_date - 1
         if snd_section <= fst_section:
             snd_section = fst_section+1
-        lborder = min(self.structure["lborder"][fst_section:snd_section + 1])
-        rborder = max(self.structure["rborder"][fst_section:snd_section + 1])
+        if fst_section >= len(self.structure["lborder"]):
+            return None
+            lborder = self.structure["lborder"][-1]
+            rborder = self.structure["rborder"][-1]
+        else:
+            lborder = min(self.structure["lborder"][fst_section:snd_section + 1])
+            rborder = max(self.structure["rborder"][fst_section:snd_section + 1])
         tablebbox = [lborder, content_lines[fst_section]["words"][0]["hocr_coordinates"][1], rborder,
                      content_lines[snd_section - 1]["words"][-1]["hocr_coordinates"][3]]
         # Cut the area out of the image and find the biggest whitespace areas

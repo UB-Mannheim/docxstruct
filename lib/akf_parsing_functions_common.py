@@ -10,6 +10,112 @@ class AKFCommonParsingFunctions(object):
     """
 
     @staticmethod
+    def parse_grundkapital_additional_lines(content_texts, element_counter, only_add_if_value, ctr_help, key = "general_info"):
+        final_texts = {}
+
+        for text in content_texts:
+            text_stripped = text.strip()
+            match_starts_with_year = regex.match("^\d\d\d\d", text_stripped)
+            match_starts_with_grundkapital = regex.match("^[Gg]rundkapital\s?:", text_stripped)
+            if match_starts_with_year:
+                key = match_starts_with_year.group(0)
+                if key in final_texts.keys():
+                    final_key = key+"_"+str(ctr_help)
+                    final_texts[final_key] = text_stripped.replace(key, "").strip(": ")
+                    key = final_key
+                    ctr_help += 1  # one counter multiple keys, just to guarantee uniqueness
+                else:
+                    final_texts[key] = text_stripped.replace(key, "").strip(": ")
+
+            elif match_starts_with_grundkapital:
+                key = match_starts_with_grundkapital.group(0)
+
+                additional_info = []
+                prep_text = text_stripped.replace(key, "").strip(": ")
+                my_return_object, found_main_amount, element_counter, only_add_if_value, additional_info = \
+                    AKFCommonParsingFunctions.parse_grundkapital_line(prep_text, False, element_counter, only_add_if_value,
+                                               additional_info)
+
+                final_texts[key] = my_return_object
+            else:
+                if text_stripped != "":
+                    if key not in final_texts:
+                        final_texts[key] = ""
+                    if isinstance(final_texts[key], dict):
+                        if 'additional_info' not in final_texts[key].keys():
+                            final_texts[key]['additional_info'] = []
+                        final_texts[key]['additional_info'].append(text_stripped)
+                    else:
+                        final_texts[key] += " "+text_stripped
+
+        return final_texts
+    @staticmethod
+    def parse_grundkapital_line(text, found_main_amount, element_counter, only_add_if_value, additional_info):
+        my_return_object = {}
+        text_stripped = text.strip()
+        match_dm = regex.search(r"^(?P<currency>\D{1,4})(?P<amount>[\d\.\-\s]*)", text)
+        if found_main_amount is False and match_dm is not None and \
+            "Autorisiertes Kapital:" not in text and "Ausgegebenes Kapital:" not in text:
+
+            currency = match_dm.group("currency").strip(",. ")
+            amount = match_dm.group("amount")
+            if (currency is not None and currency != "") or only_add_if_value is False:
+                my_return_object["currency"] = currency
+            if (amount is not None and amount != "") or only_add_if_value is False:
+                my_return_object["amount"] = amount
+            found_main_amount = True
+        else:
+
+            # DM34000000. - Inh. - St. - Akt.
+            # DM266000. - Nam. - St. - Akt.
+            # DM1718400. - St. - Akt.
+            # DM21600. - Vorz. - Akt.
+            # DM 2 000 000.- St.-Akt.,
+            # DM 60 000.- Vorz.-Akt. Lit.A,
+            # DM 9 000.- Vorz.-Akt. Lit.B.
+
+            if "Akt." in text:
+                match_entry = regex.search(r"^(?P<currency>\D{1,4})(?P<amount>[\d\.\-\s]*)(?P<rest_info>.*)", text)
+                addt_currency = ""
+                addt_amount = ""
+                addt_rest_info = ""
+                final_object = {}
+
+                if match_entry:
+                    addt_currency = match_entry.group("currency")
+                    addt_amount = match_entry.group("amount")
+                    addt_rest_info = match_entry.group("rest_info")
+                    final_object = {
+                        "currency": addt_currency,
+                        "amount": addt_amount,
+                        "rest_info": addt_rest_info
+                    }
+                if "Inh." in text and "St." in text:
+                    # Inhaber Stammaktien
+                    my_return_object["Inhaber-Stammaktien"] = final_object
+
+
+                elif "Nam." in text and "St." in text:
+                    # Namhafte Stammaktien
+                    my_return_object["Namhafte-Stammaktien"] = final_object
+
+                elif "St." in text:
+                    # Stammaktien
+                    my_return_object["Stammaktien"] = final_object
+
+                elif "Vorz." in text:
+                    my_return_object["Vorzeigeaktien"] = final_object
+
+                else:
+                    # not recognized just add as additional info
+                    additional_info.append(text_stripped)
+                # element_counter += 1
+            else:
+                additional_info.append(text_stripped)
+
+        return my_return_object, found_main_amount, element_counter, only_add_if_value, additional_info
+
+    @staticmethod
     def parse_general_and_keys(content_texts, join_separated_lines=False, current_key_initial_value=None, abc_sections=False):
         """
         Separates an array of texts into categories.
@@ -57,6 +163,9 @@ class AKFCommonParsingFunctions(object):
             if ":" in text and abc_found is False:
                 # find out if there is a new category
                 #current_key = text.split(":")[0]
+                if regex.search("\d:\d",text):
+                    text = regex.sub("(\d):(\d)", r"\1↑\2", text) # substitute the cases which shouldn't be split
+
                 text_with_tag = regex.sub(":", "┇┇:", text)
                 current_key_sp = regex.split(r",|;|:", text_with_tag)
                 new_key_found = None
@@ -124,6 +233,13 @@ class AKFCommonParsingFunctions(object):
             # remove space added on last line
             #if text_index >= len_content_texts-1:
             #    add_space = ""
+
+            # just refactor the substitution signs
+            for key in final_items:
+                inner_list = final_items[key]
+                for inner_index, entry in enumerate(inner_list):
+                    if "↑" in entry:  # this is substitution symbol for number-divider ('1:2' or '3:4' etc)
+                        final_items[key][inner_index] = entry.replace("↑", ":")
 
             # add line to final items
             if text != "":

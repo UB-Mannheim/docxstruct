@@ -133,72 +133,112 @@ class AkfParsingFunctionsTwo(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
+
+
+
+
+        gk = cf.parse_general_and_keys(content_texts,
+                                  join_separated_lines=True,
+                                  current_key_initial_value='start_value',
+                                  abc_sections=True)
+        print(gk)
+        # check start value for 'normal' grundkapital content
+        # if found parse
+        start_value = gk['start_value']
+        if len(start_value) >= 1:
+            print("could be grundkapital")
+            my_return_object, found_main_amount, element_counter, only_add_if_value, additional_info = \
+                cf.parse_grundkapital_line(start_value[0], False, element_counter, only_add_if_value, [])
+            currency = my_return_object['currency'].strip()
+            amount = my_return_object['amount'].strip()
+            if amount != "" and currency != "":
+                self.ef.add_to_my_obj('Grundkapital', my_return_object, object_number=element_counter, only_filled=only_add_if_value)
+            else:
+                gk['additional_info'] = []
+                gk['additional_info'].append(start_value[0])
+
+
+        if len(start_value) >= 2: # get the additional values which are in start_value, but have nothing to do with that
+            if 'additional_info' not in gk.keys():
+                gk['additional_info'] = []
+
+            gk['additional_info'] = []
+            for index in range(1, len(start_value)):
+                val = start_value[index]
+                gk['additional_info'].append(val)
+
+        """
+        if 'additional_info' in gk.keys():
+            gk_ai = cf.parse_general_and_keys(gk['additional_info'],
+                                           join_separated_lines=True,
+                                           current_key_initial_value='start_value_addinfo',
+                                           abc_sections=True)
+
+            print("lemme check")
+        """
+
+
+        for key in gk:
+            if key is "start_value":
+                continue
+            entry = gk[key]
+            # individual parsing here
+            match_year = regex.search("\d\d\d\d", key) # key is year
+            year = None
+            key_rest = ""
+            if match_year:
+                year = match_year.group()
+                key_rest = key.replace(year, "").strip()
+
+            accumulated_text = ""
+            if key_rest != "":
+                accumulated_text += key_rest + " "
+
+            for inner_entry in entry:
+                accumulated_text += inner_entry + " "
+
+            final_entry = None
+            if year is None:
+                final_entry = accumulated_text
+            else:
+                final_entry = {
+                    "year": year,
+                    "text": accumulated_text
+                }
+
+            if final_entry != None and final_entry != "":
+                self.ef.add_to_my_obj(key, final_entry, object_number=element_counter,
+                                      only_filled=only_add_if_value)
+                element_counter += 1
+
+        # check all year lines and parse the
+        return
+
+
+
+        # old parsing style
         final_entries = []
         current_ref_index = -1
         found_main_amount = False
         additional_info = []
+        only_add_if_value = True
         for text_index, text in enumerate(content_texts):
-            #match_dm = regex.match(r"^DM.*", text)
-            match_dm = regex.search(r"^(?P<currency>\D{1,4})(?P<amount>[\d\.\-\s]*)",text)
-            if found_main_amount is False and match_dm is not None:
-                currency = match_dm.group("currency").strip(",. ")
-                amount = match_dm.group("amount")
-                self.ef.add_to_my_obj("currency", currency, object_number=element_counter, only_filled=only_add_if_value)
-                self.ef.add_to_my_obj("amount", amount, object_number=element_counter, only_filled=only_add_if_value)
-                found_main_amount = True
-            else:
+            text_stripped = text.strip()
+            if text_stripped == "":
+                continue
 
-                # DM34000000. - Inh. - St. - Akt.
-                # DM266000. - Nam. - St. - Akt.
-                # DM1718400. - St. - Akt.
-                # DM21600. - Vorz. - Akt.
-                # DM 2 000 000.- St.-Akt.,
-                # DM 60 000.- Vorz.-Akt. Lit.A,
-                # DM 9 000.- Vorz.-Akt. Lit.B.
+            # todo increment element ctr ?
+            my_return_object, found_main_amount, element_counter, only_add_if_value, additional_info = \
+                cf.parse_grundkapital_line(text_stripped, found_main_amount, element_counter, only_add_if_value, additional_info)
 
-                if "Akt." in text:
-                    match_entry = regex.search(r"^(?P<currency>\D{1,4})(?P<amount>[\d\.\-\s]*)(?P<rest_info>.*)", text)
-                    addt_currency = ""
-                    addt_amount = ""
-                    addt_rest_info = ""
-                    final_object = {}
+            for key in my_return_object:
+                value = my_return_object[key]
+                self.ef.add_to_my_obj(key, value, object_number=element_counter, only_filled=only_add_if_value)
 
-                    if match_entry:
-                        addt_currency = match_entry.group("currency")
-                        addt_amount = match_entry.group("amount")
-                        addt_rest_info = match_entry.group("rest_info")
-                        final_object = {
-                            "currency":addt_currency,
-                            "amount": addt_amount,
-                            "rest_info": addt_rest_info
-                        }
-                    if "Inh." in text and "St." in text:
-                        # Inhaber Stammaktien
-                        self.ef.add_to_my_obj("Inhaber-Stammaktien", final_object, object_number=element_counter,
-                                              only_filled=only_add_if_value)
-
-
-                    elif "Nam." in text and "St." in text:
-                        # Nanhafte Stammaktien
-                        self.ef.add_to_my_obj("Namhafte-Stammaktien", final_object, object_number=element_counter,
-                                              only_filled=only_add_if_value)
-                    elif "St." in text:
-                        # Stammaktien
-                        self.ef.add_to_my_obj("Stammaktien", final_object, object_number=element_counter,
-                                              only_filled=only_add_if_value)
-                    elif "Vorz." in text:
-                        self.ef.add_to_my_obj("Vorzeigeaktien", final_object, object_number=element_counter,
-                                              only_filled=only_add_if_value)
-                    else:
-                        # not recognized just add as additional info
-                        additional_info.append(text)
-                    # element_counter += 1
-                    continue
-                additional_info.append(text)
-                # element_counter += 1
 
         if len(additional_info) >= 1:
-            self.ef.add_to_my_obj("additional_info", additional_info, object_number=element_counter,
+            add_lines_parsed = cf.parse_grundkapital_additional_lines(additional_info,element_counter,True, 0)
+            self.ef.add_to_my_obj("additional_info", add_lines_parsed, object_number=element_counter,
                                      only_filled=only_add_if_value)
 
         return True
