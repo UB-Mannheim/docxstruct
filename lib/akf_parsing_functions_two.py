@@ -144,13 +144,16 @@ class AkfParsingFunctionsTwo(object):
         print(gk)
         # check start value for 'normal' grundkapital content
         # if found parse
-        start_value = gk['start_value']
+        start_value = gk.get('start_value',"")
+        if len(gk.keys()) == 1:
+            start_value = gk[list(gk.keys())[0]]
+        #if start_value =
         if len(start_value) >= 1:
             print("could be grundkapital")
             my_return_object, found_main_amount, element_counter, only_add_if_value, additional_info = \
                 cf.parse_grundkapital_line(start_value[0], False, element_counter, only_add_if_value, [])
-            currency = my_return_object['currency'].strip()
-            amount = my_return_object['amount'].strip()
+            currency = my_return_object.get('currency',"").strip()
+            amount = my_return_object.get('amount',"").strip()
             if amount != "" and currency != "":
                 self.ef.add_to_my_obj('Grundkapital', my_return_object, object_number=element_counter, only_filled=only_add_if_value)
             else:
@@ -581,7 +584,7 @@ class AkfParsingFunctionsTwo(object):
         only_add_if_value = True
         split_post = regex.split('u\.|und|,', origpost_used)
         for entry in split_post:
-            entry_stripped = entry.strip("., ")
+            entry_stripped = entry.replace("im Freiverkehr", "").replace("(amtl.)", "").strip("., ")
             if entry_stripped == None or entry_stripped == "":
                 continue
             self.ef.add_to_my_obj("location", entry_stripped, object_number=element_counter, only_filled= only_add_if_value)
