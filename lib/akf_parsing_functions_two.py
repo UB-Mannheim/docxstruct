@@ -141,7 +141,7 @@ class AkfParsingFunctionsTwo(object):
                                   join_separated_lines=True,
                                   current_key_initial_value='start_value',
                                   abc_sections=True)
-        print(gk)
+        #print(gk)
         # check start value for 'normal' grundkapital content
         # if found parse
         start_value = gk.get('start_value',"")
@@ -149,7 +149,7 @@ class AkfParsingFunctionsTwo(object):
             start_value = gk[list(gk.keys())[0]]
         #if start_value =
         if len(start_value) >= 1:
-            print("could be grundkapital")
+            #print("could be grundkapital")
             my_return_object, found_main_amount, element_counter, only_add_if_value, additional_info = \
                 cf.parse_grundkapital_line(start_value[0], False, element_counter, only_add_if_value, [])
             currency = my_return_object.get('currency',"").strip()
@@ -458,7 +458,7 @@ class AkfParsingFunctionsTwo(object):
                         "value": "",
                         "currency": "",
                         "rank": element_counter}
-                self.ef.add_to_my_obj("entry", stck, object_number=element_counter,
+                self.ef.add_to_my_obj(element_counter, stck, object_number=element_counter,
                                       only_filled=only_add_if_value)
                 element_counter += 1
                 continue
@@ -480,7 +480,7 @@ class AkfParsingFunctionsTwo(object):
                             "value": finding[3].strip(),
                             "currency": finding[2].strip(),
                             "rank": element_counter}
-                    self.ef.add_to_my_obj("entry", stck, object_number=element_counter,
+                    self.ef.add_to_my_obj(element_counter, stck, object_number=element_counter,
                                           only_filled=only_add_if_value)
                     element_counter += 1
                     stck = {"kind": finding[5].strip(),
@@ -489,7 +489,7 @@ class AkfParsingFunctionsTwo(object):
                             "value": finding[4].strip(),
                             "currency": finding[2].strip(),
                             "rank": element_counter}
-                    self.ef.add_to_my_obj("entry", stck, object_number=element_counter,
+                    self.ef.add_to_my_obj(element_counter, stck, object_number=element_counter,
                                           only_filled=only_add_if_value)
                     continue
             if not finding or finding[0][0] + finding[0][1] == "":
@@ -521,7 +521,7 @@ class AkfParsingFunctionsTwo(object):
                     "value": finding[3].strip(),
                     "currency": finding[2].strip(),
                     "rank": element_counter}
-            self.ef.add_to_my_obj("entry", stck, object_number=element_counter, only_filled=only_add_if_value)
+            self.ef.add_to_my_obj(element_counter, stck, object_number=element_counter, only_filled=only_add_if_value)
             element_counter += 1
         # match_akt = regex.search(r"\.\s?\-\s?Akt", text)
         # if match_saemtlsakt is not None:
@@ -670,7 +670,7 @@ class AkfParsingFunctionsTwo(object):
                      "currency": finding[0][3],
                      "value": finding[0][4],
                      "rank":element_counter}
-            self.ef.add_to_my_obj("entry", stck, object_number=element_counter, only_filled=only_add_if_value)
+            self.ef.add_to_my_obj(element_counter, stck, object_number=element_counter, only_filled=only_add_if_value)
             element_counter += 1
            # match_akt = regex.search(r"\.\s?\-\s?Akt", text)
             #if match_saemtlsakt is not None:
