@@ -1113,7 +1113,7 @@ class Sharetable(Table):
                                     year = "19"+year
                                 bbox[0] = bbox[2]
                                 bbox[2] = subtable[2]
-                                value = self._reocr(bbox[:]).replace("1/2",",5").replace("1/4",",25").replace("3/4",",75").strip()
+                                value = self._reocr(bbox[:]).replace(" /","/").replace("1/2","").replace("1/4","").replace("3/4","").strip()
                                 #self.info.reocrcount += 1
                                 amount = "".join([char for char in value if char.isdigit()])
                                 currency, unit = "", 1
@@ -1293,9 +1293,11 @@ class Sharetable(Table):
         for uid in self.content[type].keys():
             num = self.content[type][uid][item]
             num = num.replace(",", ".")
+            num = num.split(".")[0]
             if num == "-" or num == " ":
                 continue
             if "/" in num:
+                num = num.replace(" /","/")
                 num = num[:num.index("/")-1]
             try:
                 array[item].append(convert(num))
