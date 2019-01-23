@@ -41,7 +41,7 @@ for key in hocr_files:
     #if "1956" not in key:
     #    continue
     int_key = int(key)
-    if int_key < 1975 or int_key > 1975:  # start from 1971
+    if int_key < 1971 or int_key > 1971:  # start from 1971
         continue
 
     accumulated_diff_info = output_analyzer.AccumulatedInfo()
