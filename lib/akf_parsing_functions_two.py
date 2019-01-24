@@ -190,12 +190,12 @@ class AkfParsingFunctionsTwo(object):
                 year = match_year.group()
                 key_rest = key.replace(year, "").strip()
 
-            accumulated_text = ""
+            accumulated_text = []
             if key_rest != "":
-                accumulated_text += key_rest + " "
+                accumulated_text.append(key_rest)
 
             for inner_entry in entry:
-                accumulated_text += inner_entry + " "
+                accumulated_text.append(inner_entry)
 
             final_entry = None
             if year is None:
