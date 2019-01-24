@@ -527,26 +527,33 @@ class AkfParsingFunctionsTwo(object):
         # logme
         self.output_analyzer.log_segment_information(segmentation_class.segment_tag, content_texts, real_start_tag)
 
-        # find last parenthesis and filter
-        match_parenth = regex.findall(r"(\(.*?\))", origpost_red)
         found_parenth = None
         origpost_used = origpost_red
-        # find additional info in  each line and subtract it
-        if match_parenth:
-            found_parenth = match_parenth[-1].strip("., ")  # find the last parenthesis grounp
-            origpost_used = origpost_red.replace(found_parenth, "") # update the orignpost used
 
         # log all location elements
         only_add_if_value = True
         split_post = regex.split('u\.|und|,', origpost_used)
         for entry in split_post:
             entry_stripped = entry.strip("., ")
-            if entry_stripped == None or entry_stripped == "":
+
+            # find additional info in  each line and subtract it
+            # find last parenthesis and filter
+            #match_parenth = regex.findall(r"(\(.*?\))", entry_stripped)
+            #combined_ps = []
+            #for res in match_parenth:
+                #combined_ps.append(res.strip())
+                #origpost_used = origpost_red.replace(found_parenth, "")  # update the orignpost used
+                # log additional info in last parenthesis
+
+            #self.ef.add_to_my_obj("additional_info", combined_ps, object_number=element_counter,
+            #                          only_filled = only_add_if_value)
+
+            if entry_stripped is None or entry_stripped == "":
+                #if match_parenth:
+                #    element_counter += 1
                 continue
             self.ef.add_to_my_obj("location", entry_stripped, object_number=element_counter, only_filled= only_add_if_value)
             element_counter += 1
-        # log additional info in last parenthesis
-        self.ef.add_to_my_obj("additional_info", found_parenth, object_number=element_counter, only_filled=only_add_if_value)
 
         return True
 
