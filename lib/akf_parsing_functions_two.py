@@ -557,6 +557,36 @@ class AkfParsingFunctionsTwo(object):
 
         return True
 
+
+    def preprocess_stueckelung_texts(self, content_texts):
+        final_stueckelung_texts = []
+
+        previous_text_stripped = ""
+        for index, current_text in enumerate(content_texts):
+            current_text_stripped = current_text.strip()
+            if current_text_stripped == "":
+                continue
+
+            if current_text_stripped.startswith("zu je") or current_text_stripped.startswith("Zu je"):
+                final_stueckelung_texts.append(previous_text_stripped + "  "+current_text_stripped)
+                previous_text_stripped = ""
+            elif "(" == current_text_stripped[0] and ")" == current_text_stripped[-1]:
+                final_stueckelung_texts.append(previous_text_stripped + "  "+current_text_stripped)
+                previous_text_stripped = ""
+            else:
+                final_stueckelung_texts.append(previous_text_stripped)
+                previous_text_stripped = current_text_stripped
+                if index == len(content_texts)-1:
+                    final_stueckelung_texts.append(current_text_stripped)
+
+        final_texts_filtered = []
+        for text in final_stueckelung_texts:
+            text_stripped = text.strip()
+            if text_stripped != "":
+                final_texts_filtered.append(text_stripped)
+
+        return final_texts_filtered
+
     def parse_stueckelung(self, real_start_tag, content_texts, content_lines, feature_lines, segmentation_class):
         # get basic data
         element_counter = 0
@@ -576,36 +606,55 @@ class AkfParsingFunctionsTwo(object):
             origpost_used = origpost_red.replace(found_parenth, "") # update the orignpost used
 
         final_lines = []
+        additional_info_final = []
         only_add_if_value = True
         skip = False
         final_text = ""
-        for text_index, text in enumerate(content_texts):
+        final_add_rest = ""
+        used_content_texts = self.preprocess_stueckelung_texts(content_texts)
+        for text_index, text in enumerate(used_content_texts):
             if text.strip() == "":
                 continue
             if skip:
                 skip = False
                 continue
             parse_stck = regex.compile(r"(?P<amount>[\d\s\.]*)\s*(?P<kind>[^\d]*?)[\s]?(?P<nominal>zu je|zuje|zu|je)\s{0,}(?P<currency>[^\d\s]*)\s{0,}(?P<value>[\d\s]*)")
-            finding = parse_stck.findall(text.replace(" Stücke "," Aktien ").replace(" Stück "," Aktie ").replace("DM"," DM").replace("RM"," RM").replace("hfl"," hfl"))
+            finding = parse_stck.findall(text.replace(" Stücke ", " Aktien ").replace(" Stück ", " Aktie ").replace("DM", " DM").replace("RM", " RM").replace("hfl"," hfl"))
+
+            rest_finding = ""
+            if len(finding) >= 1:
+                rest_finding = text # get the rest of finding
+                subtract_sorted = sorted(finding[0],key=len)
+                subtract_sorted.reverse()
+                for find_chunk in subtract_sorted:
+                    rest_finding = rest_finding.replace(find_chunk, "", 1).strip()
+                rest_finding = regex.sub("\s{2,}"," ", rest_finding) # just replace redundant spaces for better subtraction
+
             if not finding or finding[0][0]+finding[0][1] == "" or finding[0][0]+finding[0][4] == "":
                 match_akt = regex.search(r"\.\s?\-\s?Akt", text)
                 match_saemtlsakt, err_saemtlsakt = regu.fuzzy_search(
-                    r"([Ss]ämtliche [Ss]tammaktien.*|[Ss]ämtliche [Aa]ktien.*)", text, err_number=1)
-                if match_saemtlsakt is not None and match_akt is not None:
+                    r"([Ss]ämtliche [Ss]tammaktien.*|[Ss]ämtliche [Aa]ktien.*|[Ss]ämtliche Namens\-Stammaktien.*)", text, err_number=1)
+                if match_saemtlsakt is not None: #and match_akt is not None: @jk is this second condition really necessary ?
                     saemtl_res = match_saemtlsakt.group()
                     self.ef.add_to_my_obj("additional_info", saemtl_res, object_number=element_counter,
                                           only_filled=only_add_if_value)
                     reduced_text = text.replace(saemtl_res, "")
                     final_lines.append(reduced_text)
-                if match_saemtlsakt or "Börse" in text or "Besondere" in text:
-                    self.ef.add_to_my_obj("additional_info", "".join(content_texts[text_index:]), object_number=element_counter,
+                    rest_finding = rest_finding.replace(reduced_text,"")
+                if "Börse" in text or "Besondere" in text:
+                    addendum = "".join(content_texts[text_index:])
+                    self.ef.add_to_my_obj("additional_info", addendum, object_number=element_counter,
                                           only_filled=only_add_if_value)
                     element_counter += 1
+                    rest_finding = rest_finding.replace("".join(content_texts[text_index:]), "")
                     break
                 if "(" in text:
                     self.ef.add_to_my_obj("additional_info", text, object_number=element_counter-1,
                                           only_filled=only_add_if_value)
+                    rest_finding = rest_finding.replace(text, "")
+
                 else:
+                    rest_finding = rest_finding.replace(text, "")
                     final_text += text
                 continue
             finding_next = None
@@ -616,14 +665,14 @@ class AkfParsingFunctionsTwo(object):
                                           only_filled=only_add_if_value)
                     continue
                 else:
-                    finding_next = parse_stck.findall(text +" "+ content_texts[text_index + 1])
+                    finding_next = parse_stck.findall(text + " " + content_texts[text_index + 1])
             if finding[0][3]+finding[0][4] == "":
                 if text_index == len(content_texts) - 1:
                     self.ef.add_to_my_obj("additional_info", text, object_number=element_counter,
                                           only_filled=only_add_if_value)
                     continue
                 else:
-                    finding_next = parse_stck.findall(text +" "+ content_texts[text_index + 1])
+                    finding_next = parse_stck.findall(text + " " + content_texts[text_index + 1])
             if finding_next:
                 skip = True
                 finding = finding_next
@@ -632,8 +681,10 @@ class AkfParsingFunctionsTwo(object):
                      "nominal": "zu je",
                      "currency": finding[0][3],
                      "value": finding[0][4],
-                     "rank":element_counter}
+                     "rank": element_counter}
             self.ef.add_to_my_obj("entry", stck, object_number=element_counter, only_filled=only_add_if_value)
+            if rest_finding != "":
+                final_add_rest += rest_finding + " "
             element_counter += 1
            # match_akt = regex.search(r"\.\s?\-\s?Akt", text)
             #if match_saemtlsakt is not None:
@@ -641,7 +692,13 @@ class AkfParsingFunctionsTwo(object):
             #    element_counter += 1
             #    continue
         if final_text != "":
-            self.ef.add_to_my_obj("additional_info", final_text, object_number=element_counter,
+            self.ef.add_to_my_obj("additional_info", final_text.replace(final_add_rest.strip(".,- "),
+                                                                        "", 1).strip(".,- "), object_number=element_counter,
+                                  only_filled=only_add_if_value)
+            element_counter += 1
+
+        if final_add_rest != "":
+            self.ef.add_to_my_obj("additional_info", final_add_rest.strip(".,- "), object_number=element_counter,
                                   only_filled=only_add_if_value)
         return True
 

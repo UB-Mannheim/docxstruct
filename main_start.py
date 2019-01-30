@@ -41,7 +41,7 @@ for key in hocr_files:
     #if "1956" not in key:
     #    continue
     int_key = int(key)
-    if int_key < 1958 or int_key > 1958:  # start from 1971
+    if int_key < 1960 or int_key > 1960:  # start from 1971
         continue
 
     accumulated_diff_info = output_analyzer.AccumulatedInfo()
@@ -59,9 +59,9 @@ for key in hocr_files:
         # only check files which are relevant (comment out if not used)
         # Sitz ok:     72, 207,671, 731, 733
         # Sitz faulty: 270,454
-        if ctr_test not in [30]:
-          ctr_test += 1
-          continue
+        #if ctr_test not in [2]:
+        #    ctr_test += 1
+        #    continue
 
         #if not "0064_1" in file.name and not "0142_1" in file.name:
         #    continue
@@ -98,9 +98,8 @@ for key in hocr_files:
         accumulated_tags = output_analyzer.log_tags(ocromore_data, accumulated_tags)
         ctr_test += 1
 
-        #if ctr_test >= 30:
-        #     break
-
+        if ctr_test >= 5:
+             break
 
         # clear the current result in segment_parser cache to parse the next one
         segment_parser.clear_result(output_analyzer, dictionary_handler)
