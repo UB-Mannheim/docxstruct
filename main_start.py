@@ -102,8 +102,8 @@ for key in hocr_files:
         accumulated_tags = output_analyzer.log_tags(ocromore_data, accumulated_tags)
         ctr_test += 1
 
-        #if ctr_test >= 30:
-        #    break
+        if ctr_test >= 5:
+             break
 
         # clear the current result in segment_parser cache to parse the next one
         segment_parser.clear_result(output_analyzer, dictionary_handler)
