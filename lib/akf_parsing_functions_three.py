@@ -50,34 +50,42 @@ class AkfParsingFunctionsThree(object):
 
         #parse the specific categories
         if bezugsrechtsabschlaege:
-            split_orig = regex.split(origpost_red, ";") #sometimes ; is confused with :
-            date = split_orig[0]
-            endobject = None
-            if len(split_orig) <= 1:
-                split_orig.append("") # just apppend empty fill
+            split_orig = regex.split(";", origpost_red) #sometimes ; is confused with :
+            for entry in split_orig:
+                match_date = regex.search(r'\d{2,4}[-\.]\d{1,2}[-\.]\d{2,4}', entry)
+                date = ""
+                if match_date:
+                    date = match_date.group()
+                endobject = None
 
-            match_dm = regex.search(r"^(?P<currency>\D{1,4})(?P<amount>[\d\.\-\s]*)", split_orig[1].strip())
-            if match_dm:
-                currency = match_dm.group("currency").strip(",. ")
-                amount = match_dm.group("amount")
-                endobject = {
-                    "date": date,
-                    "currency": currency,
-                    "amount": amount
-                }
+                if len(entry) <= 1:
+                    split_orig.append("") # just apppend empty fill
+                if ":" in entry:
+                    entry_rf = entry.split(":")[1]
+                    entry = entry_rf.strip()
 
-            match_percentage = regex.search(r"\d+\s?%", split_orig[1].strip())
-            if match_percentage:
-                percentage = match_percentage.group(0).strip()
-                endobject = {
-                    "date": date,
-                    "percentage": percentage
-                }
+                match_dm = regex.search(r"^(?P<currency>\D{1,4})(?P<amount>[\d\.\-\s]*)", entry)
+                if match_dm:
+                    currency = match_dm.group("currency").strip(",. ")
+                    amount = match_dm.group("amount")
+                    endobject = {
+                        "date": date,
+                        "currency": currency,
+                        "amount": amount
+                    }
 
-            self.ef.add_to_my_obj("bezugsrechtsabschlaege", endobject, object_number=element_counter,
-                                  only_filled=only_add_if_value)
+                match_percentage = regex.search(r"\d+\s?%", entry.strip())
+                if match_percentage:
+                    percentage = match_percentage.group(0).strip()
+                    endobject = {
+                        "date": date,
+                        "percentage": percentage
+                    }
 
-            return  True # categories are mutually exclusive
+                self.ef.add_to_my_obj("bezugsrechtsabschlaege", endobject, object_number=element_counter,
+                                      only_filled=only_add_if_value)
+
+            return True  # categories are mutually exclusive
 
         info_key = None
         if berichtigigungsaktien:

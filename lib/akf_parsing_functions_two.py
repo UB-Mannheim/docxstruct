@@ -592,7 +592,7 @@ class AkfParsingFunctionsTwo(object):
             #self.ef.add_to_my_obj("additional_info", combined_ps, object_number=element_counter,
             #                          only_filled = only_add_if_value)
 
-            if entry_stripped is None or entry_stripped == "":
+            #if entry_stripped is None or entry_stripped == "":
                 #if match_parenth:
                 #    element_counter += 1
             entry_stripped = entry.replace("im Freiverkehr", "").replace("(amtl.)", "").strip("., ")
