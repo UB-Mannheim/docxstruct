@@ -722,7 +722,7 @@ class SegmentHolder(object):
 
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
             # matches ss or ß (group is not capturing)
-            match_start, errors = regu.fuzzy_search(r"Gro(?:ss|ß)aktionär(?:\s?|e\s?|Aktionäre):", line_text)
+            match_start, errors = regu.fuzzy_search(r"(Gro(?:ss|ß)aktionär(?:\s?|e\s?)|Aktionäre)\s?:", line_text)
 
             if match_start is not None:
                 self.do_match_work(True, match_start, line_index, errors)
