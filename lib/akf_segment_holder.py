@@ -105,6 +105,20 @@ class SegmentHolder(object):
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 
+    class SegmentGesellschafter(Segment):
+        # example recognition:
+        # Gesellschafter
+
+        def __init__(self):
+            super().__init__("Gesellschafter")
+
+        def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
+            match_start, errors = regu.fuzzy_search(r"^(Persönlich\shaftender\s)?(Gesellschafter|schafter)\s?:", line_text)
+
+            if match_start is not None:
+                self.do_match_work(True, match_start, line_index, errors)
+                return True
+
 
     class SegmentSekretaere(Segment):
         # example recognition:
