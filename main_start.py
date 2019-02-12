@@ -41,7 +41,7 @@ for key in hocr_files:
     #if "1956" not in key:
     #    continue
     int_key = int(key)
-    if int_key < 1968 or int_key > 1968:  # start from 1971
+    if int_key < 1973 or int_key > 1973:  # start from 1971
         continue
 
     accumulated_diff_info = output_analyzer.AccumulatedInfo()
@@ -59,7 +59,7 @@ for key in hocr_files:
         # only check files which are relevant (comment out if not used)
         # Sitz ok:     72, 207,671, 731, 733
         # Sitz faulty: 270,454
-        if ctr_test not in [9]:
+        if ctr_test not in [151]:
             ctr_test += 1
             continue
 
