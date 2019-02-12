@@ -500,7 +500,7 @@ class SegmentHolder(object):
         def match_start_condition(self, line, line_text, line_index, features, num_lines, prev_line, combined_texts):
 
             # reduced error number to prevent confusion with "Beteiligung:"
-            match_bet, errors = regu.fuzzy_search(r"(((?:Namhafte|Wesentliche|Maßgebliche|Wichtigste|Sonstige|Direkte)\s?Beteiligung(en)?)|\s?Beteiligungen)\s?:", line_text, err_number=0)
+            match_bet, errors = regu.fuzzy_search(r"(((?:Namhafte|Wesentliche|Maßgebliche|Wichtigste|Sonstige|Direkte)\s?Beteiligung(en)?)|\s?Beteiligung(en)?)\s?:", line_text, err_number=0)
             if match_bet is not None:
                 self.do_match_work(True, match_bet, line_index, errors)
                 return True
