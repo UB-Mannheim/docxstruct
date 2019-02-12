@@ -1378,7 +1378,9 @@ class Dividendtable(Table):
         self.structure["input"] = []
         self.structure["data"] = []
         for lidx, (content, features) in enumerate(zip(content_lines, feature_lines)):
-            if skip: continue
+            if skip:
+                skip = False
+                continue
             text = content["text"]
             if text.strip() == "":
                 continue
