@@ -74,7 +74,7 @@ class AKFCommonParsingFunctions(object):
             # DM 60 000.- Vorz.-Akt. Lit.A,
             # DM 9 000.- Vorz.-Akt. Lit.B.
 
-            if "Akt." in text:
+            if "Akt" in text or "ktien" in text:
                 match_entry = regex.search(r"^(?P<currency>\D{1,4})(?P<amount>[\d\.\-\s]*)(?P<rest_info>.*)", text)
                 addt_currency = ""
                 addt_amount = ""
@@ -104,7 +104,7 @@ class AKFCommonParsingFunctions(object):
                     my_return_object["Stammaktien"] = final_object
 
                 elif "Vorz." in text:
-                    my_return_object["Vorzeigeaktien"] = final_object
+                    my_return_object["Vorzugsaktien"] = final_object
 
                 else:
                     # not recognized just add as additional info

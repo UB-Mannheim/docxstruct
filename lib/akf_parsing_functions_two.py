@@ -135,7 +135,8 @@ class AkfParsingFunctionsTwo(object):
 
 
 
-
+        # Try to normalize ; to : with prefix apital
+        content_texts = [content_text.replace("apital;","apital:") for content_text in content_texts]
 
         gk = cf.parse_general_and_keys(content_texts,
                                   join_separated_lines=True,
@@ -158,7 +159,7 @@ class AkfParsingFunctionsTwo(object):
                 self.ef.add_to_my_obj('Grundkapital', my_return_object, object_number=element_counter, only_filled=only_add_if_value)
             else:
                 gk['additional_info'] = []
-                gk['additional_info'].append(start_value[0])
+                gk['additional_info'].append(start_value[0].replace("↑", ":"))
 
 
         if len(start_value) >= 2: # get the additional values which are in start_value, but have nothing to do with that
@@ -168,7 +169,7 @@ class AkfParsingFunctionsTwo(object):
             gk['additional_info'] = []
             for index in range(1, len(start_value)):
                 val = start_value[index]
-                gk['additional_info'].append(val)
+                gk['additional_info'].append(val.replace("↑", ":"))
 
         """
         if 'additional_info' in gk.keys():
