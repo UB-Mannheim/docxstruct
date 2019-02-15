@@ -658,8 +658,8 @@ class AkfParsingFunctionsTwo(object):
         skip = False
         final_text = ""
         final_add_rest = ""
-        used_content_texts = self.preprocess_stueckelung_texts(content_texts)
-        for text_index, text in enumerate(used_content_texts):
+        content_texts = self.preprocess_stueckelung_texts(content_texts)
+        for text_index, text in enumerate(content_texts):
             if text.strip() == "":
                 continue
             if skip:
@@ -705,7 +705,7 @@ class AkfParsingFunctionsTwo(object):
                     final_text += text
                 continue
             finding_next = None
-            if finding[0][2] == "" or (finding[0][2] == "zu" and finding[0][3] == ""):
+            if finding[0][2] == "" or (("zu" in finding[0][2] or "je" in finding[0][2]) and finding[0][3] == ""):
                 #test =  '2 638 514 Inh. - bzw. Namensaktien zuje FF 75.-'
                 if text_index == len(content_texts) - 1:
                     self.ef.add_to_my_obj("additional_info", text, object_number=element_counter,
