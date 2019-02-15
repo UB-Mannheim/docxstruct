@@ -368,6 +368,9 @@ class AKFCommonParsingFunctions(object):
             title = ""
             funct = ""
             rest_info = []
+            AN = False
+            if "+)" in entry_stripped:
+                AN = True
             for fragment_index, fragment in enumerate(entry_split):
                 if fragment_index == 0:
                     name, title = dictionary_handler.diff_name_title(fragment.strip())
@@ -388,9 +391,12 @@ class AKFCommonParsingFunctions(object):
                     #name = fragment.strip()
                     #print("asd")
                 elif fragment_index == 1:
-                    city = fragment.strip()
+                    city = fragment.replace("+)","").strip()
                 elif fragment_index == 2:
-                    funct = fragment.strip() # that's probably position
+                    if fragment.strip() != "" and AN:
+                        funct = "Arbeitnehmervertreter"
+                    else:
+                        funct = fragment.strip() # that's probably position
                 elif fragment_index >= 3:
                     rest_info.append(fragment.strip())
             #print("Parsed:", (name, city, title, funct, rest_info))
