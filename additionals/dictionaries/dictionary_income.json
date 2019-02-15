@@ -11,8 +11,9 @@
 	},
 	"Hauptpunkte":
 	{
-		"Löhne und Gehälter": "Löhne und Gehälter",
 		"rechnungen Löhne und Gehälter": "Löhne und Gehälter",
+		"Löhne und Gehälter": "Löhne und Gehälter",
+		"Abschreibungen u. Werberichtigung": "Abschreibungen und Werberichtigung",
 		"Abschreibungen": "Abschreibungen",
 		"Jahresrohertrag": "Jahresrohertrag",
 		"Jahresertrag": "Jahresertrag",
@@ -81,6 +82,7 @@
         "EEV-Steuern": "EEV-Steuern",
         "Besitzsteuern": "Besitzsteuern",
         "Gewinnabführung": "Gewinnabführung",
+		"Materialaufwand, Fremdleistung": "Materialaufwand und Fremdleistung",
         "Materialaufwand": "Materialaufwand",
         "Verkaufs und allgemeine Unkosten":"Verkaufs und allgemeine Unkosten",
         "Vermögensfreigaben im Ausland":"Vermögensfreigaben im Ausland",

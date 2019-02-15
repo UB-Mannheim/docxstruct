@@ -685,6 +685,9 @@ class Datatable(Table):
                     if len(item)-3<len(itemname)<len(item)+3:
                         if itemregex.search(itemname.lower().replace(" ","")):
                             # Check if the last chars are there or if the itemname is split in 2 lines
+                            #Experimental for Peronsalaufwend
+                            if itemname == "Personalaufwend":
+                                continue
                             if regex.compile(r"(?:"+regex.escape(item[-4:])+"){e<=" + str(2) + "}").search(regex.escape(itemname.lower().replace(" ","")[-4:])):
                                 self.info.row = add+self.info.dictionary[itemlvl][itemname]
                                 if subitemflag or (itemlvl == "Unterpunkte" and self.info.lastmainitem and lidx and self.info.fst_order < self.structure["lborder"][lidx]):
