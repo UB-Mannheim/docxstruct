@@ -824,7 +824,7 @@ class SegmentHolder(object):
             match_start, errors = regu.fuzzy_search \
                 (r"^(Gezahlte\s)?Dividenden\s?(\(netto\s?\))?:", line_text, err_number=0)
                 #(r"^(Dividenden ab (\d{4}\/\d{2})?(\-\d{4}\/\d{2})?|Dividenden)s?:", line_text)
-            if match_start is not None:
+            if match_start is not None and "Kapital" not in combined_texts:
                 self.do_match_work(True, match_start, line_index, errors)
                 return True
 
