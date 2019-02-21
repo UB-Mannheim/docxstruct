@@ -1,6 +1,10 @@
-# akf-hocrparser
-Parsing .hocr-output of ocromore to get a content-classified .json output for further database export.
+![docxstruct](docs/img/docxstruct_logo.png)
+============
+![license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)
 
+Docxstruct  is part of the [Aktienführer-Datenarchiv work process][akf-link] and it 
+parses .hocr-output of [ocromore][ocromore-link] to get a content-classified .json output 
+for further database export.
 
 # Installation 
 
@@ -9,8 +13,6 @@ To initialize the git submodules (~git version 2.7.4):
 `
 git submodule update --init --recursive
 `
-
-
 
 For development Pycharm IDE 2017.3 Community Edition was used 
 
@@ -25,9 +27,9 @@ editor.soft.wrap.force.limit=10000
 
 
 # Handling Code
-The akf-hocrparser is made to be adapted for parsing other kinds of content
-than 'Aktienführer'. It can be used as generic text-content recognizer and clarifier 
-and provides lot's of analysis and structure for that. 
+`Docxstruct` is made to be adapted for parsing other kinds of content
+than 'Aktienführer'. It can be used as generic text-content recognizer and clarifier.
+Therefore it provides lot's of analysis and structure for that. 
 
 Usually all akf-specific content is stored in files which are called 'akf_....'
 this are the parts where you might want to put your custom functionalities. 
@@ -80,7 +82,7 @@ until the segment has been found automatically.
 To use your custom parsing code instantiate your 'segment_parser.py'
 FunctionMapAKF constructor. Make sure your function tag is the one
 used in the segment_classifier. For the keys in 'function_map' use 
-the keyss noted in your segment holder (i.e. 'akf_segment_holder')
+the keys noted in your segment holder (i.e. 'akf_segment_holder')
 
 ```python
     self.akf_one = AkfParsingFunctionsOne(endobject_factory, output_analyzer)
@@ -107,9 +109,9 @@ can be stored in a common parsing class like in 'akf_parsing_functions_one'.
 The parameters have to be exactly the same like in example.
 
 The add_check_element functionality adds in the output an additional
-element for this segment with the original data (for verifcation later).
-Also it improves the data to be better parsed. (it's recommended to use this function always)
-Options for this function can be found in configuration. 
+element for this segment with the original data (for evaluation later).
+Also it improves the data to be better parsed. (recommended to use this function always)
+Options for this function can be found in the configuration. 
 
 
 To note results to final output the add_to_my_obj function is used. 
@@ -141,14 +143,14 @@ self.output_analyzer.log_segment_information(segmentation_class.segment_tag, con
 ## Configuration
 Which configuration file is used is specified in main_start.py here.
 ```python
-CODED_CONFIGURATION_PATH= './configuration/config_parse_hocr_js.conf'
+CODED_CONFIGURATION_PATH= './configuration/XXX.conf'
 ```
 In the configuration files there are several options the same configuration
 keys which are in the given config files can be used as command line parameters
 also. 
 
 At the beginning a common singleton configuration object is created, 
-which allows to access configuration.
+which allows to access configuration global.
 
 Configuration can be accessed in each class of the project without 
 passing it through the constructors from the root class. In a
@@ -163,8 +165,6 @@ class Example(object):
 
         self.config = config_handler.get_config()
 ```
-
-
 
 ## Custom logging function
 For general overview in the program output, custom logging functionality
@@ -187,3 +187,9 @@ defining configuration parameters.
 The warning and exception level tags will allow logging even if the base
 'PRINT...' parameter is not true. The cpr.printex and cpr.printw functions provide
 colored output to hint exceptions (red) and warnings (yellow). 
+
+
+Originally written by Johannes Stegmüller and Jan Kamlah.
+
+[akf-link]: https://github.com/UB-Mannheim/Aktienfuehrer-Datenarchiv-Tools
+[ocromore-link]: https://github.com/UB-Mannheim/ocromore
