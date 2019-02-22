@@ -2,9 +2,9 @@
 ============
 ![license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)
 
-Docxstruct  is part of the [Aktienführer-Datenarchiv work process][akf-link] and it 
-parses .hocr-output of [ocromore][ocromore-link] to get a content-classified .json output 
-for further database export.
+Docxstruct parses .hocr-output of [ocromore][ocromore-link] to get a content-classified .json output 
+for further database export. It is part of the [Aktienführer-Datenarchiv work process][akf-link],
+but can also be used independently.
 
 # Installation 
 
@@ -28,7 +28,7 @@ editor.soft.wrap.force.limit=10000
 
 # Handling Code
 `Docxstruct` is made to be adapted for parsing other kinds of content
-than 'Aktienführer'. It can be used as generic text-content recognizer and clarifier.
+than 'Aktienführer'. It can be used as generic text-content recognizer and classifier.
 Therefore it provides lot's of analysis and structure for that. 
 
 Usually all akf-specific content is stored in files which are called 'akf_....'
