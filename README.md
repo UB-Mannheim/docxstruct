@@ -1,4 +1,4 @@
-![docxstruct](docs/img/docxstruct_logo.png)
+![docxstruct](docs/img/docxstruct_logo.png "docxstruct")
 ============
 ![license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)
 
@@ -191,5 +191,5 @@ colored output to hint exceptions (red) and warnings (yellow).
 
 Originally written by Johannes Stegmüller and Jan Kamlah.
 
-[akf-link]: https://github.com/UB-Mannheim/Aktienfuehrer-Datenarchiv-Tools
-[ocromore-link]: https://github.com/UB-Mannheim/ocromore
+[akf-link]: https://github.com/UB-Mannheim/Aktienfuehrer-Datenarchiv-Tools "Aktienfuehrer-Datenarchiv-Tools "
+[ocromore-link]: https://github.com/UB-Mannheim/ocromore "ocromore"
