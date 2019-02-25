@@ -188,8 +188,24 @@ The warning and exception level tags will allow logging even if the base
 'PRINT...' parameter is not true. The cpr.printex and cpr.printw functions provide
 colored output to hint exceptions (red) and warnings (yellow). 
 
+Copyright and License
+--------
 
-Originally written by Johannes Stegmüller and Jan Kamlah.
+Copyright (c) 2017 Universitätsbibliothek Mannheim
+
+Author: 
+ * [Jan Kamlah](https://github.com/jkamlah)
+ * [Johannes Stegmüller](https://github.com/Hyper-Node) 
+
+**docxstruct** is Free Software. You may use it under the terms of the Apache 2.0 License.
+See [LICENSE](./LICENSE) for details.
+
+
+Acknowledgements
+-------
+
+The tools are depending on some third party libraries:
+
 
 [akf-link]: https://github.com/UB-Mannheim/Aktienfuehrer-Datenarchiv-Tools "Aktienfuehrer-Datenarchiv-Tools "
 [ocromore-link]: https://github.com/UB-Mannheim/ocromore "ocromore"
