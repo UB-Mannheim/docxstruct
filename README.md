@@ -36,7 +36,60 @@ this are the parts where you might want to put your custom functionalities.
 
 Ways how to do that are described in the following documentation parts.
 
+# input output example 
+In an example with Aktienführer data io is explained. This is the basic input which is usually in a hocr file. 
+```                          
+            <title>OCR Results</title>
+            <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+            <meta name='AKF-OCR' content='msa-combined' />
+            <meta name='ocr-capabilities' content='ocr_line ocrx_word'/>
+        </head>
+        <body>
+            <div class='ocr_page' title='image None; bbox 0 0 1046 9348'>
+            <span class ='ocr_line' title='bbox 0 0 1046 9348' ><br/>
+                <span  class ='ocrx_word' title='bbox 0 0 1046 9348' ></span >
+            </span>
+            <span class ='ocr_line' title='bbox 423 200 1683 271' ><br/>
+                <span  class ='ocrx_word' title='bbox 423 200 798 271' >Überlandwerk</span >
+                <span  class ='ocrx_word' title='bbox 824 200 1180 271' >Unterfranken</span >
+                <span  class ='ocrx_word' title='bbox 1206 200 1682 271' >Aktiengesellschatt</span >
+            </span>
+            <span class ='ocr_line' t
+...
+```
 
+
+This is a segmented not yet parsed output ('segmentation simple analysis output')
+Segmentation starting tags are on the left. Actual input data on the right. 
+```
+False                         ¦¦                            
+Firmenname                    ¦¦Überlandwerk Unterfranken Aktiengesellschatt
+Sitz                          ¦¦Sitz: 8700 Würzburg 2, Bismarckstraße
+False                         ¦¦9-11, Postfach 1160         
+Telefon/Fernruf               ¦¦Fernruf: (09 31) Sa.-Nr. 3 01
+Fernschreiber                 ¦¦Fernschreiber: 6 8 827      
+Vorstand                      ¦¦Vorstand:                   
+False                         ¦¦Claus Bovenschen, Gerbrunn bei Würz-
+False                         ¦¦burg;                       
+False                         ¦¦Dr. Willibald Janßen, Würzburg
+```
+
+This is a part of the categorized json output for one segment ('Sitz' as example) 
+```
+     "Sitz": [
+          {
+               "origpost": "(21b) Dortmund, Rheinische Str.73.",
+               "type": "Sitz"
+          },
+          {
+               "numID": "(21b)",
+               "city": "Dortmund",
+               "street": "Rheinische Str.",
+               "street_number": "73"
+          }
+     ],
+```
+     
 ## Creating segments 
 For creating a segment from input data. In your segment holder class (i.e. 'akf_segment_holder') create
 the code which recognizes start and  optionally the stop condition of the
@@ -139,6 +192,21 @@ self.output_analyzer.log_segment_information(segmentation_class.segment_tag, con
 
 
 ## Code analysis
+There is lot's of analysis functionalities to check if the input data was correctly segmented and finally parsed. 
+All analysis can be toggled in analysis settings in the conf files in configuration. 
+
+There's different mechanisms: 
+```
+LOG_PARSED_SEGMENTED_OUTPUT = True                  # logs the parsed results in a file for each segmentation tag
+LOG_SIMPLE = True                                   # Just simple and fast logging (without tablerecognition)
+LOG_PARSED_TO_ORIG_DIFF_PER_CATEGORY = True         # logs the difference of parsed result and original segmented output for specific category
+LOG_PARSED_TO_ORIG_ADD_OUTPUT_JSON = False          # in above logging add the output-json to the diff files
+LOG_PARSED_TO_ORIG_DIFF_ACCUMULATED = True          # creates an accumulated report for differences from parsed to segmented output for each folder/akf-year
+LOG_SEGMENTED_TO_ORIG_DIFF_PER_FILE = True          # (needs ADD_FULLTEXT_ENTRY enabled) logs the difference of segmented result and original segmented output for specific file/akf-table
+LOG_SEGMENTED_TO_ORIG_ADD_OUTPUT_JSON = True        # in above logging add the output-json to the diff files
+LOG_SEGMENTED_TO_ORIG_DIFF_ACCUMULATED = True       # creates an accumulated report for differences from segmented to original output for each folder/akf-year
+JOIN_SEGMENTED_TEXTS_IN_ORIG_DIFF_PER_CATEGORY = True # the segmented texts get joined by algorithm which removes dashes and so on
+```
 
 ## Configuration
 Which configuration file is used is specified in main_start.py here.
@@ -188,6 +256,16 @@ The warning and exception level tags will allow logging even if the base
 'PRINT...' parameter is not true. The cpr.printex and cpr.printw functions provide
 colored output to hint exceptions (red) and warnings (yellow). 
 
+## possible future improvements 
+
+- support for more input and output formats 
+- adapt fuzzy-regexes and make the fuzzyness more configurable 
+- adapt akf name parsing (especially the multi-title recognition) 
+- modularize parsing and segmentation content so it can be completely swapped by a single configuration tag 
+- provide common normalization methods for data
+
+
+
 Copyright and License
 --------
 
@@ -209,3 +287,6 @@ The tools are depending on some third party libraries:
 
 [akf-link]: https://github.com/UB-Mannheim/Aktienfuehrer-Datenarchiv-Tools "Aktienfuehrer-Datenarchiv-Tools "
 [ocromore-link]: https://github.com/UB-Mannheim/ocromore "ocromore"
+
+
+
