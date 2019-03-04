@@ -28,10 +28,10 @@ editor.soft.wrap.force.limit=10000
 
 # Handling Code
 `Docxstruct` is made to be adapted for parsing other kinds of content
-than 'Aktienführer'. It can be used as generic text-content recognizer and classifier.
+than *Aktienführer data*. It can be used as generic text-content recognizer and classifier.
 Therefore it provides lot's of analysis and structure for that. 
 
-Usually all akf-specific content is stored in files which are called 'akf_....'
+Usually all akf-specific content is stored in files which are called *akf_XXX*
 this are the parts where you might want to put your custom functionalities. 
 
 Ways how to do that are described in the following documentation parts.
@@ -59,7 +59,7 @@ In an example with Aktienführer data io is explained. This is the basic input w
 ```
 
 
-This is a segmented not yet parsed output ('segmentation simple analysis output')
+This is a segmented not yet parsed output (**segmentation simple analysis output**)
 Segmentation starting tags are on the left. Actual input data on the right. 
 ```
 False                         ¦¦                            
@@ -74,7 +74,7 @@ False                         ¦¦burg;
 False                         ¦¦Dr. Willibald Janßen, Würzburg
 ```
 
-This is a part of the categorized json output for one segment ('Sitz' as example) 
+This is a part of the categorized json output for one segment ("Sitz" as example) 
 ```
      "Sitz": [
           {
@@ -91,14 +91,14 @@ This is a part of the categorized json output for one segment ('Sitz' as example
 ```
      
 ## Creating segments 
-For creating a segment from input data. In your segment holder class (i.e. 'akf_segment_holder') create
+For creating a segment from input data. In your segment holder class (i.e. `akf_segment_holder`) create
 the code which recognizes start and  optionally the stop condition of the
-segment. The segment recognition class should always inherit from 'Segment'
+segment. The segment recognition class should always inherit from `Segment`
 parent class (which gives a set of values and has abstract functions for matching).
-When creating a matching function (match_start_condition or match_stop_condition)
-make sure that the function has the same parameters as in the example (or as abstract functions in 'Segment').
+When creating a matching function (`match_start_condition` or `match_stop_condition`)
+make sure that the function has the same parameters as in the example (or as abstract functions in `Segment`).
 
-If the 'match_stop_condition' function is not defined, the segment will continue
+If the `match_stop_condition` function is not defined, the segment will continue
 from the start line to the start of the next segment by default. This behaviour can
 also be specified in the configuration. The given segment tag to the parents constructor
 is used for common identification of the segment later. The match work function 
@@ -132,10 +132,10 @@ until the segment has been found automatically.
 
 
 ## Parsing code 
-To use your custom parsing code instantiate your 'segment_parser.py'
-FunctionMapAKF constructor. Make sure your function tag is the one
-used in the segment_classifier. For the keys in 'function_map' use 
-the keys noted in your segment holder (i.e. 'akf_segment_holder')
+To use your custom parsing code instantiate your *segment_parser
+FunctionMapAKF constructor*. Make sure your function tag is the one
+used in the segment_classifier. For the keys in *function_map* use 
+the keys noted in your segment holder (i.e. `akf_segment_holder`)
 
 ```python
     self.akf_one = AkfParsingFunctionsOne(endobject_factory, output_analyzer)
@@ -158,16 +158,16 @@ the keys noted in your segment holder (i.e. 'akf_segment_holder')
 
 ### Parsing functions 
 Here is an example of a mapped parsing function from above. These functions
-can be stored in a common parsing class like in 'akf_parsing_functions_one'. 
+can be stored in a common parsing class like in *akf_parsing_functions_one*. 
 The parameters have to be exactly the same like in example.
 
-The add_check_element functionality adds in the output an additional
+The `add_check_element` function adds in the output an additional
 element for this segment with the original data (for evaluation later).
 Also it improves the data to be better parsed. (recommended to use this function always)
 Options for this function can be found in the configuration. 
 
 
-To note results to final output the add_to_my_obj function is used. 
+To note results to final output the `add_to_my_obj` function is used. 
 It works by simple key-value storing. If there are multiple objects within
 one segment element counter can be incremented to assign values to another segment. 
 There is also an option to only store if the value has any content. 
@@ -247,22 +247,23 @@ of each class.
         self.cpr.print("init akf parsing functions two")
 ```
 Logging with the cpr.print function adds a tag (here the class name) at the start of each 
-output. It only logs if the PRINT_SEGMENT_PARSER_AKF_FN_TWO from config is set to 'True'. 
+output. It only logs if the `PRINT_SEGMENT_PARSER_AKF_FN_TWO` from config is set to `True`. 
 
 In this way you can toggle logging each class or even more specific areas by
 defining configuration parameters.
 
 The warning and exception level tags will allow logging even if the base
-'PRINT...' parameter is not true. The cpr.printex and cpr.printw functions provide
+`PRINT...` parameter is `False`. The cpr.printex and cpr.printw functions provide
 colored output to hint exceptions (red) and warnings (yellow). 
 
-## possible future improvements 
+Further ideas
+----
 
-- support for more input and output formats 
-- adapt fuzzy-regexes and make the fuzzyness more configurable 
-- adapt akf name parsing (especially the multi-title recognition) 
-- modularize parsing and segmentation content so it can be completely swapped by a single configuration tag 
-- provide common normalization methods for data
+* support for more input and output formats 
+* adapt fuzzy-regexes and make the fuzzyness more configurable 
+* adapt akf name parsing (especially the multi-title recognition) 
+* modularize parsing and segmentation content so it can be completely swapped by a single configuration tag 
+* provide common normalization methods for data
 
 
 
@@ -283,10 +284,14 @@ Acknowledgements
 -------
 
 The tools are depending on some third party libraries:
+ * [hocr-parser][hocr-parser-link] parses hocr files into a dictionary structure.
+    Originally written by [Athento][orig-hocr-parser-link].
 
 
 [akf-link]: https://github.com/UB-Mannheim/Aktienfuehrer-Datenarchiv-Tools "Aktienfuehrer-Datenarchiv-Tools "
 [ocromore-link]: https://github.com/UB-Mannheim/ocromore "ocromore"
+[hocr-parser-link]: https://github.com/UB-Mannheim/hocr-parser "hocr-parser"
+[orig-hocr-parser-link]: athento/hocr-parser "Athento's hocr-parser"
 
 
 
