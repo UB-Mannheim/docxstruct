@@ -265,8 +265,6 @@ Further ideas
 * modularize parsing and segmentation content so it can be completely swapped by a single configuration tag 
 * provide common normalization methods for data
 
-
-
 Copyright and License
 --------
 
